@@ -1,0 +1,9 @@
+# Godot import cache (regenerated automatically)
+.import/
+
+# Audacity project sources (large, not needed to run the game)
+*.aup3
+
+# OS files
+.DS_Store
+Thumbs.db
