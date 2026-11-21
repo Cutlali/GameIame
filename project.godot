@@ -40,12 +40,22 @@ config/icon="res://icon.svg"
 [autoload]
 
 GS="*res://GS.gd"
+GameData="*res://GameData.gd"
+RunStats="*res://RunStats.gd"
+Encyclopedia="*res://Encyclopedia.gd"
+Toast="*res://ui/Toast.gd"
 CardCreation="*res://CardCreation.gd"
 TutorialSteps="*res://tutorial/TutorialSteps.gd"
 Music="*res://Music.tscn"
 SFX="*res://SFX.tscn"
 Flags="*res://Flags.gd"
 SceneTransitions="*res://SceneTransitions.tscn"
+Season="*res://SeasonManager.gd"
+BottleManager="*res://BottleManager.gd"
+HarvestManager="*res://HarvestManager.gd"
+EncyclopediaUI="*res://ui/EncyclopediaUI.gd"
+YearSummary="*res://ui/YearSummary.gd"
+FarmChoiceUI="*res://ui/FarmChoiceUI.gd"
 
 [display]
 

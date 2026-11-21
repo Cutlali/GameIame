@@ -14,6 +14,15 @@ export var card_level = 1
 
 export var anim_frames: SpriteFrames
 
+# 新循环：植物物种与变异。变异在收获时判定，变种是独立图鉴条目。
+var species_id = ""
+var mutated = false
+var variant_index = 0
+var mutation_rolled = false
+var _died = false
+# 只有被虫害打掉血才让魔瓶受损；牺牲卡主动杀掉植物不算。
+var died_by_pest = false
+
 # If the plant is "consumed", that means the card / gold popup has been
 # shown, and the plant should be queue_freed()
 var consumed = false
@@ -125,6 +134,8 @@ func dec_health():
 	health -= amount
 	$HeartFX.play("Pop")
 	if health <= 0:
+		died_by_pest = true
+		_count_death()
 		$AnimationPlayer.queue("OutOfHealth")
 		
 func set_health(amount):
@@ -138,7 +149,23 @@ func set_health(amount):
 	$HeartFX.play("Pop")
 	
 	if health <= 0:
+		_count_death()
 		$AnimationPlayer.queue("OutOfHealth")
+
+
+func _count_death():
+	if _died:
+		return
+	_died = true
+	var stats = get_node_or_null("/root/RunStats")
+	if stats != null:
+		stats.plants_lost += 1
+	# 魔瓶维持四季；植物被虫害打死时掉 1 滴血。
+	# 成熟与否都算，但玩家自己用牺牲卡杀掉的不扣。
+	if died_by_pest:
+		var bottle = get_node_or_null("/root/BottleManager")
+		if bottle != null:
+			bottle.damage(1)
 		
 func set_defense(amount):
 	if amount > 10:
@@ -177,17 +204,37 @@ func water_plant():
 	set_water(water - 1)
 	
 func popup_menu():
-	if card_level == 1:
-		GS.popup_card_selection(CardCreation.pick_plant1_cards(health))
-	elif card_level == 2:
-		GS.popup_card_selection(CardCreation.pick_plant2_cards(health))
-	elif card_level == 3:
-		GS.popup_card_selection(CardCreation.pick_plant3_cards(health))
-	elif card_level == 4:
-		GS.popup_card_winner()
-	
+	HarvestManager.handle_harvest(self)
+
+
+# 收获时判定变异。变种是独立图鉴条目。
+func resolve_entry_id():
+	if species_id == "":
+		return ""
+	if not mutation_rolled:
+		mutation_rolled = true
+		var chance = GameData.mutation_chance(Season.current_season, RunStats.mutation_pity)
+		if randf() < chance:
+			mutated = true
+			variant_index = randi() % 2
+			RunStats.mutation_pity = 0
+			# 变异是高光时刻，用一段上扬的魔法音效强调，区别于普通收获。
+			SFX.mutation.play_usual()
+		else:
+			mutated = false
+			RunStats.mutation_pity += 1
+	if mutated:
+		return species_id + "_v" + str(variant_index)
+	return species_id
+
+
+# 春季：1 次浇水推进 2 个生长帧；其他季节 1 帧。
 func upgrade_plant():
-	$Plant.frame += 1
+	var steps = Season.growth_per_water()
+	var max_frame = $Plant.frames.get_frame_count("default") - 1
+	for i in range(steps):
+		if $Plant.frame < max_frame:
+			$Plant.frame += 1
 	
 func turn_over():
 	# If we are being polled about our turn, then the card selection

@@ -32,11 +32,16 @@ func _physics_process(delta):
 				current_plant_target = null
 				
 func dec_health():
+	if health <= 0:
+		return
 	var amount = attack_queue.pop_front()
 	if amount == null:
 		amount = 1
 	health -= amount
 	if health <= 0:
+		var stats = get_node_or_null("/root/RunStats")
+		if stats != null:
+			stats.pests_killed += 1
 		remove_from_group("Enemy")
 		remove_from_group("Object")
 		$AnimationPlayer.queue("OutOfHealth")

@@ -26,10 +26,8 @@ func _on_buy():
 			GS.energy_max += 1
 			GS.energy += 1
 		else:
-			if up_num == 1:
-				GS.tilemap.up1()
-			elif up_num == 2:
-				GS.tilemap.up2()
+			if up_num == 1 or up_num == 2:
+				GS.queue_farm_choice()
 			elif up_num == 3:
 				GS.card_draw_count += 1
 			elif up_num == 4:

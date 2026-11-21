@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=2]
+[gd_scene load_steps=22 format=2]
 
 [ext_resource path="res://SFX.gd" type="Script" id=1]
 [ext_resource path="res://SFXRand.gd" type="Script" id=2]
@@ -19,6 +19,8 @@
 [ext_resource path="res://sfx/plant_jingle.wav" type="AudioStream" id=17]
 [ext_resource path="res://sfx/nowater2.wav" type="AudioStream" id=18]
 [ext_resource path="res://music/win_jingle.ogg" type="AudioStream" id=19]
+[ext_resource path="res://sfx/year_end.wav" type="AudioStream" id=20]
+[ext_resource path="res://sfx/mutation.wav" type="AudioStream" id=21]
 
 [node name="SFX" type="Node"]
 script = ExtResource( 1 )
@@ -118,5 +120,18 @@ script = ExtResource( 2 )
 [node name="NoWater" type="AudioStreamPlayer" parent="."]
 stream = ExtResource( 18 )
 volume_db = -24.0
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="YearEnd" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 20 )
+volume_db = -3.0
+bus = "SFX"
+pause_mode = 2
+script = ExtResource( 2 )
+
+[node name="Mutation" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 21 )
+volume_db = -2.0
 bus = "SFX"
 script = ExtResource( 2 )

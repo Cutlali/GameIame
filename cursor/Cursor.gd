@@ -31,23 +31,35 @@ func new_plant(associated_card):
 	TutorialSteps.mark_have_planted()
 	
 	var scene = null
+	var sid = associated_card.species_id
+	var level = 1
 	
-	# My understanding is that these are reference types.
-	if associated_card == GS.card_basic_plant:
-		scene = GS.Plant1
-	if associated_card == GS.card_medium_plant:
-		scene = GS.Plant2
-	if associated_card == GS.card_high_plant:
-		scene = GS.Plant3
-	if associated_card == GS.card_win_plant:
-		scene = GS.PlantWin
+	if sid != "":
+		scene = GameData.scene_for(sid)
+		var sp = GameData.species(sid)
+		if sp != null:
+			level = sp["level"]
+	else:
+		# 兼容旧卡牌（正常流程不会走到这里）
+		if associated_card == GS.card_basic_plant:
+			scene = GS.Plant1
+		if associated_card == GS.card_medium_plant:
+			scene = GS.Plant2
+		if associated_card == GS.card_high_plant:
+			scene = GS.Plant3
+		if associated_card == GS.card_win_plant:
+			scene = GS.PlantWin
 		
 	if scene == null:
 		return
 		
 	var p = scene.instance()
+	p.species_id = sid
+	p.card_level = level
 	p.position = position
 	get_parent().add_child(p)
+	
+	RunStats.plantings += 1
 		
 func water(card):
 	TutorialSteps.mark_have_watered()
@@ -74,6 +86,7 @@ func water(card):
 			var plant = GS.get_plant_at_map_lcoord(Vector2(x, y))
 			if plant != null:
 				plant.set_water(plant.water + card.quantity)
+				RunStats.water_spent += card.quantity
 				
 func attack(card):
 	TutorialSteps.mark_have_attacked()
