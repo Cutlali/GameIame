@@ -208,6 +208,31 @@ func net(card):
 	enemy.take_damage(dmg)
 	enemy.stun_next_attack()
 
+func attack_all(card):
+	var dmg = damage(card)
+	reset_damage()
+
+	var enemies = get_tree().get_nodes_in_group("Enemy")
+	if enemies.empty():
+		Toast.show_message("田里没有虫子。")
+		return
+	for enemy in enemies:
+		enemy.take_damage(dmg)
+
+func heal_bottle(card):
+	var gained = BottleManager.heal(card.quantity)
+	if gained > 0:
+		Toast.show_message("魔瓶恢复了 %d 点生命。" % gained)
+	else:
+		Toast.show_message("魔瓶现在不需要修补。")
+
+func thorns_armor(card):
+	var plant = GS.get_plant_at_map_lcoord(position)
+	if plant == null:
+		return
+	plant.set_defense(plant.defense + card.quantity)
+	plant.add_reflect(card.drain)
+
 func heal_all_dmg(card):
 	var dmg = damage(card)
 	reset_damage()
@@ -361,10 +386,21 @@ func update_playable_and_display():
 		or card.action == GS.Action.HEAL_DMG_NEAR \
 		or card.action == GS.Action.DEF_DMG_NEAR \
 		or card.action == GS.Action.HASTEN \
-		or card.action == GS.Action.GRAFT:
+		or card.action == GS.Action.GRAFT \
+		or card.action == GS.Action.THORNS:
 		if is_tile_plant():
 			$CursorDefense.show() # TODO: Defend
 			may_play = true
+
+	if card.action == GS.Action.HEAL_BOTTLE:
+		if BottleManager.hp < BottleManager.MAX_HP:
+			snap = false
+			var cam_zoom = GS.camera.zoom.y
+			var bottom = GS.camera.global_position.y + get_viewport().size.y * 0.5 * cam_zoom
+			var thresh = bottom - 360 * GS.hand.scale.y
+			if get_global_mouse_position().y < thresh:
+				$CursorGeneral.show()
+				may_play = true
 			
 	if card.action == GS.Action.DRAIN_WATER_DMG_RNG \
 		or card.action == GS.Action.DRAIN_WATER_DMG_ALL:
@@ -382,6 +418,7 @@ func update_playable_and_display():
 		or card.action == GS.Action.HEAL_ALL_DMG \
 		or card.action == GS.Action.DRAW_3 \
 		or card.action == GS.Action.PLUS_ENERGY \
+		or card.action == GS.Action.ATTACK_ALL \
 		or card.action == GS.Action.CORK:
 		var cam_zoom = GS.camera.zoom.y
 		var bottom = GS.camera.global_position.y + get_viewport().size.y * 0.5 * cam_zoom

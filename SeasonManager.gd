@@ -180,6 +180,21 @@ func bottle_can_refresh():
 	return is_winter()
 
 
+# 年终总结里提前告知下一年的新压力，让玩家有准备。
+func threat_text_for_year(y):
+	match y:
+		2:
+			return "明年的新威胁：虫子开始结伴出现。蜂群可以一次清理一片。"
+		3:
+			return "明年的新威胁：瓶虱会直接啃咬魔瓶。记得带上瓶塞与修补。"
+		4:
+			return "明年的新威胁：精英虫登场，外壳更硬、咬得更重。护盾与反伤能救场。"
+		_:
+			if y > 4:
+				return "明年的新威胁：四季的侵蚀仍在加深，虫群会越来越难缠。"
+	return ""
+
+
 # 由 TheTileMap 在 _ready 时调用。每次进入 Game 场景都重置回春季。
 func bind_tilemap(map):
 	if _tilemap != null and is_instance_valid(_tilemap):
@@ -352,7 +367,8 @@ func advance_round():
 		change_season(0, false, false)
 		_update_hud()
 
-		YearSummary.show_summary(finished_year, false, lines, discovered, total)
+		YearSummary.show_summary(finished_year, false, lines, discovered, total,
+			threat_text_for_year(year))
 		return true
 
 	round_in_year += 1

@@ -110,7 +110,7 @@ const MUTATION_CHANCE = {
 # 每次收获没有变异，下一次变异概率追加 15 个百分点。
 const MUTATION_PITY_STEP = 0.15
 
-# 每回合基础抽卡池
+# 每回合基础抽卡池。带 min_year 的卡从对应年份开始才会出现。
 const BASIC_POOL = [
 	{"id": "water_drop", "weight": 8},
 	{"id": "water_drip", "weight": 5},
@@ -121,7 +121,10 @@ const BASIC_POOL = [
 	{"id": "basic_plant", "weight": 5},
 	{"id": "hasten", "weight": 3},
 	{"id": "graft", "weight": 2},
-	{"id": "net", "weight": 3}
+	{"id": "net", "weight": 3},
+	{"id": "swarm", "weight": 2, "min_year": 2},
+	{"id": "patch", "weight": 2, "min_year": 3},
+	{"id": "thorns_armor", "weight": 2, "min_year": 4}
 ]
 
 # 魔瓶卡池：不同植物给不同的池
@@ -141,7 +144,9 @@ const BOTTLE_POOLS = {
 		{"id": "cork", "weight": 2},
 		{"id": "hasten", "weight": 2},
 		{"id": "graft", "weight": 2},
-		{"id": "net", "weight": 2}
+		{"id": "net", "weight": 2},
+		{"id": "swarm", "weight": 2, "min_year": 2},
+		{"id": "patch", "weight": 2, "min_year": 3}
 	],
 	"medium": [
 		{"id": "water_barrel", "weight": 4},
@@ -157,7 +162,10 @@ const BOTTLE_POOLS = {
 		{"id": "cork", "weight": 2},
 		{"id": "hasten", "weight": 2},
 		{"id": "graft", "weight": 2},
-		{"id": "net", "weight": 2}
+		{"id": "net", "weight": 2},
+		{"id": "swarm", "weight": 2, "min_year": 2},
+		{"id": "patch", "weight": 2, "min_year": 3},
+		{"id": "thorns_armor", "weight": 2, "min_year": 4}
 	],
 	"high": [
 		{"id": "water_rain", "weight": 4},
@@ -169,7 +177,10 @@ const BOTTLE_POOLS = {
 		{"id": "power_crystal", "weight": 3},
 		{"id": "high_plant", "weight": 3},
 		{"id": "win_plant", "weight": 1},
-		{"id": "cork", "weight": 2}
+		{"id": "cork", "weight": 2},
+		{"id": "swarm", "weight": 2, "min_year": 2},
+		{"id": "patch", "weight": 2, "min_year": 3},
+		{"id": "thorns_armor", "weight": 3, "min_year": 4}
 	],
 	"rare": [
 		{"id": "tsunami", "weight": 4},
@@ -178,7 +189,8 @@ const BOTTLE_POOLS = {
 		{"id": "magic_shield", "weight": 3},
 		{"id": "water_rain", "weight": 3},
 		{"id": "win_plant", "weight": 5},
-		{"id": "high_plant", "weight": 2}
+		{"id": "high_plant", "weight": 2},
+		{"id": "thorns_armor", "weight": 2, "min_year": 4}
 	]
 }
 
@@ -293,18 +305,29 @@ func entry(id):
 	return e
 
 
+func _entry_available(e):
+	return int(e.get("min_year", 1)) <= Season.year
+
+
 func roll_basic_card_id():
-	var total = 0
+	var available = []
 	for e in BASIC_POOL:
+		if _entry_available(e):
+			available.append(e)
+	if available.empty():
+		return BASIC_POOL[0]["id"]
+
+	var total = 0
+	for e in available:
 		total += e["weight"]
 
 	var r = randi() % total
-	for e in BASIC_POOL:
+	for e in available:
 		r -= e["weight"]
 		if r < 0:
 			return e["id"]
 
-	return BASIC_POOL[0]["id"]
+	return available[0]["id"]
 
 
 # 从某个池子里不重复地抽若干张
@@ -312,7 +335,8 @@ func roll_offer(pool_id, count):
 	var pool = BOTTLE_POOLS.get(pool_id, BOTTLE_POOLS["basic"])
 	var remaining = []
 	for e in pool:
-		remaining.append(e)
+		if _entry_available(e):
+			remaining.append(e)
 
 	var out = []
 	while out.size() < count and remaining.size() > 0:

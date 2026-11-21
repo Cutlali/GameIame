@@ -12,7 +12,9 @@ func _init():
 		"res://BottleManager.gd",
 		"res://cursor/Cursor.gd",
 		"res://cards/HandCard.gd",
-		"res://ui/EncyclopediaUI.gd"
+		"res://ui/EncyclopediaUI.gd",
+		"res://ui/YearSummary.gd",
+		"res://SeasonManager.gd"
 	]
 	var failures = 0
 	for p in paths:

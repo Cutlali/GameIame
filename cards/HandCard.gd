@@ -98,6 +98,12 @@ func play_self():
 		GS.cursor.cork(associated_card)
 	if associated_card.action == GS.Action.NET:
 		GS.cursor.net(associated_card)
+	if associated_card.action == GS.Action.ATTACK_ALL:
+		GS.cursor.attack_all(associated_card)
+	if associated_card.action == GS.Action.HEAL_BOTTLE:
+		GS.cursor.heal_bottle(associated_card)
+	if associated_card.action == GS.Action.THORNS:
+		GS.cursor.thorns_armor(associated_card)
 		
 	GS.energy -= associated_card.cost
 	discard()

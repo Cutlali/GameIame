@@ -23,7 +23,11 @@ enum Action {
 	HASTEN,
 	GRAFT,
 	CORK,
-	NET
+	NET,
+
+	ATTACK_ALL,
+	HEAL_BOTTLE,
+	THORNS
 }
 
 enum Water {
@@ -446,6 +450,28 @@ var card_net : Card = Card.new(
 	Action.NET
 ).with_quantity(1).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/zing.svg"))
 
+# 逐年解锁的应对工具：新压力到来的同一年，魔瓶会开始提供解法。
+var card_swarm : Card = Card.new(
+	"蜂群",
+	"对所有敌人造成 $DQ 点伤害",
+	3,
+	Action.ATTACK_ALL
+).with_quantity(2).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/vampire_blast.svg"))
+
+var card_patch : Card = Card.new(
+	"修补",
+	"为魔瓶恢复 $DQ 点生命",
+	2,
+	Action.HEAL_BOTTLE
+).with_quantity(1).with_cat(CAT_DEF).with_icon(preload("res://cards/icons/tough_shield.svg"))
+
+var card_thorns_armor : Card = Card.new(
+	"反伤甲",
+	"为一株植物施加 2 点护盾，被虫咬时反伤 2 点",
+	2,
+	Action.THORNS
+).with_quantity(2).with_drain(2).with_cat(CAT_DEF).with_icon(preload("res://cards/icons/thorns.svg"))
+
 # 卡牌 ID → 卡牌实例。魔瓶池、基础抽卡、调试都通过这里取牌。
 var card_registry = {}
 
@@ -485,6 +511,9 @@ func build_card_registry():
 		"graft": card_graft,
 		"cork": card_cork,
 		"net": card_net,
+		"swarm": card_swarm,
+		"patch": card_patch,
+		"thorns_armor": card_thorns_armor,
 		"basic_plant": card_basic_plant,
 		"medium_plant": card_medium_plant,
 		"high_plant": card_high_plant,
@@ -659,7 +688,9 @@ enum SpawnOpt {
 	Bug2,
 	Bug3,
 	Bug5,
-	Bug9
+	Bug9,
+	BottleBiter,
+	Elite
 }
 var spawn_1bug2 = [SpawnOpt.Bug2]
 var spawn_2bug2 = [SpawnOpt.Bug2, SpawnOpt.Bug2]
@@ -711,57 +742,90 @@ var spawn_configs = [
 ]
 
 var next_spawn = 0
-	
-func spawn_enemies():
-	 # DEBUG
-	
+
+func _spawn_bug_at(pos, item):
+	if get_object_at_map_lcoord(pos) != null:
+		return false
+
+	var bug = Bug.instance()
+	bug.position = pos
+	if item == SpawnOpt.Bug2:
+		bug.health = 2
+	elif item == SpawnOpt.Bug3:
+		bug.health = 3
+	elif item == SpawnOpt.Bug5:
+		bug.health = 5
+	elif item == SpawnOpt.Bug9:
+		bug.health = 9
+	elif item == SpawnOpt.BottleBiter:
+		# 瓶虱：会隔几回合直接啃咬魔瓶。
+		bug.health = 3
+		bug.is_bottle_biter = true
+	elif item == SpawnOpt.Elite:
+		# 精英虫：血更厚、有外壳、咬得更重。
+		bug.health = 6
+		bug.is_elite = true
+	tilemap.add_child(bug)
+	return true
+
+func build_spawn_config():
+	# 年度压力：第 2 年结伴、第 3 年瓶虱、第 4 年精英虫。
+	var year = Season.year
 	var cfg = spawn_configs[next_spawn].duplicate()
 	if Season.is_summer():
 		cfg.append(SpawnOpt.Bug3)
+	if year >= 2:
+		cfg.append(SpawnOpt.Bug2)
+	if year >= 3 and randf() < 0.45:
+		cfg.append(SpawnOpt.BottleBiter)
+	if year >= 4 and randf() < 0.40:
+		cfg.append(SpawnOpt.Elite)
+	return cfg
+
+func spawn_enemies():
+	var year = Season.year
+	var cfg = build_spawn_config()
+
 	# TODO: Keep using "difficult" configs
 	next_spawn += 1
 	if next_spawn >= spawn_configs.size():
 		next_spawn = 11 - 2 # Allow some easy
-	
+
 	# Enemies are spawned near plants
 	var plants = get_tree().get_nodes_in_group("Plant")
-	
+
 	# Can't spawn if there are no plants, also wil cause div by zero
 	if plants.size() == 0:
 		return
-	
+
 	var count_enemys = get_tree().get_nodes_in_group("Enemy").size()
 	var summer = Season.is_summer()
 	var enemy_cap = 6 if summer else 5
-	
+
 	# Three times
 	for item in cfg:
 		# 夏季虫害更多：上限提高，且配置额外补一只
 		if count_enemys >= enemy_cap:
 			return
-		
+
 		# Try 100 times to spawn an enemy
 		for attempt in range(0, 100):
 			var p = plants[randi() % plants.size()]
 			var x = (randi() % 5) - 2
 			var y = (randi() % 5) - 2
 			var pos = p.position + Vector2(x, y) * 128
-			
-			var existing = get_object_at_map_lcoord(pos)
-			if existing == null:
-				var bug = Bug.instance()
-				bug.position = pos
-				tilemap.add_child(bug)
-				
-				if item == SpawnOpt.Bug2:
-					bug.health = 2
-				if item == SpawnOpt.Bug3:
-					bug.health = 3
-				if item == SpawnOpt.Bug5:
-					bug.health = 5
-				if item == SpawnOpt.Bug9:
-					bug.health = 9
+
+			if _spawn_bug_at(pos, item):
 				count_enemys += 1
+
+				# 第 2 年起，普通虫会叫来一只贴身的同伴。
+				if year >= 2 and item == SpawnOpt.Bug2 and count_enemys < enemy_cap and randf() < 0.45:
+					var dirs = [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1)]
+					dirs.shuffle()
+					for d in dirs:
+						if _spawn_bug_at(pos + d * 128, SpawnOpt.Bug2):
+							count_enemys += 1
+							break
 				break
 	
 func end_turn():

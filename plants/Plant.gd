@@ -4,6 +4,9 @@ export var health = 3
 var water = 0
 var defense = 0
 
+# 反伤甲提供的固定反伤，和变种特性叠加。
+var reflect_damage = 0
+
 var health_disp = 3
 var water_disp = 0
 var defense_disp = 0
@@ -75,15 +78,21 @@ func slash_health(amount, attacker = null):
 	$AnimationPlayer.play("Slash")
 	SFX.whack.play_sfx()
 
-	# 靛蓝番茄 / 红磨坊向日葵的反伤：咬到它就等于咬到自己。
+	# 靛蓝番茄 / 红磨坊向日葵的反伤 + 反伤甲。
+	var reflect = reflect_damage
 	var perk = current_perk()
-	if perk != null and attacker != null and is_instance_valid(attacker):
-		var reflect = int(perk.get("reflect", 0))
-		if reflect > 0:
-			if attacker.has_method("take_reflect_damage"):
-				attacker.take_reflect_damage(reflect)
-			else:
-				attacker.take_damage(reflect)
+	if perk != null:
+		reflect += int(perk.get("reflect", 0))
+	if reflect > 0 and attacker != null and is_instance_valid(attacker):
+		if attacker.has_method("take_reflect_damage"):
+			attacker.take_reflect_damage(reflect)
+		else:
+			attacker.take_damage(reflect)
+
+
+func add_reflect(amount):
+	reflect_damage += amount
+	Toast.show_message("这株植物获得反伤护甲（被咬时反伤 %d 点）。" % reflect_damage)
 	
 # Can be called from animations to explicitly update the visibility at some point.
 func update_markers_visibility():

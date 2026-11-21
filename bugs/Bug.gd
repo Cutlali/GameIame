@@ -18,6 +18,26 @@ var spawned = false
 var stun_turns = 0
 var _stun_tween: Tween
 
+# 年度压力虫：
+# 瓶虱每 3 回合直接啃咬一次魔瓶；精英虫有外壳、咬得更重。
+var is_bottle_biter = false
+var is_elite = false
+var armor = 0
+var bite_damage = 1
+var bottle_bite_timer = 2
+
+var base_modulate = Color(1, 1, 1)
+
+
+func _ready():
+	if is_elite:
+		bite_damage = 2
+		armor = 1
+		base_modulate = Color(0.95, 0.80, 0.42)
+	elif is_bottle_biter:
+		base_modulate = Color(0.78, 0.62, 0.98)
+	modulate = base_modulate
+
 func spawn_now():
 	spawned = true
 	$AnimationPlayer.play("Spawn")
@@ -27,7 +47,12 @@ func spawn_now():
 #	$AnimationPlayer.play("Spawn")
 
 func _physics_process(delta):
-	$HeartMarker/HealthNum.text = String(health)
+	var tag = ""
+	if is_elite:
+		tag = "★"
+	elif is_bottle_biter:
+		tag = "瓶"
+	$HeartMarker/HealthNum.text = tag + String(health)
 	
 	# If our animation is done, also check the target's animation.
 	if not $AnimationPlayer.is_playing():
@@ -41,6 +66,9 @@ func dec_health():
 	var amount = attack_queue.pop_front()
 	if amount == null:
 		amount = 1
+	# 精英虫的外壳至少挡掉 1 点伤害，但不会完全免疫。
+	if armor > 0:
+		amount = max(1, amount - armor)
 	health -= amount
 	if health <= 0:
 		var stats = get_node_or_null("/root/RunStats")
@@ -82,7 +110,7 @@ func _flash_stun():
 		_stun_tween = Tween.new()
 		add_child(_stun_tween)
 	modulate = Color(1.0, 0.92, 0.55)
-	_stun_tween.interpolate_property(self, "modulate", modulate, Color.white, 0.55)
+	_stun_tween.interpolate_property(self, "modulate", modulate, base_modulate, 0.55)
 	_stun_tween.start()
 
 
@@ -116,11 +144,23 @@ func take_turn():
 		current_plant_target = null
 		_flash_stun()
 		return
+
+	# 瓶虱每 3 回合直取魔瓶，其余回合照常咬植物。
+	if is_bottle_biter:
+		if bottle_bite_timer <= 0:
+			bottle_bite_timer = 2
+			bite_bottle()
+			return
+		bottle_bite_timer -= 1
 	
 	var act = compute_action()
 	
 	if act == ActionType.ATTACK_CLOSEST:
 		attack(find_closest())
+
+func bite_bottle():
+	$AnimationPlayer.play("Attack")
+	BottleManager.damage(1)
 		
 func turn_over():
 	if is_instance_valid(current_plant_target):
@@ -136,7 +176,9 @@ func attack(plant):
 	current_plant_target = plant
 	
 func play_target_anim():
-	current_plant_target.slash_health(1, self)
+	if not is_instance_valid(current_plant_target):
+		return
+	current_plant_target.slash_health(bite_damage, self)
 	
 func find_closest():
 	var closest = null

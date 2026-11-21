@@ -6,6 +6,7 @@ var _root: Control
 var _title: Label
 var _body: Label
 var _progress: Label
+var _threat: Label
 var _button: Button
 var _final = false
 
@@ -68,6 +69,11 @@ func _build_ui():
 	_progress.align = Label.ALIGN_CENTER
 	vbox.add_child(_progress)
 
+	_threat = _make_label("", 18, Color(1.0, 0.72, 0.50))
+	_threat.align = Label.ALIGN_CENTER
+	_threat.visible = false
+	vbox.add_child(_threat)
+
 	_button = _make_flat_button("继续", Vector2(240, 50))
 	_button.anchor_left = 0.5
 	_button.anchor_right = 0.5
@@ -122,7 +128,7 @@ func _make_flat_button(text, min_size):
 	return b
 
 
-func show_summary(year_number, final, lines = null, discovered = -1, total = -1):
+func show_summary(year_number, final, lines = null, discovered = -1, total = -1, threat_text = ""):
 	if _root == null:
 		return
 
@@ -144,6 +150,9 @@ func show_summary(year_number, final, lines = null, discovered = -1, total = -1)
 	var progress = "图鉴进度：%d / %d 条" % [discovered, total]
 	progress += "\n" + Encyclopedia.next_milestone_text()
 	_progress.text = progress
+
+	_threat.text = threat_text
+	_threat.visible = threat_text != ""
 
 	if final:
 		_button.text = "返回主菜单"
