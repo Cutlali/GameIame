@@ -41,6 +41,9 @@ var _batch_gained = 0
 const MAX_HP = 3
 var hp = MAX_HP
 
+# 瓶塞：每层抵挡一次伤害。
+var cork_charges = 0
+
 signal hp_changed(current, max_hp)
 
 var _shatter_pending = false
@@ -254,6 +257,12 @@ func is_busy():
 func damage(amount = 1):
 	if hp <= 0 or _shatter_pending or _shatter_open:
 		return 0
+
+	if cork_charges > 0:
+		cork_charges -= 1
+		Toast.show_message("瓶塞挡住了这次伤害！（剩余 %d 次）" % cork_charges)
+		return 0
+
 	hp = max(0, hp - amount)
 	emit_signal("hp_changed", hp, MAX_HP)
 	_flash_damage()
@@ -267,8 +276,23 @@ func damage(amount = 1):
 
 func refill():
 	hp = MAX_HP
+	cork_charges = 0
 	_shatter_pending = false
 	emit_signal("hp_changed", hp, MAX_HP)
+
+
+func heal(amount = 1):
+	if hp <= 0 or _shatter_pending or _shatter_open:
+		return 0
+	var before = hp
+	hp = min(MAX_HP, hp + amount)
+	emit_signal("hp_changed", hp, MAX_HP)
+	return hp - before
+
+
+func add_cork(amount = 1):
+	cork_charges += amount
+	Toast.show_message("魔瓶被瓶塞保护，可抵挡 %d 次伤害。" % cork_charges)
 
 
 func _flash_damage():
@@ -302,6 +326,7 @@ func _try_open_shatter():
 
 func _show_shatter():
 	charges.clear()
+	cork_charges = 0
 	if has_node("/root/Toast"):
 		Toast.clear()
 	_shatter_pending = false
@@ -362,6 +387,7 @@ func reset_all():
 	_batch_done = 0
 	_batch_gained = 0
 	hp = MAX_HP
+	cork_charges = 0
 	_shatter_pending = false
 	_shatter_open = false
 	if _root != null:

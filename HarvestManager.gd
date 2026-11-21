@@ -16,6 +16,7 @@ var _photo_caption: Label
 
 var _pending_entry = null
 var _pending_pool = ""
+var _pending_perk_note = ""
 
 
 func _ready():
@@ -186,6 +187,51 @@ func _show_photo(entry):
 	_photo_caption.add_color_override("font_color", border)
 
 
+func _perk_for(entry):
+	if entry == null or not entry["is_variant"]:
+		return null
+	return GameData.variant_perk(entry["species_id"], entry["variant_index"])
+
+
+func _shield_neighbors(plant, amount):
+	var count = 0
+	for other in get_tree().get_nodes_in_group("Plant"):
+		if other == plant or not is_instance_valid(other):
+			continue
+		var dx = abs(other.position.x - plant.position.x)
+		var dy = abs(other.position.y - plant.position.y)
+		if dx <= 128.5 and dy <= 128.5:
+			other.set_defense(other.defense + amount)
+			count += 1
+	return count
+
+
+# 变种特性在“收获”这个节点统一结算，无论玩家随后选择收录还是交给魔瓶。
+func _apply_harvest_perks(plant, entry, pool):
+	var perk = _perk_for(entry)
+	if perk == null:
+		return ""
+
+	var notes = []
+
+	if perk.has("harvest_shield"):
+		var amount = int(perk["harvest_shield"])
+		var count = _shield_neighbors(plant, amount)
+		if count > 0:
+			notes.append("%d 株相邻植物获得 %d 点护盾" % [count, amount])
+
+	if perk.has("harvest_charge"):
+		BottleManager.add_charge(pool, true)
+		notes.append("魔瓶额外充能 +%d" % int(perk["harvest_charge"]))
+
+	if perk.has("harvest_heal_bottle"):
+		var healed = BottleManager.heal(int(perk["harvest_heal_bottle"]))
+		if healed > 0:
+			notes.append("魔瓶恢复 %d 点生命" % healed)
+
+	return PoolStringArray(notes).join("，")
+
+
 func handle_harvest(plant):
 	if plant == null or _root == null or _root.visible:
 		return
@@ -208,15 +254,21 @@ func handle_harvest(plant):
 	if species != null:
 		pool = species["pool"]
 
+	var perk_note = _apply_harvest_perks(plant, entry, pool)
+
 	# 已收录：直接自动抽卡，不再需要玩家手动开魔瓶
 	if Encyclopedia.is_discovered(entry_id):
 		BottleManager.add_charge(pool, true)
-		Toast.show_message("已收录「%s」，魔瓶自动抽取（%s池）。" % [
-			entry["name"], BottleManager.pool_name(pool)])
+		var msg = "已收录「%s」，魔瓶自动抽取（%s池）。" % [
+			entry["name"], BottleManager.pool_name(pool)]
+		if perk_note != "":
+			msg += " 变种特性：" + perk_note + "。"
+		Toast.show_message(msg)
 		return
 
 	_pending_entry = entry
 	_pending_pool = pool
+	_pending_perk_note = perk_note
 
 	_show_photo(entry)
 
@@ -229,10 +281,15 @@ func handle_harvest(plant):
 	lines.append("%s · 原产%s" % [entry["family"], entry["origin"]])
 	if entry["is_variant"] and entry["variant_desc"] != "":
 		lines.append(entry["variant_desc"])
+	if entry["is_variant"] and entry["perk_text"] != "":
+		lines.append("【变种特性】" + entry["perk_text"])
 	lines.append("")
 	lines.append(entry["lore"])
 	lines.append("")
 	lines.append("这个条目还没有收录进图鉴。你可以保留样本，也可以把它交给魔瓶换取高级抽卡。")
+	if _pending_perk_note != "":
+		lines.append("")
+		lines.append("本次收获：" + _pending_perk_note + "。")
 	_body.text = lines.join("\n")
 
 	_bottle_button.text = "交给魔瓶（+1 次%s抽卡）" % BottleManager.pool_name(pool)
@@ -246,8 +303,15 @@ func _on_sample_pressed():
 	if _pending_entry == null:
 		return
 	var entry_id = _pending_entry["id"]
+	var msg = ""
 	if Encyclopedia.discover(entry_id):
-		Toast.show_message("图鉴新增：%s" % _pending_entry["name"])
+		msg = "图鉴新增：%s" % _pending_entry["name"]
+	if _pending_perk_note != "":
+		if msg != "":
+			msg += " "
+		msg += "变种特性：" + _pending_perk_note + "。"
+	if msg != "":
+		Toast.show_message(msg)
 	close()
 
 
@@ -255,13 +319,17 @@ func _on_bottle_pressed():
 	if _pending_entry == null:
 		return
 	BottleManager.add_charge(_pending_pool, true)
-	Toast.show_message("「%s」已交给魔瓶，开始自动抽取。" % _pending_entry["name"])
+	var msg = "「%s」已交给魔瓶，开始自动抽取。" % _pending_entry["name"]
+	if _pending_perk_note != "":
+		msg += " 变种特性：" + _pending_perk_note + "。"
+	Toast.show_message(msg)
 	close()
 
 
 func close():
 	_pending_entry = null
 	_pending_pool = ""
+	_pending_perk_note = ""
 	GS.waiting_for_card_selection = false
 	GS.harvest_open = false
 	if _root != null:

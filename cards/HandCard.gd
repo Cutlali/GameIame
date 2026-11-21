@@ -90,6 +90,14 @@ func play_self():
 		GS.draw_card_to_hand()
 	if associated_card.action == GS.Action.PLUS_ENERGY:
 		GS.energy += 1
+	if associated_card.action == GS.Action.HASTEN:
+		GS.cursor.hasten(associated_card)
+	if associated_card.action == GS.Action.GRAFT:
+		GS.cursor.graft(associated_card)
+	if associated_card.action == GS.Action.CORK:
+		GS.cursor.cork(associated_card)
+	if associated_card.action == GS.Action.NET:
+		GS.cursor.net(associated_card)
 		
 	GS.energy -= associated_card.cost
 	discard()

@@ -14,6 +14,10 @@ var current_plant_target = null
 
 var spawned = false
 
+# 捕虫网：让这只虫跳过下一次攻击。
+var stun_turns = 0
+var _stun_tween: Tween
+
 func spawn_now():
 	spawned = true
 	$AnimationPlayer.play("Spawn")
@@ -54,6 +58,34 @@ func take_damage(amount):
 	attack_queue.push_back(amount)
 	$AnimationPlayer.play("Slash")
 
+
+# 反伤不应该打断虫子正在播放的咬击动画。
+func take_reflect_damage(amount):
+	if health <= 0:
+		return
+	attack_queue.push_back(amount)
+	if $AnimationPlayer.current_animation == "Attack":
+		$AnimationPlayer.queue("Slash")
+	else:
+		$AnimationPlayer.play("Slash")
+
+
+func stun_next_attack():
+	stun_turns = max(stun_turns, 1)
+	_flash_stun()
+
+
+func _flash_stun():
+	if _stun_tween != null and is_instance_valid(_stun_tween):
+		_stun_tween.stop_all()
+	else:
+		_stun_tween = Tween.new()
+		add_child(_stun_tween)
+	modulate = Color(1.0, 0.92, 0.55)
+	_stun_tween.interpolate_property(self, "modulate", modulate, Color.white, 0.55)
+	_stun_tween.start()
+
+
 func pull_action():
 	var result = actions[next_action]
 	
@@ -78,6 +110,12 @@ func take_turn():
 		spawned = true
 		$AnimationPlayer.queue("Spawn")
 		return
+
+	if stun_turns > 0:
+		stun_turns -= 1
+		current_plant_target = null
+		_flash_stun()
+		return
 	
 	var act = compute_action()
 	
@@ -98,7 +136,7 @@ func attack(plant):
 	current_plant_target = plant
 	
 func play_target_anim():
-	current_plant_target.slash_health(1)
+	current_plant_target.slash_health(1, self)
 	
 func find_closest():
 	var closest = null

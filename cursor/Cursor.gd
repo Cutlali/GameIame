@@ -176,6 +176,38 @@ func def_all(associated_card):
 	for plant in get_tree().get_nodes_in_group("Plant"):
 		plant.set_defense(plant.defense + associated_card.quantity)
 
+func hasten(card):
+	var plant = GS.get_plant_at_map_lcoord(position)
+	if plant == null:
+		return
+	plant.advance_growth(card.quantity)
+
+func graft(card):
+	var plant = GS.get_plant_at_map_lcoord(position)
+	if plant == null:
+		return
+	if plant.mutated:
+		Toast.show_message("这株植物已经变异，嫁接没有额外效果。")
+		return
+	plant.add_mutation_bonus(card.quantity / 100.0)
+	if plant.mutated:
+		Toast.show_message("嫁接成功：这株植物发生了变异！")
+	else:
+		Toast.show_message("嫁接：这株植物下次收获的变异率提高 %d%%。" % card.quantity)
+
+func cork(_card):
+	BottleManager.add_cork(1)
+
+func net(card):
+	var enemy = GS.get_enemy_at_map_lcoord(position)
+	if enemy == null:
+		return
+
+	var dmg = damage(card)
+	reset_damage()
+	enemy.take_damage(dmg)
+	enemy.stun_next_attack()
+
 func heal_all_dmg(card):
 	var dmg = damage(card)
 	reset_damage()
@@ -319,14 +351,17 @@ func update_playable_and_display():
 			may_play = true
 		
 			
-	if card.action == GS.Action.ATTACK:
+	if card.action == GS.Action.ATTACK \
+		or card.action == GS.Action.NET:
 		if is_tile_enemy():
 			$CursorAttack.show()
 			may_play = true
 			
 	if card.action == GS.Action.DEFEND \
 		or card.action == GS.Action.HEAL_DMG_NEAR \
-		or card.action == GS.Action.DEF_DMG_NEAR:
+		or card.action == GS.Action.DEF_DMG_NEAR \
+		or card.action == GS.Action.HASTEN \
+		or card.action == GS.Action.GRAFT:
 		if is_tile_plant():
 			$CursorDefense.show() # TODO: Defend
 			may_play = true
@@ -346,7 +381,8 @@ func update_playable_and_display():
 		or card.action == GS.Action.DEF_ALL \
 		or card.action == GS.Action.HEAL_ALL_DMG \
 		or card.action == GS.Action.DRAW_3 \
-		or card.action == GS.Action.PLUS_ENERGY:
+		or card.action == GS.Action.PLUS_ENERGY \
+		or card.action == GS.Action.CORK:
 		var cam_zoom = GS.camera.zoom.y
 		var bottom = GS.camera.global_position.y + get_viewport().size.y * 0.5 * cam_zoom
 		var thresh = bottom - 360 * GS.hand.scale.y

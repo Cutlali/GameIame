@@ -22,9 +22,11 @@ const SPECIES = {
 		"lore": "番茄是喜温、喜光的茄科作物，原产于南美洲安第斯山区。充足日照和稳定水分能让果实顺利转色。",
 		"variants": [
 			{"name": "樱桃番茄", "scientific": "Solanum lycopersicum var. cerasiforme",
-				"desc": "番茄的变种，果实小而圆、糖度较高，常作为鲜食水果栽培。", "color": [1.0, 0.55, 0.55]},
+				"desc": "番茄的变种，果实小而圆、糖度较高，常作为鲜食水果栽培。", "color": [1.0, 0.55, 0.55],
+				"perk": {"frames_bonus": 1, "text": "成熟快 1 帧"}},
 			{"name": "靛蓝玫瑰番茄", "scientific": "Solanum lycopersicum 'Indigo Rose'",
-				"desc": "富含花青素的园艺品种，未熟果呈紫黑色，成熟后转为暗红色。", "color": [0.55, 0.35, 0.65]}
+				"desc": "富含花青素的园艺品种，未熟果呈紫黑色，成熟后转为暗红色。", "color": [0.55, 0.35, 0.65],
+				"perk": {"reflect": 1, "text": "被虫咬时反伤 1 点"}}
 		]
 	},
 	"sunflower": {
@@ -43,9 +45,11 @@ const SPECIES = {
 		"lore": "向日葵喜光耐旱，原产于北美洲。幼嫩花盘会朝向太阳，成熟后逐渐固定方向。",
 		"variants": [
 			{"name": "泰迪熊向日葵", "scientific": "Helianthus annuus 'Teddy Bear'",
-				"desc": "矮生重瓣品种，舌状花密集，整体呈毛绒球形，适合盆栽观赏。", "color": [1.0, 0.8, 0.25]},
+				"desc": "矮生重瓣品种，舌状花密集，整体呈毛绒球形，适合盆栽观赏。", "color": [1.0, 0.8, 0.25],
+				"perk": {"harvest_shield": 1, "text": "收获时为相邻植物 +1 护盾"}},
 			{"name": "红磨坊向日葵", "scientific": "Helianthus annuus 'Moulin Rouge'",
-				"desc": "花瓣呈深红至酒红色的观赏品种，花盘比普通向日葵小。", "color": [0.9, 0.45, 0.2]}
+				"desc": "花瓣呈深红至酒红色的观赏品种，花盘比普通向日葵小。", "color": [0.9, 0.45, 0.2],
+				"perk": {"reflect": 2, "text": "被虫咬时反伤 2 点"}}
 		]
 	},
 	"pumpkin": {
@@ -64,9 +68,11 @@ const SPECIES = {
 		"lore": "南瓜喜温耐旱，原产于中美洲。藤蔓生长迅速，秋季成熟，果皮坚硬、耐储存。",
 		"variants": [
 			{"name": "奶油南瓜", "scientific": "Cucurbita moschata 'Butternut'",
-				"desc": "长梨形的食用品种，果肉橙黄细腻、甜度高，耐储存。", "color": [1.0, 0.85, 0.55]},
+				"desc": "长梨形的食用品种，果肉橙黄细腻、甜度高，耐储存。", "color": [1.0, 0.85, 0.55],
+				"perk": {"harvest_charge": 1, "text": "收获时魔瓶额外充能 +1"}},
 			{"name": "贝贝南瓜", "scientific": "Cucurbita moschata 'Beibei'",
-				"desc": "小型板栗南瓜，单果约 300 至 500 克，口感粉糯。", "color": [0.95, 0.6, 0.25]}
+				"desc": "小型板栗南瓜，单果约 300 至 500 克，口感粉糯。", "color": [0.95, 0.6, 0.25],
+				"perk": {"frames_bonus": 1, "text": "成熟快 1 帧"}}
 		]
 	},
 	"moonflower": {
@@ -85,9 +91,11 @@ const SPECIES = {
 		"lore": "月见草是二年生草本，原产于北美洲，傍晚开花，种子可榨油。它耐寒，适合在秋冬季节慢慢生长。",
 		"variants": [
 			{"name": "非洲太阳月见草", "scientific": "Oenothera biennis 'African Sun'",
-				"desc": "月见草的园艺品种，株型紧凑、花色明黄，适合花境种植。", "color": [1.0, 0.9, 0.4]},
+				"desc": "月见草的园艺品种，株型紧凑、花色明黄，适合花境种植。", "color": [1.0, 0.9, 0.4],
+				"perk": {"always_two_growth": true, "text": "不受季节生长速度惩罚"}},
 			{"name": "柠檬日落月见草", "scientific": "Oenothera 'Lemon Sunset'",
-				"desc": "月见草属园艺杂交品种，花瓣由柠檬黄渐变为橙粉色。", "color": [1.0, 0.7, 0.55]}
+				"desc": "月见草属园艺杂交品种，花瓣由柠檬黄渐变为橙粉色。", "color": [1.0, 0.7, 0.55],
+				"perk": {"harvest_heal_bottle": 1, "text": "收获时魔瓶恢复 1 点生命"}}
 		]
 	}
 }
@@ -110,7 +118,10 @@ const BASIC_POOL = [
 	{"id": "shield", "weight": 4},
 	{"id": "whack", "weight": 4},
 	{"id": "kapow", "weight": 2},
-	{"id": "basic_plant", "weight": 5}
+	{"id": "basic_plant", "weight": 5},
+	{"id": "hasten", "weight": 3},
+	{"id": "graft", "weight": 2},
+	{"id": "net", "weight": 3}
 ]
 
 # 魔瓶卡池：不同植物给不同的池
@@ -125,7 +136,12 @@ const BOTTLE_POOLS = {
 		{"id": "kapow", "weight": 3},
 		{"id": "power_fungi", "weight": 3},
 		{"id": "vampire_fang", "weight": 2},
-		{"id": "medium_plant", "weight": 2}
+		{"id": "medium_plant", "weight": 2},
+		{"id": "water_dagger", "weight": 2},
+		{"id": "cork", "weight": 2},
+		{"id": "hasten", "weight": 2},
+		{"id": "graft", "weight": 2},
+		{"id": "net", "weight": 2}
 	],
 	"medium": [
 		{"id": "water_barrel", "weight": 4},
@@ -137,7 +153,11 @@ const BOTTLE_POOLS = {
 		{"id": "blood_dagger", "weight": 3},
 		{"id": "draw3", "weight": 2},
 		{"id": "medium_plant", "weight": 3},
-		{"id": "high_plant", "weight": 1}
+		{"id": "high_plant", "weight": 1},
+		{"id": "cork", "weight": 2},
+		{"id": "hasten", "weight": 2},
+		{"id": "graft", "weight": 2},
+		{"id": "net", "weight": 2}
 	],
 	"high": [
 		{"id": "water_rain", "weight": 4},
@@ -148,7 +168,8 @@ const BOTTLE_POOLS = {
 		{"id": "sacrifice", "weight": 2},
 		{"id": "power_crystal", "weight": 3},
 		{"id": "high_plant", "weight": 3},
-		{"id": "win_plant", "weight": 1}
+		{"id": "win_plant", "weight": 1},
+		{"id": "cork", "weight": 2}
 	],
 	"rare": [
 		{"id": "tsunami", "weight": 4},
@@ -199,6 +220,18 @@ func variant_color(id, index):
 	return Color(c[0], c[1], c[2])
 
 
+# 变种的玩法特性。所有特性都在 GameData 里集中声明，
+# 植物、收获与图鉴界面只负责读取。
+func variant_perk(id, index):
+	var sp = SPECIES.get(id, null)
+	if sp == null:
+		return null
+	var vs = sp["variants"]
+	if index < 0 or index >= vs.size():
+		return null
+	return vs[index].get("perk", null)
+
+
 func mutation_chance(season, pity = 0):
 	var base = MUTATION_CHANCE.get(season, 0.06)
 	return min(1.0, base + MUTATION_PITY_STEP * pity)
@@ -243,7 +276,8 @@ func entry(id):
 		"health": sp["health"],
 		"level": sp["level"],
 		"lore": sp["lore"],
-		"variant_desc": ""
+		"variant_desc": "",
+		"perk_text": ""
 	}
 
 	if vi >= 0:
@@ -253,6 +287,8 @@ func entry(id):
 			e["variant_desc"] = vs[vi]["desc"]
 			if vs[vi].has("scientific"):
 				e["scientific"] = vs[vi]["scientific"]
+			if vs[vi].has("perk"):
+				e["perk_text"] = vs[vi]["perk"].get("text", "")
 
 	return e
 

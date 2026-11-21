@@ -20,6 +20,15 @@ var mutated = false
 var variant_index = 0
 var mutation_rolled = false
 var _died = false
+
+# 嫁接卡带来的本次收获额外变异概率（0.3 = +30%）
+var mutation_bonus = 0.0
+# 变种特性只在第一次确认时套用一次
+var _variant_setup_done = false
+var _variant_announced = false
+var _mutation_rewarded = false
+var _entry_resolved = false
+var _resolved_id = ""
 # 只有被虫害打掉血才让魔瓶受损；牺牲卡主动杀掉植物不算。
 var died_by_pest = false
 
@@ -38,6 +47,11 @@ func _ready():
 	
 	$Plant.frames = anim_frames
 	$Plant.scale = Vector2(plant_scale, plant_scale)
+
+	# 变异在种下时就已经决定，玩家可以围绕这株变种做构筑；
+	# 图鉴收录与音效仍然留到收获时揭晓。
+	roll_mutation_if_needed()
+	_apply_variant_setup()
 	
 	heart_update()
 	defense_update()
@@ -57,9 +71,19 @@ func sine_y_offset(node, offset):
 	
 	node.position.y = y
 	
-func slash_health(amount):
+func slash_health(amount, attacker = null):
 	$AnimationPlayer.play("Slash")
 	SFX.whack.play_sfx()
+
+	# 靛蓝番茄 / 红磨坊向日葵的反伤：咬到它就等于咬到自己。
+	var perk = current_perk()
+	if perk != null and attacker != null and is_instance_valid(attacker):
+		var reflect = int(perk.get("reflect", 0))
+		if reflect > 0:
+			if attacker.has_method("take_reflect_damage"):
+				attacker.take_reflect_damage(reflect)
+			else:
+				attacker.take_damage(reflect)
 	
 # Can be called from animations to explicitly update the visibility at some point.
 func update_markers_visibility():
@@ -207,34 +231,119 @@ func popup_menu():
 	HarvestManager.handle_harvest(self)
 
 
-# 收获时判定变异。变种是独立图鉴条目。
-func resolve_entry_id():
-	if species_id == "":
-		return ""
-	if not mutation_rolled:
-		mutation_rolled = true
+func current_perk():
+	if not mutated:
+		return null
+	return GameData.variant_perk(species_id, variant_index)
+
+
+# 决定这株植物是不是变种。种下时调用一次；如果调用时还没拿到 species_id，
+# 后续浇水/收获时会再补一次。
+func roll_mutation_if_needed():
+	if species_id == "" or mutation_rolled:
+		return
+	mutation_rolled = true
+	var chance = GameData.mutation_chance(Season.current_season, RunStats.mutation_pity)
+	chance = min(1.0, chance + mutation_bonus)
+	if randf() < chance:
+		mutated = true
+		variant_index = randi() % 2
+	else:
+		mutated = false
+
+
+func _apply_variant_setup():
+	if _variant_setup_done or not mutated:
+		return
+	_variant_setup_done = true
+
+	var perk = current_perk()
+	if perk != null:
+		var frames_bonus = int(perk.get("frames_bonus", 0))
+		if frames_bonus > 0:
+			var max_frame = $Plant.frames.get_frame_count("default") - 1
+			# 用加法而不是覆盖：嫁接让普通株中途变成变种时，
+			# 不应该把它已经长出的帧数退回去。
+			$Plant.frame = min(max_frame, $Plant.frame + frames_bonus)
+
+	# 给变种一点颜色倾向，玩家在田里就能看出这株不一般。
+	var c = GameData.variant_color(species_id, variant_index)
+	$Plant.modulate = Color(1, 1, 1).linear_interpolate(Color(c.r, c.g, c.b), 0.22)
+
+	_announce_variant()
+
+
+func _announce_variant():
+	if _variant_announced:
+		return
+	_variant_announced = true
+	if GS.tutorial:
+		return
+	var sp = GameData.species(species_id)
+	if sp != null:
+		Toast.show_message("这株%s看起来有些不一样，也许会发生变异。" % sp["name"])
+
+
+func add_mutation_bonus(amount):
+	mutation_bonus += amount
+	# 种下时已经判定过“没有变异”的植物，嫁接会给它一次新的机会。
+	# 这样嫁接才是真正的投资，而不是一张对已定型植物无效的牌。
+	if mutation_rolled and not mutated:
 		var chance = GameData.mutation_chance(Season.current_season, RunStats.mutation_pity)
+		chance = min(1.0, chance + mutation_bonus)
 		if randf() < chance:
 			mutated = true
 			variant_index = randi() % 2
+			_apply_variant_setup()
+
+
+# 收获时确认条目。变种是独立图鉴条目。
+func resolve_entry_id():
+	if species_id == "":
+		return ""
+	if _entry_resolved:
+		return _resolved_id
+
+	roll_mutation_if_needed()
+	_apply_variant_setup()
+
+	if mutated:
+		_entry_resolved = true
+		_resolved_id = species_id + "_v" + str(variant_index)
+		if not _mutation_rewarded:
+			_mutation_rewarded = true
 			RunStats.mutation_pity = 0
 			# 变异是高光时刻，用一段上扬的魔法音效强调，区别于普通收获。
 			SFX.mutation.play_usual()
-		else:
-			mutated = false
-			RunStats.mutation_pity += 1
-	if mutated:
-		return species_id + "_v" + str(variant_index)
-	return species_id
+		return _resolved_id
+
+	RunStats.mutation_pity += 1
+	_entry_resolved = true
+	_resolved_id = species_id
+	return _resolved_id
 
 
 # 春季：1 次浇水推进 2 个生长帧；其他季节 1 帧。
-func upgrade_plant():
+# 非洲太阳月见草不受这个季节惩罚，始终按 2 帧生长。
+func growth_steps():
 	var steps = Season.growth_per_water()
+	var perk = current_perk()
+	if perk != null and perk.get("always_two_growth", false):
+		steps = max(steps, 2)
+	return steps
+
+
+func advance_growth(steps):
 	var max_frame = $Plant.frames.get_frame_count("default") - 1
 	for i in range(steps):
 		if $Plant.frame < max_frame:
 			$Plant.frame += 1
+
+
+func upgrade_plant():
+	roll_mutation_if_needed()
+	_apply_variant_setup()
+	advance_growth(growth_steps())
 	
 func turn_over():
 	# If we are being polled about our turn, then the card selection

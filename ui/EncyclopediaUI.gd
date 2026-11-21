@@ -351,6 +351,8 @@ func _show_detail(entry_id):
 		lines.append("")
 		lines.append("【变异品种】")
 		lines.append(entry["variant_desc"])
+		if entry["perk_text"] != "":
+			lines.append("【变种特性】" + entry["perk_text"])
 	lines.append("")
 	lines.append("【植物知识】")
 	lines.append(entry["lore"])

@@ -18,7 +18,12 @@ enum Action {
 	SACRIF,
 	
 	DRAW_3,
-	PLUS_ENERGY
+	PLUS_ENERGY,
+
+	HASTEN,
+	GRAFT,
+	CORK,
+	NET
 }
 
 enum Water {
@@ -181,11 +186,11 @@ var card_free_1x1_water : Card = Card.new(
 ).shape(Water.W1x1).with_cat(CAT_WATER).with_icon(preload("res://cards/icons/water_drop.svg"))
 
 var card_buy_1x1_water : Card = Card.new(
-	"滴水",
-	"为 1x1 的区域施加 1 点水分",
+	"浸润",
+	"为 1x1 的区域施加 $DQ 点水分",
 	1,
 	Action.WATER
-).shape(Water.W1x1).with_cat(CAT_WATER).with_icon(preload("res://cards/icons/water_drip.svg"))
+).shape(Water.W1x1).with_quantity(2).with_cat(CAT_WATER).with_icon(preload("res://cards/icons/water_drip.svg"))
 
 var card_small_attack : Card = Card.new(
 	"重击！",
@@ -412,6 +417,35 @@ var card_cards : Card = Card.new(
 	Action.DRAW_3
 ).with_icon(preload("res://cards/icons/cool_drawing.svg"))
 
+# 新循环：节奏、变异投资与控场
+var card_hasten : Card = Card.new(
+	"催熟",
+	"让一株植物立即生长 $DQ 帧",
+	1,
+	Action.HASTEN
+).with_quantity(2).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/power_crystal.svg"))
+
+var card_graft : Card = Card.new(
+	"嫁接",
+	"让一株植物下次收获的变异概率提高 $DQ%",
+	1,
+	Action.GRAFT
+).with_quantity(30).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/technique.svg"))
+
+var card_cork : Card = Card.new(
+	"瓶塞",
+	"为魔瓶抵挡下一次伤害",
+	1,
+	Action.CORK
+).with_cat(CAT_DEF).with_icon(preload("res://cards/icons/tough_shield.svg"))
+
+var card_net : Card = Card.new(
+	"捕虫网",
+	"对一只虫子造成 $DQ 点伤害，并让它下回合无法攻击",
+	1,
+	Action.NET
+).with_quantity(1).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/zing.svg"))
+
 # 卡牌 ID → 卡牌实例。魔瓶池、基础抽卡、调试都通过这里取牌。
 var card_registry = {}
 
@@ -447,6 +481,10 @@ func build_card_registry():
 		"sacrifice": card_sacrifice,
 		"draw3": card_cards,
 		"energy": card_energy,
+		"hasten": card_hasten,
+		"graft": card_graft,
+		"cork": card_cork,
+		"net": card_net,
 		"basic_plant": card_basic_plant,
 		"medium_plant": card_medium_plant,
 		"high_plant": card_high_plant,
