@@ -78,6 +78,15 @@ func _ready():
 	_build_hud()
 
 
+func _process(_delta):
+	# 新手教程的羊皮纸卷轴占着顶部，暂时收起季节 HUD，避免两块面板叠在一起。
+	if _hud_layer == null:
+		return
+	var should_show = is_in_game() and not GS.tutorial
+	if _hud_layer.visible != should_show:
+		_hud_layer.visible = should_show
+
+
 func _build_overlay():
 	_fade_layer = CanvasLayer.new()
 	_fade_layer.layer = 128

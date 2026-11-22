@@ -16,7 +16,11 @@ func _init():
 		"res://ui/EncyclopediaUI.gd",
 		"res://ui/YearSummary.gd",
 		"res://SeasonManager.gd",
-		"res://ui/MainMenu.gd"
+		"res://ui/MainMenu.gd",
+		"res://Intro.gd",
+		"res://tutorial/Tutorial.gd",
+		"res://ui/PauseMenu.gd",
+		"res://ui/GuideBook.gd"
 	]
 	var failures = 0
 	for p in paths:

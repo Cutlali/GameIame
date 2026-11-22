@@ -1,329 +1,157 @@
-[gd_scene load_steps=9 format=2]
+[gd_scene load_steps=13 format=2]
 
-[ext_resource path="res://ui/MainUITheme.tres" type="Theme" id=1]
+[ext_resource path="res://ui/MenuTheme.tres" type="Theme" id=1]
 [ext_resource path="res://Intro.gd" type="Script" id=2]
 [ext_resource path="res://ButtonSFX.gd" type="Script" id=3]
+[ext_resource path="res://ui/menu/menu_bg.png" type="Texture" id=4]
+[ext_resource path="res://ui/menu/menu_vignette.png" type="Texture" id=5]
+[ext_resource path="res://fonts/SimHei.ttf" type="DynamicFontData" id=6]
 
-[sub_resource type="Animation" id=5]
-resource_name = "Fourth"
-tracks/0/type = "value"
-tracks/0/path = NodePath("L4:modulate")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/keys = {
-"times": PoolRealArray( 0, 1 ),
-"transitions": PoolRealArray( 1, 1 ),
-"update": 0,
-"values": [ Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 1 ) ]
-}
-tracks/1/type = "value"
-tracks/1/path = NodePath("Button:modulate")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/keys = {
-"times": PoolRealArray( 0, 1 ),
-"transitions": PoolRealArray( 1, 1 ),
-"update": 0,
-"values": [ Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 1 ) ]
-}
-tracks/2/type = "value"
-tracks/2/path = NodePath("Button:visible")
-tracks/2/interp = 1
-tracks/2/loop_wrap = true
-tracks/2/imported = false
-tracks/2/enabled = true
-tracks/2/keys = {
-"times": PoolRealArray( 0 ),
-"transitions": PoolRealArray( 1 ),
-"update": 1,
-"values": [ true ]
-}
+[sub_resource type="DynamicFont" id=1]
+size = 15
+font_data = ExtResource( 6 )
 
-[sub_resource type="Animation" id=1]
-length = 0.001
-tracks/0/type = "value"
-tracks/0/path = NodePath("L1:modulate")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/keys = {
-"times": PoolRealArray( 0 ),
-"transitions": PoolRealArray( 1 ),
-"update": 0,
-"values": [ Color( 1, 1, 1, 0 ) ]
-}
-tracks/1/type = "value"
-tracks/1/path = NodePath("L2:modulate")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/keys = {
-"times": PoolRealArray( 0 ),
-"transitions": PoolRealArray( 1 ),
-"update": 0,
-"values": [ Color( 1, 1, 1, 0 ) ]
-}
-tracks/2/type = "value"
-tracks/2/path = NodePath("L3:modulate")
-tracks/2/interp = 1
-tracks/2/loop_wrap = true
-tracks/2/imported = false
-tracks/2/enabled = true
-tracks/2/keys = {
-"times": PoolRealArray( 0 ),
-"transitions": PoolRealArray( 1 ),
-"update": 0,
-"values": [ Color( 1, 1, 1, 0 ) ]
-}
-tracks/3/type = "value"
-tracks/3/path = NodePath("L4:modulate")
-tracks/3/interp = 1
-tracks/3/loop_wrap = true
-tracks/3/imported = false
-tracks/3/enabled = true
-tracks/3/keys = {
-"times": PoolRealArray( 0 ),
-"transitions": PoolRealArray( 1 ),
-"update": 0,
-"values": [ Color( 1, 1, 1, 0 ) ]
-}
-tracks/4/type = "value"
-tracks/4/path = NodePath("Button:modulate")
-tracks/4/interp = 1
-tracks/4/loop_wrap = true
-tracks/4/imported = false
-tracks/4/enabled = true
-tracks/4/keys = {
-"times": PoolRealArray( 0 ),
-"transitions": PoolRealArray( 1 ),
-"update": 0,
-"values": [ Color( 1, 1, 1, 1 ) ]
-}
-tracks/5/type = "value"
-tracks/5/path = NodePath("Button:visible")
-tracks/5/interp = 1
-tracks/5/loop_wrap = true
-tracks/5/imported = false
-tracks/5/enabled = true
-tracks/5/keys = {
-"times": PoolRealArray( 0 ),
-"transitions": PoolRealArray( 1 ),
-"update": 0,
-"values": [ true ]
-}
+[sub_resource type="DynamicFont" id=2]
+size = 42
+font_data = ExtResource( 6 )
 
-[sub_resource type="Animation" id=3]
-resource_name = "Second"
-length = 4.5
-tracks/0/type = "value"
-tracks/0/path = NodePath("L2:modulate")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/keys = {
-"times": PoolRealArray( 0, 1 ),
-"transitions": PoolRealArray( 1, 1 ),
-"update": 0,
-"values": [ Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 1 ) ]
-}
+[sub_resource type="DynamicFont" id=3]
+size = 20
+font_data = ExtResource( 6 )
 
-[sub_resource type="Animation" id=2]
-resource_name = "Start"
-length = 6.0
-tracks/0/type = "value"
-tracks/0/path = NodePath("L1:modulate")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/keys = {
-"times": PoolRealArray( 0, 1 ),
-"transitions": PoolRealArray( 1, 1 ),
-"update": 0,
-"values": [ Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 1 ) ]
-}
-tracks/1/type = "value"
-tracks/1/path = NodePath("L2:modulate")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/keys = {
-"times": PoolRealArray( 0 ),
-"transitions": PoolRealArray( 1 ),
-"update": 0,
-"values": [ Color( 1, 1, 1, 0 ) ]
-}
-tracks/2/type = "value"
-tracks/2/path = NodePath("L3:modulate")
-tracks/2/interp = 1
-tracks/2/loop_wrap = true
-tracks/2/imported = false
-tracks/2/enabled = true
-tracks/2/keys = {
-"times": PoolRealArray( 0 ),
-"transitions": PoolRealArray( 1 ),
-"update": 0,
-"values": [ Color( 1, 1, 1, 0 ) ]
-}
-tracks/3/type = "value"
-tracks/3/path = NodePath("L4:modulate")
-tracks/3/interp = 1
-tracks/3/loop_wrap = true
-tracks/3/imported = false
-tracks/3/enabled = true
-tracks/3/keys = {
-"times": PoolRealArray( 0 ),
-"transitions": PoolRealArray( 1 ),
-"update": 0,
-"values": [ Color( 1, 1, 1, 0 ) ]
-}
-tracks/4/type = "value"
-tracks/4/path = NodePath("Button:visible")
-tracks/4/interp = 1
-tracks/4/loop_wrap = true
-tracks/4/imported = false
-tracks/4/enabled = true
-tracks/4/keys = {
-"times": PoolRealArray( 0 ),
-"transitions": PoolRealArray( 1 ),
-"update": 1,
-"values": [ false ]
-}
-tracks/5/type = "value"
-tracks/5/path = NodePath("Button:modulate")
-tracks/5/interp = 1
-tracks/5/loop_wrap = true
-tracks/5/imported = false
-tracks/5/enabled = true
-tracks/5/keys = {
-"times": PoolRealArray( 0 ),
-"transitions": PoolRealArray( 1 ),
-"update": 0,
-"values": [ Color( 1, 1, 1, 0 ) ]
-}
+[sub_resource type="DynamicFont" id=4]
+size = 13
+font_data = ExtResource( 6 )
 
-[sub_resource type="Animation" id=4]
-resource_name = "Third"
-length = 6.0
-tracks/0/type = "value"
-tracks/0/path = NodePath("L3:modulate")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/keys = {
-"times": PoolRealArray( 0, 1 ),
-"transitions": PoolRealArray( 1, 1 ),
-"update": 0,
-"values": [ Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 1 ) ]
-}
+[sub_resource type="DynamicFont" id=5]
+size = 23
+font_data = ExtResource( 6 )
 
 [node name="Control" type="Control"]
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 2
 theme = ExtResource( 1 )
 script = ExtResource( 2 )
 
-[node name="Guide" type="Label" parent="."]
-visible = false
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-margin_left = -409.0
-margin_top = -230.0
-margin_right = 409.0
-margin_bottom = 86.0
-text = "耕作是一门奇特的营生。它完全依靠魔法卡组来完成，懂得这门技艺的人寥寥无几，精通者更是少之又少。
-
-但它依然吸引着你。
-
-尽管你对这个神秘领域一无所知，你还是为自己在乡下弄到了一座破败而古老的农场。
-
-环顾你的新农场，你发现一块模样古怪的石头。石头下面藏着一卷落满灰尘的卷轴，还有一副落灰更厚的卡组。卷轴上写着的内容非常有用："
-autowrap = true
-
-[node name="L1" type="Label" parent="."]
-modulate = Color( 1, 1, 1, 0 )
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-margin_left = -409.0
-margin_top = -230.0
-margin_right = 409.0
-margin_bottom = 86.0
-text = "耕作是一门奇特的营生。它完全依靠魔法卡组来完成，懂得这门技艺的人寥寥无几，精通者更是少之又少。"
-autowrap = true
-
-[node name="L2" type="Label" parent="."]
-modulate = Color( 1, 1, 1, 0 )
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-margin_left = -409.0
-margin_top = -143.0
-margin_right = 409.0
-margin_bottom = 86.0
-text = "但它依然吸引着你。"
-autowrap = true
-
-[node name="L3" type="Label" parent="."]
-modulate = Color( 1, 1, 1, 0 )
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-margin_left = -409.0
-margin_top = -85.0
-margin_right = 409.0
-margin_bottom = 86.0
-text = "尽管你对这个神秘领域一无所知，你还是为自己在乡下弄到了一座破败而古老的农场。"
-autowrap = true
-
-[node name="L4" type="Label" parent="."]
-modulate = Color( 1, 1, 1, 0 )
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-margin_left = -409.0
-margin_top = 2.0
-margin_right = 409.0
-margin_bottom = 86.0
-text = "环顾你的新农场，你发现一块模样古怪的石头。石头下面藏着一卷落满灰尘的卷轴，还有一副落灰更厚的卡组。卷轴上写着的内容非常有用："
-autowrap = true
-
-[node name="Button" type="Button" parent="."]
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
+[node name="Background" type="TextureRect" parent="."]
+anchor_right = 1.0
 anchor_bottom = 1.0
-margin_left = -106.0
-margin_top = -118.0
-margin_right = 106.0
-margin_bottom = -76.0
-text = "下一步"
+mouse_filter = 2
+texture = ExtResource( 4 )
+expand = true
+stretch_mode = 7
+
+[node name="Dim" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color( 0.055, 0.044, 0.038, 0.58 )
+
+[node name="Vignette" type="TextureRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource( 5 )
+expand = true
+stretch_mode = 1
+
+[node name="Panel" type="Panel" parent="."]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -440.0
+margin_top = -300.0
+margin_right = 440.0
+margin_bottom = 300.0
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+custom_constants/margin_left = 46
+custom_constants/margin_top = 38
+custom_constants/margin_right = 46
+custom_constants/margin_bottom = 32
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+mouse_filter = 2
+custom_constants/separation = 12
+alignment = 1
+
+[node name="Subtitle" type="Label" parent="Panel/Margin/VBox"]
+mouse_filter = 2
+custom_colors/font_color = Color( 0.52, 0.35, 0.2, 1 )
+custom_fonts/font = SubResource( 1 )
+text = "序 章   ·   第 一 页"
+align = 1
+
+[node name="Title" type="Label" parent="Panel/Margin/VBox"]
+mouse_filter = 2
+custom_colors/font_color = Color( 0.3, 0.19, 0.12, 1 )
+custom_fonts/font = SubResource( 2 )
+text = "尘封的农场"
+align = 1
+
+[node name="Ornament" type="HSeparator" parent="Panel/Margin/VBox"]
+mouse_filter = 2
+
+[node name="Gap" type="Control" parent="Panel/Margin/VBox"]
+rect_min_size = Vector2( 0, 6 )
+mouse_filter = 2
+
+[node name="Body" type="VBoxContainer" parent="Panel/Margin/VBox"]
+mouse_filter = 2
+custom_constants/separation = 16
+
+[node name="L1" type="Label" parent="Panel/Margin/VBox/Body"]
+mouse_filter = 2
+custom_colors/font_color = Color( 0.28, 0.18, 0.11, 1 )
+custom_constants/line_spacing = 7
+custom_fonts/font = SubResource( 3 )
+text = "你在乡下得到了一座荒废已久的农场。整理旧物时，你在石头下发现了两样东西：一只蒙尘的魔瓶，和一本空白的图鉴。"
+autowrap = true
+
+[node name="L2" type="Label" parent="Panel/Margin/VBox/Body"]
+modulate = Color( 1, 1, 1, 0 )
+mouse_filter = 2
+custom_colors/font_color = Color( 0.28, 0.18, 0.11, 1 )
+custom_constants/line_spacing = 7
+custom_fonts/font = SubResource( 3 )
+text = "魔瓶里藏着一座小小的世界。四季在其中流转，土地会呼吸，植物会生长；图鉴则会记下你在瓶中种出的一切。"
+autowrap = true
+
+[node name="L3" type="Label" parent="Panel/Margin/VBox/Body"]
+modulate = Color( 1, 1, 1, 0 )
+mouse_filter = 2
+custom_colors/font_color = Color( 0.28, 0.18, 0.11, 1 )
+custom_constants/line_spacing = 7
+custom_fonts/font = SubResource( 3 )
+text = "但瓶中的世界并不只有恩赐。耕作越久，越会惊动藏在暗处的虫子。植物死去，魔瓶就会受损；伤得太重，四季便会停滞。"
+autowrap = true
+
+[node name="L4" type="Label" parent="Panel/Margin/VBox/Body"]
+modulate = Color( 1, 1, 1, 0 )
+mouse_filter = 2
+custom_colors/font_color = Color( 0.28, 0.18, 0.11, 1 )
+custom_constants/line_spacing = 7
+custom_fonts/font = SubResource( 3 )
+text = "好在魔瓶会自行修复。随着图鉴一页页填满，它的力量也会慢慢苏醒。至于它为何存在——答案或许就藏在图鉴的最后一页。"
+autowrap = true
+
+[node name="Hint" type="Label" parent="Panel/Margin/VBox"]
+mouse_filter = 2
+custom_colors/font_color = Color( 0.47, 0.31, 0.19, 0.6 )
+custom_fonts/font = SubResource( 4 )
+text = "点击任意处继续"
+align = 1
+
+[node name="Button" type="Button" parent="Panel/Margin/VBox"]
+rect_min_size = Vector2( 0, 58 )
+custom_fonts/font = SubResource( 5 )
+text = "继续"
 script = ExtResource( 3 )
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-autoplay = "Start"
-anims/Fourth = SubResource( 5 )
-anims/RESET = SubResource( 1 )
-anims/Second = SubResource( 3 )
-anims/Start = SubResource( 2 )
-anims/Third = SubResource( 4 )
-next/Second = "Third"
-next/Start = "Second"
-next/Third = "Fourth"
-
-[connection signal="pressed" from="Button" to="." method="_on_Button_pressed"]
+[connection signal="pressed" from="Panel/Margin/VBox/Button" to="." method="_on_Button_pressed"]

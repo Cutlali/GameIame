@@ -6,3 +6,6 @@ func _ready():
 func _on_StartButton_pressed():
 	GS.reset_all_state()
 	SceneTransitions.change_scene_to(GS.Intro)
+
+func _on_GuideButton_pressed():
+	$GuideBook.open()

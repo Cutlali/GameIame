@@ -77,6 +77,19 @@ func _idle(_delta):
 		ok = false
 	else:
 		pause_menu.pause()
+		var pause_guide = pause_menu.get_node_or_null("GuideBook")
+		if pause_guide == null:
+			print("FAIL: pause guide missing")
+			ok = false
+		else:
+			pause_menu._on_GuideButton_pressed()
+			if not (pause_guide.visible and paused):
+				print("FAIL: pause guide did not open while paused")
+				ok = false
+			pause_guide.close()
+			if pause_guide.visible or not paused:
+				print("FAIL: pause guide close broke pause state")
+				ok = false
 		pause_menu._on_QuitButton_pressed()
 		if not (summary._root.visible and paused and summary._final):
 			print("FAIL: quit summary not shown / not paused")

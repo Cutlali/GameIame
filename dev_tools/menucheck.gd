@@ -5,6 +5,7 @@ extends SceneTree
 var frames = 0
 var scene = null
 var problems = []
+var guide = null
 
 
 func _init():
@@ -28,6 +29,8 @@ func _idle(_delta):
 		var skip = scene.get_node("Content/Panel/Margin/VBox/SkipTutorial")
 		var hard = scene.get_node("Content/Panel/Margin/VBox/HardMode")
 		var vol = scene.get_node("Content/Panel/Margin/VBox/VolumeBars")
+		var guide_btn = scene.get_node("Content/GuideButton")
+		guide = scene.get_node("GuideBook")
 
 		_check(bg.texture != null and bg.texture.resource_path.ends_with("menu_bg.png"), "background texture")
 		_check(panel.rect_size.x >= 440 and panel.rect_size.y >= 380, "panel size %s" % panel.rect_size)
@@ -45,6 +48,9 @@ func _idle(_delta):
 		var grid = vol.get_node("GridContainer")
 		_check(vlabel.rect_position.y + vlabel.rect_size.y <= grid.rect_position.y + 1, "volume label/grid overlap")
 
+		_check(guide_btn.rect_position.y + guide_btn.rect_size.y <= 740, "guide button on screen")
+		_check(guide != null and not guide.visible, "guide starts hidden")
+
 		skip.pressed = true
 		hard.pressed = true
 
@@ -58,6 +64,11 @@ func _idle(_delta):
 		slider.value = 0.3
 		_check(abs(db2linear(AudioServer.get_bus_volume_db(idx)) - 0.3) < 0.02, "master volume applies")
 		slider.value = old
+
+		guide.open()
+		_check(guide.visible, "guide opens from menu")
+		guide.close()
+		_check(not guide.visible, "guide closes from menu")
 
 		if problems.empty():
 			print("MENU CHECK OK")
