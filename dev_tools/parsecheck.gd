@@ -15,7 +15,8 @@ func _init():
 		"res://cards/CardBase.gd",
 		"res://ui/EncyclopediaUI.gd",
 		"res://ui/YearSummary.gd",
-		"res://SeasonManager.gd"
+		"res://SeasonManager.gd",
+		"res://ui/MainMenu.gd"
 	]
 	var failures = 0
 	for p in paths:
