@@ -91,13 +91,16 @@ func _check_plant_perks():
 	var cherry_sprite = cherry.get_node("Plant")
 	if cherry_sprite.frame != 1:
 		failures.append("cherry tomato should start at frame 1, got %d" % cherry_sprite.frame)
-	if cherry_sprite.modulate == Color.white:
-		failures.append("variant should have a color tint")
+	# 变种颜色要到后段才显现，刚种下时应该还是正常颜色。
+	if cherry_sprite.modulate != Color.white:
+		failures.append("variant should stay normal-colored during early growth")
 
 	var before = cherry_sprite.frame
 	cherry.advance_growth(2)
 	if cherry_sprite.frame != before + 2:
 		failures.append("advance_growth did not advance 2 frames")
+	if cherry_sprite.modulate == Color.white:
+		failures.append("variant should tint once it reaches the mature frame")
 
 	# 靛蓝番茄：被咬时反伤。
 	var indigo = _make_plant("res://plants/plant1/Plant1.tscn", "tomato", 1)

@@ -133,26 +133,42 @@ func _check_seed_guarantee():
 	print("seed guarantee: empty field + empty hand -> seed dealt")
 
 
-# 4. 变种颜色应该和图鉴一致，并且从种下起就生效。
+func _color_close(a, b, eps = 0.001):
+	return abs(a.r - b.r) < eps and abs(a.g - b.g) < eps \
+		and abs(a.b - b.b) < eps and abs(a.a - b.a) < eps
+
+
+# 4. 变种颜色要等植物长到后段才显现，成熟帧与图鉴一致。
+#    早期成长帧保持原色，符合“有些变种只有成熟才看得出来”。
 func _check_variant_tint():
 	var plant = _make_plant("res://plants/plant2/Plant2.tscn", "sunflower", 1)
 	plant.position = Vector2(384, 0)
 	var expected = game_data.variant_color("sunflower", 1)
 	var sprite = plant.get_node("Plant")
-	if sprite.modulate != expected:
-		failures.append("variant tint does not match encyclopedia color: %s vs %s"
+	var max_frame = plant.max_growth_frame()
+
+	sprite.frame = 0
+	plant._update_variant_tint()
+	if not _color_close(sprite.modulate, Color.white):
+		failures.append("variant should stay normal-colored during early growth")
+
+	sprite.frame = max_frame - 1
+	plant._update_variant_tint()
+	if _color_close(sprite.modulate, Color.white) \
+		or _color_close(sprite.modulate, expected):
+		failures.append("penultimate frame should show a partial variant hint")
+
+	sprite.frame = max_frame
+	plant._update_variant_tint()
+	if not _color_close(sprite.modulate, expected):
+		failures.append("mature variant tint does not match encyclopedia color: %s vs %s"
 			% [sprite.modulate, expected])
 	if plant.has_method("_announce_variant"):
 		failures.append("variant toast announcement should be removed")
 
-	var tint = sprite.modulate
-	sprite.frame = 2
-	if sprite.modulate != tint:
-		failures.append("variant tint should persist across growth frames")
-
 	plant.get_parent().remove_child(plant)
 	plant.queue_free()
-	print("variant tint: matches encyclopedia color and persists")
+	print("variant tint: hidden early, partial hint at max-1, full color when mature")
 
 
 func _report():

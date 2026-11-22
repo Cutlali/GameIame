@@ -28,6 +28,8 @@ var _died = false
 var mutation_bonus = 0.0
 # 变种特性只在第一次确认时套用一次
 var _variant_setup_done = false
+# 记录上一次按帧更新变种颜色时的帧号，避免每帧重复设置。
+var _last_tint_frame = -1
 var _mutation_rewarded = false
 var _entry_resolved = false
 var _resolved_id = ""
@@ -125,6 +127,10 @@ func update_display():
 
 func _process(delta):
 	update_display()
+
+	# 帧号被外部修改时（例如测试或动画）也同步变种颜色。
+	if mutated and $Plant.frame != _last_tint_frame:
+		_update_variant_tint()
 	
 	if spawn_sfx_timer > 0:
 		spawn_sfx_timer -= delta
@@ -274,9 +280,29 @@ func _apply_variant_setup():
 			# 不应该把它已经长出的帧数退回去。
 			$Plant.frame = min(max_frame, $Plant.frame + frames_bonus)
 
-	# 用图鉴里变种照片的同款颜色给成长帧上色。
-	# 从种子阶段一直可见，玩家不需要等右下角提示才知道它变异了。
-	$Plant.modulate = GameData.variant_color(species_id, variant_index)
+	# 很多变种要等开花、结果才看得出来，前中期保持正常颜色。
+	_update_variant_tint()
+
+
+# 变种颜色按生长阶段逐步显现：
+# 最后一帧之前保持原色，成熟前一帧给一点暗示，成熟帧与图鉴照片完全一致。
+func _update_variant_tint():
+	if not mutated:
+		$Plant.modulate = Color.white
+		_last_tint_frame = $Plant.frame
+		return
+
+	var max_frame = max_growth_frame()
+	var remaining = max_frame - $Plant.frame
+	var strength = 0.0
+	if remaining <= 0:
+		strength = 1.0
+	elif remaining == 1:
+		strength = 0.35
+
+	var c = GameData.variant_color(species_id, variant_index)
+	$Plant.modulate = Color(1, 1, 1).linear_interpolate(c, strength)
+	_last_tint_frame = $Plant.frame
 
 
 func add_mutation_bonus(amount):
@@ -346,9 +372,10 @@ func advance_growth(steps):
 			$Plant.frame += 1
 
 	var advanced = $Plant.frame - before
-	if advanced > 0 and not $AnimationPlayer.is_playing() \
-		and has_node("PlantUpgradeParticles"):
-		$PlantUpgradeParticles.restart()
+	if advanced > 0:
+		_update_variant_tint()
+		if not $AnimationPlayer.is_playing() and has_node("PlantUpgradeParticles"):
+			$PlantUpgradeParticles.restart()
 	return advanced
 
 
