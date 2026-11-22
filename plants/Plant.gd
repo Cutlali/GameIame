@@ -28,7 +28,6 @@ var _died = false
 var mutation_bonus = 0.0
 # 变种特性只在第一次确认时套用一次
 var _variant_setup_done = false
-var _variant_announced = false
 var _mutation_rewarded = false
 var _entry_resolved = false
 var _resolved_id = ""
@@ -275,22 +274,9 @@ func _apply_variant_setup():
 			# 不应该把它已经长出的帧数退回去。
 			$Plant.frame = min(max_frame, $Plant.frame + frames_bonus)
 
-	# 给变种一点颜色倾向，玩家在田里就能看出这株不一般。
-	var c = GameData.variant_color(species_id, variant_index)
-	$Plant.modulate = Color(1, 1, 1).linear_interpolate(Color(c.r, c.g, c.b), 0.22)
-
-	_announce_variant()
-
-
-func _announce_variant():
-	if _variant_announced:
-		return
-	_variant_announced = true
-	if GS.tutorial:
-		return
-	var sp = GameData.species(species_id)
-	if sp != null:
-		Toast.show_message("这株%s看起来有些不一样，也许会发生变异。" % sp["name"])
+	# 用图鉴里变种照片的同款颜色给成长帧上色。
+	# 从种子阶段一直可见，玩家不需要等右下角提示才知道它变异了。
+	$Plant.modulate = GameData.variant_color(species_id, variant_index)
 
 
 func add_mutation_bonus(amount):
@@ -342,11 +328,28 @@ func growth_steps():
 	return steps
 
 
+func max_growth_frame():
+	return $Plant.frames.get_frame_count("default") - 1
+
+
+func is_mature():
+	return $Plant.frame >= max_growth_frame()
+
+
+# 返回实际推进的帧数。已经成熟时会返回 0，
+# 让催熟卡可以给玩家一个明确的反馈。
 func advance_growth(steps):
-	var max_frame = $Plant.frames.get_frame_count("default") - 1
+	var max_frame = max_growth_frame()
+	var before = $Plant.frame
 	for i in range(steps):
 		if $Plant.frame < max_frame:
 			$Plant.frame += 1
+
+	var advanced = $Plant.frame - before
+	if advanced > 0 and not $AnimationPlayer.is_playing() \
+		and has_node("PlantUpgradeParticles"):
+		$PlantUpgradeParticles.restart()
+	return advanced
 
 
 func upgrade_plant():

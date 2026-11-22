@@ -927,6 +927,12 @@ func _deal_cards():
 			break
 		add_card_to_hand(c)
 	
+	# 田里一株植物都没有、手里也没有种子时，补一张番茄种子。
+	# 瓶碎重开后的第一手牌最容易出现这个问题。
+	if get_tree().get_nodes_in_group("Plant").empty() and _hand_seed_count() == 0:
+		add_card_to_hand(card_basic_plant)
+		Toast.show_message("田里还没有植物，补一张番茄种子。")
+
 	# 轻量兜底：只有在一张水牌都没有时补一张，避免整轮完全停滞。
 	# 不再按植物数量固定塞水牌。
 	if get_tree().get_nodes_in_group("Plant").size() > 0 and _hand_water_count() == 0:
@@ -946,6 +952,16 @@ func _hand_water_count():
 	var n = 0
 	for c in hand.get_children():
 		if c.associated_card != null and c.associated_card.action == Action.WATER:
+			n += 1
+	return n
+
+
+func _hand_seed_count():
+	if hand == null or not is_instance_valid(hand):
+		return 0
+	var n = 0
+	for c in hand.get_children():
+		if c.associated_card != null and c.associated_card.action == Action.PLANT:
 			n += 1
 	return n
 

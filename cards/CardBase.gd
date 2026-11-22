@@ -6,11 +6,26 @@ var associated_card = null
 
 var last_checked = 0
 
+# 力量类卡牌只给“下一次造成伤害”的牌加成。
+# 水牌、催熟、嫁接、修补这些牌虽然也用 $DQ 占位，但不吃伤害加成。
+func _uses_damage_bonus():
+	if associated_card == null:
+		return false
+	match associated_card.action:
+		GS.Action.ATTACK, GS.Action.NET, GS.Action.ATTACK_ALL, \
+		GS.Action.DRAIN_WATER_DMG_RNG, GS.Action.DRAIN_WATER_DMG_ALL, \
+		GS.Action.HEAL_DMG_NEAR, GS.Action.DEF_DMG_NEAR, \
+		GS.Action.HEAL_ALL_DMG, GS.Action.SACRIF:
+			return true
+	return false
+
+
 func update_display():
-	var q = associated_card.quantity + last_checked
+	var bonus = last_checked if _uses_damage_bonus() else 0
+	var q = associated_card.quantity + bonus
 	
 	var dq = String(q)
-	if last_checked != 0:
+	if bonus != 0:
 		dq = "[color=#3d3]" + dq + "[/color]"
 	
 	$Desc.bbcode_text = "[center]" + associated_card.desc.replace("$DQ", dq) + "[/center]"
@@ -42,8 +57,13 @@ func _process(delta):
 	if not dynamic_display:
 		return
 
-	if dynamic_display:
-		if GS.cursor.current_damage_add != last_checked:
-			last_checked = GS.cursor.current_damage_add
-			
+	# 不消耗伤害加成的牌永远显示自己的原始数值。
+	if not _uses_damage_bonus():
+		if last_checked != 0:
+			last_checked = 0
 			update_display()
+		return
+
+	if GS.cursor.current_damage_add != last_checked:
+		last_checked = GS.cursor.current_damage_add
+		update_display()

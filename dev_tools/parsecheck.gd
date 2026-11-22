@@ -12,6 +12,7 @@ func _init():
 		"res://BottleManager.gd",
 		"res://cursor/Cursor.gd",
 		"res://cards/HandCard.gd",
+		"res://cards/CardBase.gd",
 		"res://ui/EncyclopediaUI.gd",
 		"res://ui/YearSummary.gd",
 		"res://SeasonManager.gd"

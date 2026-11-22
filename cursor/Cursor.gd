@@ -180,7 +180,13 @@ func hasten(card):
 	var plant = GS.get_plant_at_map_lcoord(position)
 	if plant == null:
 		return
+
 	plant.advance_growth(card.quantity)
+	if plant.is_mature():
+		if plant.water >= 1:
+			Toast.show_message("这株植物已经成熟，结束回合即可收获。")
+		else:
+			Toast.show_message("这株植物已经成熟，再浇 1 点水就能收获。")
 
 func graft(card):
 	var plant = GS.get_plant_at_map_lcoord(position)
