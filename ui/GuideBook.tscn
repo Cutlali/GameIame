@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://ui/MenuTheme.tres" type="Theme" id=1]
 [ext_resource path="res://ui/GuideBook.gd" type="Script" id=2]
@@ -18,6 +18,10 @@ font_data = ExtResource( 3 )
 
 [sub_resource type="DynamicFont" id=4]
 size = 13
+font_data = ExtResource( 3 )
+
+[sub_resource type="DynamicFont" id=5]
+size = 17
 font_data = ExtResource( 3 )
 
 [node name="GuideBook" type="CanvasLayer"]
@@ -67,7 +71,7 @@ text = "四季图鉴指南"
 [node name="Subtitle" type="Label" parent="Root/Book/Margin/VBox/Header"]
 custom_colors/font_color = Color( 0.47, 0.31, 0.19, 0.8 )
 custom_fonts/font = SubResource( 4 )
-text = "一本关于魔瓶、四季与耕作的书"
+text = "一本关于魔瓶、四季，以及前一位园丁的书"
 valign = 1
 
 [node name="Spacer" type="Control" parent="Root/Book/Margin/VBox/Header"]
@@ -112,6 +116,24 @@ autowrap = true
 custom_colors/font_color = Color( 0.28, 0.18, 0.11, 1 )
 custom_constants/line_spacing = 7
 custom_fonts/font = SubResource( 3 )
+text = "..."
+autowrap = true
+
+[node name="Note" type="VBoxContainer" parent="Root/Book/Margin/VBox/Body/Scroll/Content"]
+visible = false
+custom_constants/separation = 4
+
+[node name="Rule" type="HSeparator" parent="Root/Book/Margin/VBox/Body/Scroll/Content/Note"]
+
+[node name="NoteTitle" type="Label" parent="Root/Book/Margin/VBox/Body/Scroll/Content/Note"]
+custom_colors/font_color = Color( 0.47, 0.31, 0.19, 0.85 )
+custom_fonts/font = SubResource( 4 )
+text = "旧园丁批注"
+
+[node name="NoteBody" type="Label" parent="Root/Book/Margin/VBox/Body/Scroll/Content/Note"]
+custom_colors/font_color = Color( 0.36, 0.24, 0.15, 0.95 )
+custom_constants/line_spacing = 6
+custom_fonts/font = SubResource( 5 )
 text = "..."
 autowrap = true
 

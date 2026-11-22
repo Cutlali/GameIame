@@ -52,13 +52,18 @@ func _idle(_delta):
 		return
 	if stage == 5 and t >= 3300:
 		_save("D:/Godot/guide_new.png")
+		guide.select_chapter(0)
+		stage = 6
+		return
+	if stage == 6 and t >= 3700:
+		_save("D:/Godot/guide_note.png")
 		guide.queue_free()
 		get_root().get_node("Flags").skip_tutorial = false
 		game = load("res://Game.tscn").instance()
 		get_root().add_child(game)
-		stage = 6
+		stage = 7
 		return
-	if stage == 6 and t >= 4800:
+	if stage == 7 and t >= 5200:
 		var tut = game.get_node_or_null("CanvasLayer/Tutorial")
 		if tut != null:
 			print("TUTORIAL text_len=%d rect=%s line=%d" % [tut.text.length(), str(tut.rect_size), tut.current_line])
