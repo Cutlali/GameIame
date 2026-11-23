@@ -78,6 +78,14 @@ func _idle(_delta):
 	if stage == 0 and t >= 400:
 		_check(gs.tutorial, "tutorial flag set")
 		_check(tut != null, "tutorial node exists")
+		_check(tut._avatar != null and tut._avatar.texture != null
+			and tut._avatar.texture.resource_path.ends_with("avatar_cutout.png"), "avatar cutout texture")
+		_check(tut._avatar.get_parent() == tut._panel, "avatar sits on dialog panel")
+		_check(tut._avatar.rect_size.y <= tut._panel.rect_size.y, "avatar fits dialog height")
+		_check(tut._avatar.rect_size.y >= tut._panel.rect_size.y * 0.75, "avatar large enough")
+		_check(tut._avatar.get_global_rect().end.x < tut.get_global_rect().position.x, "avatar ends before text")
+		_check(tut._typing, "typewriter running")
+		_check(tut.visible_characters == 0, "typewriter starts empty")
 		_check(guide != null and guide.visible, "forced guide opened")
 		if guide != null and guide.visible:
 			_check(guide._restricted, "guide restricted")
@@ -95,6 +103,10 @@ func _idle(_delta):
 		_check(gs.turn_state == gs.TurnState.PLAYING_CARDS, "cards playable after reading")
 		_check(gs.tutorial_allowed_action == "plant", "only plant allowed")
 		_check(_hand_has(gs.Action.PLANT), "plant card in hand")
+		# 打字机最终必须完整显示整段文字。
+		tut._type_accum = 9999.0
+		tut._process(0.0)
+		_check(tut.visible_characters == -1 and not tut._typing, "typewriter completes")
 		steps.mark_have_planted()
 		_next(2)
 		return

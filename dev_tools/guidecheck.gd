@@ -7,6 +7,7 @@ var guide = null
 var intro = null
 var start_ms = 0
 var stage = 0
+var stage_ms = 0
 
 
 func _init():
@@ -58,10 +59,14 @@ func _idle(_delta):
 			if c is Button:
 				buttons += 1
 		_check(buttons == guide.CHAPTERS.size(), "chapter buttons %d" % buttons)
-		_check(guide.CHAPTERS.size() == 10, "notebook should have 10 pages")
-		# 初始只显示：夹页、01-03、最后一页。
-		_check(_visible_buttons(toc) == 5, "only 5 pages visible at start, got %d"
+		_check(guide.CHAPTERS.size() == 11, "notebook should have 11 pages")
+		# 目录始终列全所有页，未解锁的章节只会被雾气盖住。
+		_check(_visible_buttons(toc) == 11, "all 11 pages listed, got %d"
 			% _visible_buttons(toc))
+		_check(not guide._is_unlocked(4), "season locked at start")
+		_check(not guide._is_unlocked(9), "previous owner page locked at start")
+		_check(not guide._is_unlocked(10), "creator page locked at start")
+		_check(guide._toc_buttons[4].hint_tooltip != "", "locked page gets fog tooltip")
 
 		var body = guide.get_node("Root/Book/Margin/VBox/Body/Scroll/Content/ChapterBody")
 		var title = guide.get_node("Root/Book/Margin/VBox/Body/Scroll/Content/ChapterTitle")
@@ -70,19 +75,37 @@ func _idle(_delta):
 		_check(not note_box.visible, "side note box hidden, comments live in body")
 		_check(body.text.find("最后一个") >= 0, "front page text")
 		_check(title.text == "夹在最前面的一页", "front page title")
+		_check(not guide._fog.visible, "unlocked page has no fog")
 
-		# 锁定页不能被选中。
-		guide.select_chapter(7)
-		_check(title.text == "夹在最前面的一页", "locked chapter must not open")
+		# 未解锁的页也能翻开，但正文被雾气盖住。
+		guide.select_chapter(4)
+		_check(title.text == "04  第三页 · 四季会轮转", "locked chapter title")
+		_check(not body.visible, "locked chapter body hidden")
+		_check(guide._fog.visible, "locked chapter covered by fog")
+		_check(guide._fog_hint.text.find("雾气") >= 0, "fog hint text")
+		_check(not guide._peek_label.visible, "no peek line on ordinary locked page")
 
-		# 解锁季节页。
+		# 解锁季节页，雾气散开。
 		flags.guide_season_changed = true
 		guide._refresh_toc()
-		_check(_visible_buttons(toc) == 6, "season page visible after unlock")
+		_check(guide._is_unlocked(4), "season page unlocked")
+		_check(_visible_buttons(toc) == 11, "toc keeps every page, got %d"
+			% _visible_buttons(toc))
 		guide.select_chapter(4)
+		_check(body.visible, "season body visible after unlock")
 		_check(title.text == "04  第三页 · 四季会轮转", "season chapter title")
 		_check(body.text.find("春天浇水") >= 0, "season page body")
 		_check(body.text.find("批注：") >= 0, "comments included in body")
+		_check(guide._fog_tween != null, "fog starts dissolving")
+		stage = 5
+		return
+
+	if stage == 5 and t >= 1300:
+		var flags = get_root().get_node("Flags")
+		var toc = guide.get_node("Root/Book/Margin/VBox/Body/Toc")
+		var body = guide.get_node("Root/Book/Margin/VBox/Body/Scroll/Content/ChapterBody")
+		var title = guide.get_node("Root/Book/Margin/VBox/Body/Scroll/Content/ChapterTitle")
+		_check(not guide._fog.visible, "fog hidden after dissolve")
 
 		# 解锁虫害页。
 		flags.guide_pest_seen = true
@@ -91,32 +114,59 @@ func _idle(_delta):
 		_check(title.text == "06  第五页 · 瓶子里的虫", "pest chapter title")
 		_check(body.text.find("虫子杀不完") >= 0, "pest page comments")
 
-		# 最后一页三段式文本。
-		var enc = get_root().get_node("Encyclopedia")
-		var old_entries = enc.discovered
-		guide.select_chapter(9)
-		_check(title.text == "09  最后一页 · 瓶子里的世界", "last chapter title")
-		_check(body.text.find("阶段一") >= 0, "last chapter stage 1 at 0 entries")
-		_check(body.text.find("雾气") >= 0, "last chapter locked at 0 entries")
-
-		enc.discovered = {"a": true, "b": true, "c": true, "d": true}
-		guide.select_chapter(9)
-		_check(body.text.find("阶段二") >= 0, "last chapter stage 2 at 4 entries")
-		_check(body.text.find("直觉告诉我") >= 0, "last chapter mid reveal at 4")
-
-		enc.discovered = {"a": true, "b": true, "c": true, "d": true,
-			"e": true, "f": true, "g": true, "h": true}
-		guide.select_chapter(9)
-		_check(body.text.find("阶段三") >= 0, "last chapter stage 3 at 8 entries")
-		_check(body.text.find("我是魔瓶的创造者") >= 0, "last chapter full reveal at 8")
-		enc.discovered = old_entries
-
-		# 解锁全部页面后，目录里有 10 页。
+		# 其余章节解锁后，最后一页还差“亲眼见过瓶碎”。
 		flags.guide_variant_seen = true
 		flags.guide_bottle_damaged = true
 		flags.guide_milestone_seen = true
 		guide._refresh_toc()
-		_check(_visible_buttons(toc) == 10, "all pages visible after all unlocks")
+		_check(not guide._is_unlocked(9), "previous owner needs a shatter")
+		guide.select_chapter(9)
+		_check(title.text == "09  最后一页 · 瓶子里的世界", "last chapter title")
+		_check(not body.visible, "previous owner body hidden before shatter")
+		_check(guide._fog.visible, "previous owner fog visible")
+		_check(guide._fog_hint.text.find("碎裂") >= 0, "fog hint mentions shatter")
+		# 雾气盖住正文，但最后一句要露出来当引子。
+		_check(guide._peek_label.visible, "previous owner peek line visible")
+		_check(guide._peek_label.text.find("灾难迎来终结") >= 0, "peek line text")
+		_check(guide._peek_label.get_line_count() == 1, "peek line stays on one row, got %d"
+			% guide._peek_label.get_line_count())
+		_check(guide._peek_label.rect_position.y > guide._fog.rect_position.y + guide._fog.rect_size.y * 0.6,
+			"peek line sits at the bottom of the page")
+
+		flags.guide_bottle_shattered = true
+		guide._refresh_toc()
+		_check(guide._is_unlocked(9), "previous owner unlocked after shatter")
+		guide.select_chapter(9)
+		_check(body.visible, "previous owner body visible after shatter")
+		_check(body.text.find("下一个得到瓶子的人") >= 0, "previous owner text")
+		_check(body.text.find("看着魔瓶") >= 0, "new discovery paragraph")
+		_check(body.text.find("图鉴集齐后我便会知晓") >= 0, "new bestiary foreshadow")
+		_check(body.text.find("阶段") < 0, "no stage labels left")
+		guide._hide_fog()
+		_check(not guide._peek_label.visible, "peek line gone once page is open")
+
+		# 创造者的留言：图鉴完整才显露。
+		var enc = get_root().get_node("Encyclopedia")
+		var old_entries = enc.discovered
+		_check(not guide._is_unlocked(10), "creator locked before full bestiary")
+		guide.select_chapter(10)
+		_check(title.text == "10  创造者的留言", "creator chapter title")
+		_check(not body.visible, "creator body hidden before full bestiary")
+		_check(guide._fog_hint.text.find("图鉴完整") >= 0, "creator fog hint")
+		_check(not guide._peek_label.visible, "creator page has no peek line")
+
+		var gd = get_root().get_node("GameData")
+		var full = {}
+		for id in gd.all_entry_ids():
+			full[id] = true
+		enc.discovered = full
+		guide._refresh_toc()
+		_check(guide._is_unlocked(10), "creator unlocked at full bestiary")
+		guide.select_chapter(10)
+		_check(body.visible, "creator body visible at full bestiary")
+		_check(body.text.find("我是魔瓶的创造者") >= 0, "creator text")
+		_check(body.text.find("奇迹的种子") >= 0, "creator seed hint")
+		enc.discovered = old_entries
 
 		guide.close()
 		_check(not guide.visible, "guide closes")
@@ -156,18 +206,20 @@ func _idle(_delta):
 		_click(intro, Vector2(540, 400))
 		_click(intro, Vector2(540, 400))
 		stage = 3
+		stage_ms = t
 		return
 
-	if stage == 3 and t >= 700:
+	if stage == 3 and t >= stage_ms + 300:
 		_check(intro._index == 2, "two quick clicks advance to panel 3, got %d" % intro._index)
 		_check(intro._photo.modulate.a > 0.9, "intro panel 3 fully shown")
 		_click(intro, Vector2(540, 400))
 		_click(intro, Vector2(540, 400))
 		_click(intro, Vector2(540, 400))
 		stage = 4
+		stage_ms = t
 		return
 
-	if stage == 4 and t >= 1000:
+	if stage == 4 and t >= stage_ms + 300:
 		_check(intro._index == 5, "clicked through to panel 6, got %d" % intro._index)
 		_check(intro._photo.modulate.a > 0.9, "intro panel 6 fully shown")
 		_check(intro._next_button.visible, "intro final button visible")

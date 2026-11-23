@@ -1,18 +1,20 @@
-extends Panel
+extends Control
 
-# 右上角常驻面板：图鉴入口 + 魔瓶血量。
-# 魔瓶维持着四季，所以瓶子光晕会跟随当前季节变色。
+# 游戏内常驻界面：
+# 左上角手记，右上角图鉴 + 魔瓶，左下角水晶球（与魔力球并排）。
+# 魔瓶维持着四季，所以瓶内液体与光晕会跟随当前季节变色。
 
 var _bestiary_button: Button
+var _bestiary_label: Label
 var _guide_button: Button
 var _guide_badge: Label
 var _orb_button: Button
+var _orb_holder: Control
 
 # 最近一次解锁的手记页；有值说明玩家还没去看。
 var _new_guide_index = -1
 
-const ORB_CENTER = Vector2(210, 78)
-const ORB_RADIUS = 21.0
+const ORB_RADIUS = 56.0
 
 var _hp = 3
 var _hp_max = 3
@@ -24,38 +26,59 @@ var _orb_drag_hover = false
 
 var _title_font: DynamicFont
 var _small_font: DynamicFont
+var _orb_font: DynamicFont
+var _bottle_body_box: StyleBoxFlat
+var _bottle_outline_box: StyleBoxFlat
 
 
 func _ready():
 	GS.hud = self
-	add_stylebox_override("panel", _flat_box(Color(0.10, 0.11, 0.13, 0.82), Color(0.60, 0.64, 0.52, 0.75), 1, 10))
 
-	_bestiary_button = _make_button(Vector2(8, 8), Vector2(150, 40))
-	_bestiary_button.text = "图鉴"
-	_bestiary_button.connect("pressed", self, "_on_bestiary_pressed")
-	add_child(_bestiary_button)
+	var frame = $Frame
+	frame.add_stylebox_override("panel", _flat_box(
+		Color(0.10, 0.11, 0.13, 0.82), Color(0.60, 0.64, 0.52, 0.75), 1, 10))
 
-	_guide_button = _make_icon_button(Vector2(166, 8), Vector2(40, 40),
+	# 左上角：手记入口，做得比原来更大更显眼；放在季节横幅下方。
+	_guide_button = _make_icon_button(Vector2(16, 60), Vector2(64, 64),
 		"res://ui/guide_icon.png", "瓶中手记")
 	_guide_button.connect("pressed", self, "_on_guide_pressed")
 	add_child(_guide_button)
 
 	_guide_badge = Label.new()
 	_guide_badge.text = "新"
-	_guide_badge.rect_position = Vector2(196, -3)
-	_guide_badge.rect_size = Vector2(22, 22)
+	_guide_badge.rect_position = Vector2(63, 52)
+	_guide_badge.rect_size = Vector2(24, 24)
 	_guide_badge.align = Label.ALIGN_CENTER
 	_guide_badge.valign = Label.VALIGN_CENTER
 	_guide_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var badge_font = DynamicFont.new()
 	badge_font.font_data = load("res://fonts/SimHei.ttf")
-	badge_font.size = 12
+	badge_font.size = 13
 	badge_font.outline_size = 3
 	badge_font.outline_color = Color(0.20, 0.10, 0.05, 0.95)
 	_guide_badge.add_font_override("font", badge_font)
 	_guide_badge.add_color_override("font_color", Color(1.0, 0.82, 0.34))
 	_guide_badge.visible = false
 	add_child(_guide_badge)
+
+	# 右上角：图鉴图标。
+	_bestiary_button = _make_icon_button(Vector2(10, 12), Vector2(52, 52),
+		"res://ui/bestiary_icon.svg", "图鉴")
+	_bestiary_button.connect("pressed", self, "_on_bestiary_pressed")
+	frame.add_child(_bestiary_button)
+
+	_bestiary_label = Label.new()
+	_bestiary_label.text = "图鉴"
+	_bestiary_label.rect_position = Vector2(10, 66)
+	_bestiary_label.rect_size = Vector2(52, 18)
+	_bestiary_label.align = Label.ALIGN_CENTER
+	_bestiary_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var small = DynamicFont.new()
+	small.font_data = load("res://fonts/SimHei.ttf")
+	small.size = 12
+	_bestiary_label.add_font_override("font", small)
+	_bestiary_label.add_color_override("font_color", Color(0.88, 0.84, 0.72))
+	frame.add_child(_bestiary_label)
 
 	if not Flags.is_connected("guide_page_unlocked", self, "_on_guide_page_unlocked"):
 		Flags.connect("guide_page_unlocked", self, "_on_guide_page_unlocked")
@@ -68,18 +91,34 @@ func _ready():
 	_small_font.font_data = load("res://fonts/SimHei.ttf")
 	_small_font.size = 12
 
-	var hint = Label.new()
-	hint.text = "P 键暂停"
-	hint.rect_position = Vector2(54, 100)
-	hint.rect_size = Vector2(110, 20)
-	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hint.add_font_override("font", _small_font)
-	hint.add_color_override("font_color", Color(0.72, 0.74, 0.70))
-	add_child(hint)
+	_orb_font = DynamicFont.new()
+	_orb_font.font_data = load("res://fonts/SimHei.ttf")
+	_orb_font.size = 30
+	_orb_font.outline_size = 4
+	_orb_font.outline_color = Color(0.06, 0.10, 0.14, 0.9)
+
+	_bottle_body_box = _flat_box(Color(0.13, 0.17, 0.18, 0.96), Color(0, 0, 0, 0), 0, 10)
+	_bottle_body_box.corner_radius_top_left = 4
+	_bottle_body_box.corner_radius_top_right = 4
+	_bottle_outline_box = _flat_box(Color(0, 0, 0, 0), Color(0.60, 0.68, 0.62, 0.9), 2, 10)
+	_bottle_outline_box.draw_center = false
+	_bottle_outline_box.corner_radius_top_left = 4
+	_bottle_outline_box.corner_radius_top_right = 4
+
+	# 左下角：水晶球与魔力球并排，尺寸对齐。
+	_orb_holder = Control.new()
+	_orb_holder.anchor_top = 1.0
+	_orb_holder.anchor_bottom = 1.0
+	_orb_holder.margin_left = 134.0
+	_orb_holder.margin_right = 294.0
+	_orb_holder.margin_top = -150.0
+	_orb_holder.margin_bottom = -10.0
+	_orb_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_orb_holder)
 
 	_orb_button = Button.new()
-	_orb_button.rect_position = ORB_CENTER - Vector2(ORB_RADIUS + 4, ORB_RADIUS + 4)
-	_orb_button.rect_size = Vector2(ORB_RADIUS + 4, ORB_RADIUS + 4) * 2
+	_orb_button.anchor_right = 1.0
+	_orb_button.anchor_bottom = 1.0
 	_orb_button.flat = true
 	_orb_button.focus_mode = Control.FOCUS_NONE
 	_orb_button.hint_tooltip = "水晶球：点击取 1 点水；把水牌拖到这里存水"
@@ -87,7 +126,7 @@ func _ready():
 	for state in ["normal", "hover", "pressed", "focus"]:
 		_orb_button.add_stylebox_override(state, StyleBoxEmpty.new())
 	_orb_button.connect("pressed", self, "_on_orb_pressed")
-	add_child(_orb_button)
+	_orb_holder.add_child(_orb_button)
 
 
 func _flat_box(bg, border, width, radius):
@@ -135,6 +174,8 @@ func _make_icon_button(pos, size, icon_path, tooltip):
 
 
 func contains_mouse(control: Control):
+	if control == null or not is_instance_valid(control):
+		return false
 	var r = Rect2(Vector2.ZERO, control.rect_size)
 	return r.has_point(control.get_local_mouse_position())
 
@@ -144,11 +185,17 @@ func _exit_tree():
 		GS.hud = null
 
 
+func _orb_center():
+	if _orb_holder == null or not is_instance_valid(_orb_holder):
+		return Vector2(206, 720)
+	return _orb_holder.rect_global_position + Vector2(72, 76)
+
+
 # 鼠标是否落在水晶球范围内。拖水牌时判定比球体略宽松一点。
 func is_mouse_over_orb():
 	if not visible:
 		return false
-	return get_local_mouse_position().distance_to(ORB_CENTER) <= ORB_RADIUS + 6.0
+	return get_global_mouse_position().distance_to(_orb_center()) <= ORB_RADIUS + 7.0
 
 
 func _season_color(season):
@@ -190,79 +237,107 @@ func _process(delta):
 			_orb_drag_hover = true
 
 	update()
-	GS.upper_panel_mouse = visible and contains_mouse(self)
+	GS.upper_panel_mouse = visible and (
+		contains_mouse($Frame) or contains_mouse(_guide_button) or is_mouse_over_orb())
 
 
 func _draw():
-	# 季节光晕：魔瓶维持四季，光晕颜色跟着季节走。
-	var pulse = 0.9 + 0.1 * sin(OS.get_ticks_msec() / 520.0)
-	var center = Vector2(27, 80)
-	draw_circle(center, 30.0, Color(_glow.r, _glow.g, _glow.b, 0.10 * pulse))
-	draw_circle(center, 21.0, Color(_glow.r, _glow.g, _glow.b, 0.14 * pulse))
+	_draw_bottle($Frame.rect_position)
+	_draw_crystal_orb()
 
-	# 瓶身、瓶颈、瓶塞。
-	draw_rect(Rect2(20, 49, 14, 5), Color(0.52, 0.36, 0.22))
-	draw_rect(Rect2(21, 53, 12, 10), Color(0.16, 0.19, 0.20))
-	draw_rect(Rect2(12, 62, 30, 40), Color(0.13, 0.16, 0.18))
-	draw_rect(Rect2(12, 62, 30, 40), Color(0.58, 0.64, 0.58), false, 2.0)
+
+# 魔瓶：瓶塞、瓶颈、肩部、玻璃瓶身、液体高度和血量。
+func _draw_bottle(f):
+	var cx = f.x + 157.0
+	var y = f.y
+
+	# 季节光晕与投影。
+	var pulse = 0.9 + 0.1 * sin(OS.get_ticks_msec() / 520.0)
+	draw_circle(Vector2(cx, y + 94), 36.0,
+		Color(_glow.r, _glow.g, _glow.b, 0.10 * pulse))
+	draw_circle(Vector2(cx, y + 134), 25.0, Color(0.0, 0.0, 0.0, 0.18))
+
+	# 瓶塞与瓶颈。
+	draw_rect(Rect2(cx - 7, y + 26, 14, 8), Color(0.50, 0.34, 0.20))
+	draw_rect(Rect2(cx - 7, y + 26, 14, 2), Color(0.68, 0.50, 0.30))
+	draw_rect(Rect2(cx - 4, y + 34, 8, 12), Color(0.16, 0.19, 0.20))
+	draw_rect(Rect2(cx - 6, y + 42, 12, 3), Color(0.36, 0.40, 0.38))
+	draw_rect(Rect2(cx - 5, y + 34, 2, 9), Color(0.30, 0.34, 0.34))
+
+	# 肩部与瓶身。
+	var shoulder = PoolVector2Array([
+		Vector2(cx - 4, y + 43), Vector2(cx - 27, y + 58),
+		Vector2(cx - 27, y + 67), Vector2(cx + 27, y + 67),
+		Vector2(cx + 27, y + 58), Vector2(cx + 4, y + 43)])
+	draw_colored_polygon(shoulder, Color(0.13, 0.17, 0.18, 0.96))
+	draw_style_box(_bottle_body_box, Rect2(cx - 27, y + 58, 54, 76))
 
 	# 液体高度就是剩余血量。
 	var ratio = float(_hp) / float(max(1, _hp_max))
-	var liquid_h = 36.0 * ratio
+	var liquid_h = 72.0 * ratio
 	if liquid_h > 0.0:
 		var liquid = Color(_glow.r, _glow.g, _glow.b, 0.88)
 		if _damage_flash > 0.0:
 			liquid = liquid.linear_interpolate(Color(1.0, 0.25, 0.25, 0.95), _damage_flash)
-		draw_rect(Rect2(15, 99 - liquid_h, 24, liquid_h), liquid)
+		var ly = y + 130 - liquid_h
+		draw_rect(Rect2(cx - 23, ly, 46, liquid_h), liquid)
+		draw_line(Vector2(cx - 22, ly), Vector2(cx + 22, ly),
+			Color(liquid.r, liquid.g, liquid.b, 0.95).lightened(0.25), 1.5)
+		if liquid_h > 14.0:
+			draw_circle(Vector2(cx - 8, ly + 9), 2.5,
+				Color(1.0, 1.0, 1.0, 0.20))
+			draw_circle(Vector2(cx + 6, ly + 18), 1.8,
+				Color(1.0, 1.0, 1.0, 0.16))
 
-	# 三滴血：亮起表示剩余，暗下去表示已损失。
+	# 玻璃轮廓与反光。
+	draw_polyline(shoulder, Color(0.60, 0.68, 0.62, 0.9), 2.0)
+	draw_style_box(_bottle_outline_box, Rect2(cx - 27, y + 58, 54, 76))
+	draw_rect(Rect2(cx - 21, y + 66, 4, 54), Color(1.0, 1.0, 1.0, 0.14))
+	draw_circle(Vector2(cx - 14, y + 66), 3.5, Color(1.0, 1.0, 1.0, 0.22))
+
+	# 标题与血量。
+	draw_string(_title_font, Vector2(f.x + 84, y + 30), "魔瓶",
+		Color(0.94, 0.95, 0.90))
 	for i in range(_hp_max):
-		var p = Vector2(60 + i * 18, 84)
+		var p = Vector2(f.x + 208 + i * 15, y + 42)
 		if i < _hp:
 			var c = Color(_glow.r, _glow.g, _glow.b, 0.95)
 			if _damage_flash > 0.0:
 				c = c.linear_interpolate(Color(1.0, 0.3, 0.3, 1.0), _damage_flash)
-			draw_circle(p, 6.5, c)
+			draw_circle(p, 4.5, c)
 		else:
-			draw_circle(p, 6.5, Color(0.20, 0.21, 0.22, 0.9))
-			draw_arc(p, 6.5, 0, PI * 2, 20, Color(0.42, 0.44, 0.42), 1.0)
-
-	draw_string(_title_font, Vector2(54, 70), "魔瓶",
-		Color(0.94, 0.95, 0.90))
-	draw_string(_small_font, Vector2(112, 88), "%d / %d" % [_hp, _hp_max],
+			draw_circle(p, 4.5, Color(0.20, 0.21, 0.22, 0.9))
+			draw_arc(p, 4.5, 0, PI * 2, 16, Color(0.42, 0.44, 0.42), 1.0)
+	draw_string(_small_font, Vector2(f.x + 206, y + 62), "%d / %d" % [_hp, _hp_max],
 		Color(0.78, 0.80, 0.76))
-
-	_draw_crystal_orb()
 
 
 # 水晶球：存下的水没有上限，球体本身只表示“有没有水”，数量写在中间。
 func _draw_crystal_orb():
-	var c = ORB_CENTER
+	var c = _orb_center()
 	var r = ORB_RADIUS
-	draw_circle(c, r + 3.0, Color(0.08, 0.10, 0.12, 0.55))
+	draw_circle(c, r + 4.0, Color(0.08, 0.10, 0.12, 0.55))
 	draw_circle(c, r, Color(0.13, 0.17, 0.21, 0.92))
 
 	var has_water = GS.orb_water > 0
 	if has_water:
 		var pulse = 0.85 + 0.15 * sin(OS.get_ticks_msec() / 700.0)
-		draw_circle(c, r - 1.5, Color(0.34, 0.63, 0.92, 0.36 * pulse))
-		draw_circle(c + Vector2(0, 1.5), r - 4.0, Color(0.40, 0.70, 0.96, 0.88))
-		draw_circle(c + Vector2(-6, -7), 4.5, Color(0.88, 0.96, 1.0, 0.55))
+		draw_circle(c, r - 3.0, Color(0.34, 0.63, 0.92, 0.36 * pulse))
+		draw_circle(c + Vector2(0, 2.0), r - 8.0, Color(0.40, 0.70, 0.96, 0.88))
+		draw_circle(c + Vector2(-14, -16), 9.0, Color(0.88, 0.96, 1.0, 0.40))
+		draw_circle(c + Vector2(18, 22), 3.0, Color(0.88, 0.96, 1.0, 0.30))
 	else:
-		draw_circle(c, r - 1.5, Color(0.18, 0.23, 0.27, 0.9))
+		draw_circle(c, r - 3.0, Color(0.18, 0.23, 0.27, 0.9))
 
-	draw_arc(c, r + 0.5, 0, PI * 2, 32, Color(0.62, 0.78, 0.88, 0.85), 2.0)
+	draw_arc(c, r + 0.5, 0, PI * 2, 48, Color(0.62, 0.78, 0.88, 0.85), 2.5)
 	if _orb_drag_hover:
 		var hp = 0.7 + 0.3 * sin(OS.get_ticks_msec() / 180.0)
-		draw_arc(c, r + 7.0, 0, PI * 2, 40, Color(0.78, 0.95, 1.0, 0.55 + 0.35 * hp), 2.5)
+		draw_arc(c, r + 9.0, 0, PI * 2, 48, Color(0.78, 0.95, 1.0, 0.55 + 0.35 * hp), 3.0)
 
 	var text = "%d" % GS.orb_water
-	var font = _title_font
-	var tw = font.get_string_size(text).x
-	draw_string(font, c + Vector2(-tw * 0.5, 6), text,
+	var tw = _orb_font.get_string_size(text).x
+	draw_string(_orb_font, c + Vector2(-tw * 0.5, 10), text,
 		Color(0.96, 0.98, 1.0) if has_water else Color(0.55, 0.60, 0.62))
-	draw_string(_small_font, Vector2(c.x - 14, c.y + r + 16), "水晶球",
-		Color(0.62, 0.72, 0.80))
 
 
 func _on_bestiary_pressed():

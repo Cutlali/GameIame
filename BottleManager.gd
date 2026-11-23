@@ -269,6 +269,8 @@ func damage(amount = 1):
 	_flash_damage()
 	if hp <= 0:
 		_shatter_pending = true
+		# 亲眼见过一次瓶碎，才满足最后一页的前置条件。
+		Flags.guide_bottle_shattered = true
 		Toast.show_message("魔瓶碎裂了！四季开始停滞……")
 	else:
 		Toast.show_message("魔瓶受损！剩余 %d 滴血。" % hp)

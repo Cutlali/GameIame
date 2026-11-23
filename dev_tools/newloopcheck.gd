@@ -125,9 +125,19 @@ func _check_hud():
 	if hud == null or hud._bestiary_button == null:
 		failures.append("HUD bestiary button missing")
 		return
-	if hud._bestiary_button.text != "图鉴":
-		failures.append("HUD bestiary button should only say 图鉴")
-	print("hud bestiary text: " + hud._bestiary_button.text)
+	if hud._bestiary_button.icon == null or \
+		not hud._bestiary_button.icon.resource_path.ends_with("bestiary_icon.svg"):
+		failures.append("HUD bestiary icon missing")
+	if hud._guide_button.rect_size.x < 60:
+		failures.append("HUD guide icon should be enlarged")
+	if hud._guide_button.rect_position.x > 30 or hud._guide_button.rect_position.y > 75:
+		failures.append("HUD guide icon should sit top-left")
+	var energy = game.get_node("CanvasLayer/EnergyOrbHolder/EnergyOrb")
+	var ec = energy.global_position + Vector2(0, 9)
+	var c = hud._orb_center()
+	if abs(c.y - ec.y) > 4 or c.x - ec.x < 110 or c.x - ec.x > 150:
+		failures.append("crystal orb should sit beside energy orb, energy=%s orb=%s" % [str(ec), str(c)])
+	print("hud bestiary icon: " + hud._bestiary_button.icon.resource_path)
 
 
 func _check_mutation_pity():

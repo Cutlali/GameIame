@@ -11,6 +11,7 @@ var guide_variant_seen = false
 var guide_pest_seen = false
 var guide_bottle_damaged = false
 var guide_milestone_seen = false
+var guide_bottle_shattered = false
 
 
 func reset_guide_unlocks():
@@ -19,6 +20,7 @@ func reset_guide_unlocks():
 	guide_pest_seen = false
 	guide_bottle_damaged = false
 	guide_milestone_seen = false
+	guide_bottle_shattered = false
 
 
 # 第一次触发某页时点亮手记，并通知 HUD 弹一条“手记更新”的提示。

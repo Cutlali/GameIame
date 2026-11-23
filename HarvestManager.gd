@@ -307,6 +307,8 @@ func _on_sample_pressed():
 	var msg = ""
 	if Encyclopedia.discover(entry_id):
 		msg = "图鉴新增：%s" % _pending_entry["name"]
+		# 最后一条收录完成时，魔瓶立刻把终局种子送进手牌。
+		GS.maybe_grant_final_seed()
 	if _pending_perk_note != "":
 		if msg != "":
 			msg += " "

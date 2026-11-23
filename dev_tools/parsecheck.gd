@@ -19,6 +19,7 @@ func _init():
 		"res://SeasonManager.gd",
 		"res://ui/MainMenu.gd",
 		"res://Intro.gd",
+		"res://Ending.gd",
 		"res://tutorial/Tutorial.gd",
 		"res://ui/PauseMenu.gd",
 		"res://ui/GuideBook.gd",

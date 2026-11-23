@@ -91,6 +91,8 @@ func _idle(_delta):
 	if stage == 11 and t >= 7200:
 		var tut = game.get_node_or_null("CanvasLayer/Tutorial")
 		if tut != null:
+			tut._type_accum = 9999.0
+			tut._process(0.0)
 			print("TUTORIAL stage=%d text_len=%d rect=%s" % [
 				tut.stage, tut.text.length(), str(tut.rect_size)])
 		_save("D:/Godot/tutorial_new.png")

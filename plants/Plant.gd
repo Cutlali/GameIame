@@ -24,6 +24,9 @@ var variant_index = 0
 var mutation_rolled = false
 var _died = false
 
+# 终局植物：图鉴集齐后由“最后的种子”种下，成熟时进入结局。
+var is_final_plant = false
+
 # 嫁接卡带来的本次收获额外变异概率（0.3 = +30%）
 var mutation_bonus = 0.0
 # 变种特性只在第一次确认时套用一次
@@ -55,10 +58,16 @@ func _ready():
 	$Plant.frames = anim_frames
 	$Plant.scale = Vector2(plant_scale, plant_scale)
 
-	# 变异在种下时就已经决定，玩家可以围绕这株变种做构筑；
-	# 图鉴收录与音效仍然留到收获时揭晓。
-	roll_mutation_if_needed()
-	_apply_variant_setup()
+	if is_final_plant:
+		# 终局植物不参与变异，并且更结实一些，保证玩家能把它种到成熟。
+		mutation_rolled = true
+		mutated = false
+		health = 7
+	else:
+		# 变异在种下时就已经决定，玩家可以围绕这株变种做构筑；
+		# 图鉴收录与音效仍然留到收获时揭晓。
+		roll_mutation_if_needed()
+		_apply_variant_setup()
 	
 	heart_update()
 	defense_update()
@@ -242,6 +251,9 @@ func water_plant():
 	set_water(water - 1)
 	
 func popup_menu():
+	if is_final_plant:
+		GS.start_ending()
+		return
 	HarvestManager.handle_harvest(self)
 
 
@@ -254,7 +266,7 @@ func current_perk():
 # 决定这株植物是不是变种。种下时调用一次；如果调用时还没拿到 species_id，
 # 后续浇水/收获时会再补一次。
 func roll_mutation_if_needed():
-	if species_id == "" or mutation_rolled:
+	if is_final_plant or species_id == "" or mutation_rolled:
 		return
 	mutation_rolled = true
 	var chance = GameData.mutation_chance(Season.current_season, RunStats.mutation_pity)
@@ -347,6 +359,9 @@ func resolve_entry_id():
 # 春季：1 次浇水推进 2 个生长帧；其他季节 1 帧。
 # 非洲太阳月见草不受这个季节惩罚，始终按 2 帧生长。
 func growth_steps():
+	# 终局植物不属于任何一季，每次浇水都稳定推进 2 帧。
+	if is_final_plant:
+		return 2
 	var steps = Season.growth_per_water()
 	var perk = current_perk()
 	if perk != null and perk.get("always_two_growth", false):

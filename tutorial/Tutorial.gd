@@ -15,11 +15,22 @@ enum Stage {
 	DONE
 }
 
+const TYPE_SPEED = 34.0
+
 var stage = Stage.OPEN_GUIDE
 var _avatar = null
 var _next_button = null
 var _panel = null
 var _bug_spawn_retries = 0
+var _type_accum = 0.0
+var _typing = false
+
+
+func say(message):
+	text = message
+	visible_characters = 0
+	_type_accum = 0.0
+	_typing = true
 
 
 func contains_mouse(control: Control):
@@ -41,14 +52,12 @@ func _ready():
 
 	_next_button = $NextButton
 	_panel = $Panel
-	# 每段提示最多两行，把默认很高的对话框收窄一点。
-	# 文字区收窄一点，配合左侧头像让整个对话框在屏幕上居中。
-	margin_left = -229.0
-	margin_right = 311.0
+	# 对话框往左多伸一块，抠好的头像放在框内左侧，文字从右边留白后开始。
+	margin_left = -133.0
+	margin_right = 269.0
 	margin_bottom = margin_top + 152.0
-	# 对话框往左多伸一块，头像放在框内，文字从右边留白后开始。
-	_panel.margin_left = -112.0
-	_panel.margin_right = 30.0
+	_panel.margin_left = -173.0
+	_panel.margin_right = 25.0
 	_panel.margin_top = -20.0
 	_panel.margin_bottom = 34.0
 	_next_button.visible = false
@@ -58,41 +67,22 @@ func _ready():
 		call_deferred("tutorial_skip")
 		return
 
-	text = "石头下面除了这只瓶子，还压着一本手记。"
+	say("石头下面除了这只瓶子，还压着一本手记。")
 	call_deferred("_open_first_guide")
 
 
 func _make_avatar():
-	# 头像放进对话框内部左侧，用圆角裁切成一枚小画像。
-	var frame = Panel.new()
-	frame.rect_clip_content = true
-	var box = StyleBoxFlat.new()
-	box.bg_color = Color(0.96, 0.92, 0.82, 1.0)
-	box.border_color = Color(0.36, 0.24, 0.15, 0.85)
-	box.border_width_left = 2
-	box.border_width_right = 2
-	box.border_width_top = 2
-	box.border_width_bottom = 2
-	box.corner_radius_top_left = 8
-	box.corner_radius_top_right = 8
-	box.corner_radius_bottom_left = 8
-	box.corner_radius_bottom_right = 8
-	frame.add_stylebox_override("panel", box)
-	frame.margin_left = 18.0
-	frame.margin_right = 102.0
-	frame.margin_top = 54.0
-	frame.margin_bottom = 138.0
-	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_panel.add_child(frame)
-
+	# 透明抠图直接立在对话框里，高度略小于对话框。
 	_avatar = TextureRect.new()
-	_avatar.texture = load("res://prologue/avatar.jpg")
-	_avatar.anchor_right = 1.0
-	_avatar.anchor_bottom = 1.0
+	_avatar.texture = load("res://prologue/avatar_cutout.png")
+	_avatar.margin_left = 16.0
+	_avatar.margin_right = 155.0
+	_avatar.margin_top = 20.0
+	_avatar.margin_bottom = 188.0
 	_avatar.expand = true
-	_avatar.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_avatar.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_avatar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	frame.add_child(_avatar)
+	_panel.add_child(_avatar)
 
 
 func _open_first_guide():
@@ -109,7 +99,7 @@ func _on_first_guide_read():
 	GS.turn_state = GS.TurnState.PLAYING_CARDS
 	GS.tutorial_allowed_action = "plant"
 	tutorial_cards()
-	text = "笔记说，种子要落在翻好的土上。\n那我来试试。"
+	say("笔记说，种子要落在翻好的土上。\n那我来试试。")
 
 
 func tutorial_cards():
@@ -143,7 +133,7 @@ func on_event(event_name):
 func _start_water():
 	stage = Stage.WATER
 	GS.tutorial_allowed_action = "water"
-	text = "它真的冒芽了。\n笔记说，植物需要水。"
+	say("它真的冒芽了。\n笔记说，植物需要水。")
 
 
 func _start_end_turn():
@@ -151,7 +141,7 @@ func _start_end_turn():
 	GS.tutorial_allowed_action = ""
 	GS.tutorial_allow_end_turn = true
 	TutorialSteps.need_end_turn_button = true
-	text = "种子喝饱了水，接下来交给时间。\n结束这一回合吧。"
+	say("种子喝饱了水，接下来交给时间。\n结束这一回合吧。")
 
 
 func _start_bug():
@@ -181,7 +171,7 @@ func _start_bug():
 		bug.spawn_now()
 
 	_ensure_attack()
-	text = "有东西在土里动……\n笔记里好像写过这个。"
+	say("有东西在土里动……\n笔记里好像写过这个。")
 	GS.tutorial_allow_guide = true
 	_next_button.text = "翻开手记"
 	_next_button.visible = true
@@ -206,7 +196,7 @@ func _on_bug_guide_read():
 	stage = Stage.ATTACK
 	GS.tutorial_allowed_action = "attack"
 	_ensure_attack()
-	text = "书上说，它们会啃食植物。\n先把它赶走。"
+	say("书上说，它们会啃食植物。\n先把它赶走。")
 	_next_button.visible = false
 
 
@@ -222,7 +212,7 @@ func _ensure_attack():
 func _finish():
 	stage = Stage.FINAL
 	GS.tutorial_allowed_action = ""
-	text = "……好险。\n剩下的，手记里都写了。"
+	say("……好险。\n剩下的，手记里都写了。")
 	_next_button.text = "继续"
 	_next_button.visible = true
 
@@ -255,6 +245,15 @@ func tutorial_skip():
 
 
 func _process(delta):
+	if _typing:
+		_type_accum += delta * TYPE_SPEED
+		var total = text.length()
+		var shown = int(_type_accum)
+		if shown >= total:
+			visible_characters = -1
+			_typing = false
+		else:
+			visible_characters = shown
 	if not GS.tutorial:
 		GS.tutorial_mouse = false
 		return

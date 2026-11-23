@@ -1,32 +1,24 @@
 extends SceneTree
 
-# 开发工具：截取开始界面，便于检查布局。
-# 用法：
-#   Godot --path <project> --script res://dev_tools/menushot.gd -- <输出文件名>
+# 开发工具：截取开始界面，检查右侧面板的按钮、音量条与退出按钮排版。
+# 用法：Godot --path <project> --script res://dev_tools/menushot.gd
 
-var frames = 0
-var scene = null
-var out_name = "menu_shot.png"
+var start_ms = 0
+var done = false
 
 
 func _init():
 	OS.window_size = Vector2(1080, 800)
-	var args = OS.get_cmdline_args()
-	for a in args:
-		if not a.begins_with("-") and a != "--" and a.find("Godot") < 0 and a.find("menushot") < 0:
-			out_name = a
-	scene = load("res://MainMenu.tscn").instance()
-	get_root().add_child(scene)
+	start_ms = OS.get_ticks_msec()
+	get_root().add_child(load("res://MainMenu.tscn").instance())
 
 
 func _idle(_delta):
-	frames += 1
-	if frames < 30:
+	if done or OS.get_ticks_msec() - start_ms < 500:
 		return
-	VisualServer.force_draw()
-	VisualServer.force_draw()
+	done = true
 	var img = get_root().get_texture().get_data()
 	img.flip_y()
-	img.save_png("D:/Godot/" + out_name)
-	print("saved " + out_name)
+	img.save_png("D:/Godot/mainmenu.png")
+	print("saved mainmenu.png")
 	quit()

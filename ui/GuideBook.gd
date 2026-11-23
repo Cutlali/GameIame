@@ -53,12 +53,17 @@ const CHAPTERS = [
 	},
 	{
 		"title": "09  最后一页 · 瓶子里的世界",
-		"always": true,
-		"unlock": 8,
-		"mid_unlock": 4,
-		"locked_body": "阶段一 · 图鉴收录 0–3 条\n\n这一页被一层浓重的雾气盖住了。只能辨认出其中一行字：\n\n“这样的话，下一个得到瓶子的人，或许就不会落得我这般下场了吧”\n\n（当前收录 %d 条。收录 4 条后，雾气会散开一些。）",
-		"mid_body": "阶段二 · 图鉴收录 4–7 条\n\n图鉴厚了一些，雾气散开了几行：\n\n不知为何，在我所处的世界也渐渐发现了这种虫子，我并不认为这是一个好的预兆，瓶中的虫子有极强的破坏力，除了这些奇妙的植物几乎没有其他办法可以抵抗，收录到图鉴中的植物似乎可以取出种子，我将种子取出，在我的世界开始种植。\n\n直觉告诉我，一场灾难要来了。\n\n但等我明白这一点时，已经没时间了。大规模的虫群席卷了我的星球，我凭借种出的植物拼死抵抗，但瓶中的虫灾大大减缓了我培育植物的速度，一旦培养过快瓶中的虫灾便会迅速壮大，我不能让魔瓶损毁，这是最后的希望，这也让我最终无力回天。\n\n原来瓶底那圈纹路，是在魔瓶被创造时铭刻的——只要虫灾到了无法挽回的地步，瓶子会连同虫群一起重置。这是创造者为了让日后得到它的人能快速培育出植物的保底措施，但魔瓶却因为损坏了导致没有将创造者留下信息早些显露，我只能用最后的时间修复了这一圈纹路，并将这个魔瓶传送，希望可以帮助下一个世界。\n\n最后一页似乎与魔瓶相关联，或许当图鉴进一步集齐，魔瓶力量恢复后才会显露。\n\n（当前收录 %d 条。收录 8 条后，这一页会完整显露。）",
-		"body": "阶段三 · 图鉴收录 8 条及以上\n\n图鉴终于接近完整，最后一页的字迹也清晰了：\n\n我是魔瓶的创造者，当你看到这段话时，或许我的星球已经毁灭了，我将这段话与魔瓶相关联，希望可以提醒后来之人。\n\n我们星球的人对环境与植物不屑一顾，认为这些在科技面前不值一提，但突如其来的虫灾让他们付出了代价，这些虫子在星球之间迁徙，每到一个地方便将一个地方啃食殆尽，虫灾毁灭了我们的一切。唯有少数人依靠着培育奇妙的植物抵御虫灾活了下来，而魔瓶就是培育这些植物的容器，我们培育的所有植物都会记录在图鉴之中，但我们还是低估了虫群的力量，它们甚至入侵了魔瓶，在我们的培育中会出现虫群啃食我们的植物，所有植物都依托于魔瓶而存在，啃食植物也会让魔瓶受损，我们不得不给魔瓶一个重启机制，当虫灾到了无法挽回的地步就将魔瓶重启，我们已经是强弩之末，不过魔瓶被入侵后似乎有了定位的能力，指向了某个方向，我不知道这个定位意味着什么，但在临死前，我会将这个魔瓶传送到那个位置，或许是下一个虫灾肆虐的地方，但拥有魔瓶我想下一个世界的人应该拥有了抵抗虫灾的能力，但愿如此。"
+		"special": "previous_owner",
+		"fog": "雾气很重，只有最后一行还露在外面。\n\n也许要等前面的页都读完，并且亲眼见过瓶子碎裂一次，这一页才会散开。",
+		# 锁着的时候，只有最后这一段浮在雾外，留一个引子。
+		"peek": "“这样的话，下一个得到瓶子的人，或许能让这场灾难迎来终结....”",
+		"body": "不知为何，在我所处的世界也渐渐发现了这种虫子。我并不认为这是一个好的预兆。瓶中的虫子有极强的破坏力，除了这些奇妙的植物，几乎没有其他办法可以抵抗。\n\n收录到图鉴中的植物似乎可以取出种子。我将种子取出，在我的世界开始种植。\n\n直觉告诉我，一场灾难要来了。\n\n但等我明白这一点时，已经没时间了。大规模的虫群迅速席卷了我的星球，我凭借种出的植物拼死抵抗，但瓶中的虫灾大大减缓了我培育植物的速度。一旦培养过快，瓶中的虫灾便会迅速壮大。我不能让魔瓶损毁，这是最后的希望，这也让我最终无力回天。\n\n看着魔瓶，我突然注意到了瓶底的纹路，这纹路精密繁复，不像是普通纹饰。\n\n经过无数次尝试，我明白了！\n\n原来瓶底那圈纹路，是在魔瓶被创造时铭刻的——只要虫灾到了无法挽回的地步，瓶子会连同虫群一起重置。创造者为了让日后得到它的人能快速培育出植物早已想好保底措施，可为什么这纹路会损坏呢？似乎将图鉴集齐后我便会知晓这一切，但可惜我做不到了，来不及想这么多，我只能用最后的时间修复了这一圈纹路，并将这个魔瓶传送，希望可以帮助下一个世界。\n\n这样的话，下一个得到瓶子的人，或许能让这场灾难迎来终结...."
+	},
+	{
+		"title": "10  创造者的留言",
+		"special": "creator",
+		"fog": "雾气几乎没有尽头。\n\n图鉴完整之时，这一页才会显露。",
+		"body": "我是魔瓶的创造者。当你看到这段话时，或许我的星球已经毁灭了。我将这段话与魔瓶相关联，希望可以提醒后来之人。\n\n我们星球的人对环境与植物不屑一顾，认为这些在科技面前不值一提。但突如其来的虫灾让他们付出了代价：这些虫子在星球之间迁徙，每到一个地方便将一个地方啃食殆尽，虫灾毁灭了我们的一切....唯有少数人依靠着培育奇妙的植物抵御虫灾活了下来，而魔瓶就是培育这些植物的容器。我们培育的所有植物都会记录在图鉴之中。\n\n但我们还是低估了虫群的力量。它们甚至入侵了魔瓶，在我们的培育中会出现虫群啃食我们的植物。所有植物都依托于魔瓶而存在，啃食植物也会让魔瓶受损。我们不得不给魔瓶一个重启机制：当虫灾到了无法挽回的地步，就将魔瓶重启。\n\n我们已经是强弩之末。不过魔瓶被入侵后似乎有了定位的能力，指向了某个方向。我不知道这个定位意味着什么，但在临死前，我会将这个魔瓶传送到那个位置，或许那是下一个虫灾肆虐的地方。不过拥有魔瓶，我想下一个世界的人应该拥有了抵抗虫灾的能力。不论你是谁，希望这个瓶子能帮助你。而当你集齐所有的图鉴后，将会得到.....那奇迹的种子。"
 	}
 ]
 
@@ -66,6 +71,10 @@ var _current = 0
 var _toc_buttons = []
 var _last_focus = null
 var _paused_by_guide = false
+var _fog = null
+var _fog_hint = null
+var _peek_label = null
+var _fog_tween = null
 
 # 强制阅读模式：只显示指定页，每页都要点开，读全之前合不上。
 var _restricted = false
@@ -88,6 +97,7 @@ func _ready():
 	visible = false
 	GS.guide = self
 	_build_toc()
+	_build_fog()
 	_close_button.connect("pressed", self, "_on_close_pressed")
 	select_chapter(0)
 	_update_restriction_ui()
@@ -127,16 +137,128 @@ func _build_toc():
 	_refresh_toc()
 
 
+func _build_fog():
+	# 雾气盖在正文区域上；未解锁的章节只留下标题和一团灰雾。
+	_fog = TextureRect.new()
+	_fog.texture = load("res://ui/fog.png")
+	_fog.expand = true
+	_fog.stretch_mode = TextureRect.STRETCH_SCALE
+	_fog.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fog.visible = false
+	$Root/Book.add_child(_fog)
+
+	_fog_hint = Label.new()
+	_fog_hint.align = Label.ALIGN_CENTER
+	_fog_hint.valign = Label.VALIGN_CENTER
+	_fog_hint.autowrap = true
+	_fog_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var f = _font(23)
+	_fog_hint.add_font_override("font", f)
+	_fog_hint.add_color_override("font_color", Color(0.25, 0.23, 0.20, 0.95))
+	_fog_hint.visible = false
+	$Root/Book.add_child(_fog_hint)
+
+	# 雾气下沿露出来的最后一句：压在雾的上层，贴在页面底部。
+	_peek_label = Label.new()
+	_peek_label.align = Label.ALIGN_LEFT
+	_peek_label.valign = Label.VALIGN_CENTER
+	_peek_label.autowrap = true
+	_peek_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_peek_label.add_font_override("font", _font(18))
+	_peek_label.add_color_override("font_color", Color(0.24, 0.15, 0.09, 1))
+	_peek_label.add_color_override("font_color_shadow", Color(1, 0.98, 0.92, 0.55))
+	_peek_label.add_constant_override("shadow_offset_x", 0)
+	_peek_label.add_constant_override("shadow_offset_y", 1)
+	_peek_label.add_constant_override("line_spacing", 7)
+	_peek_label.visible = false
+	$Root/Book.add_child(_peek_label)
+
+	_fog_tween = Tween.new()
+	add_child(_fog_tween)
+
+
+func _place_fog():
+	if _fog == null or _fog_hint == null:
+		return
+	var book = $Root/Book
+	var r = Rect2(_scroll.rect_global_position - book.rect_global_position, _scroll.rect_size)
+	_fog.rect_position = r.position
+	_fog.rect_size = r.size
+	_fog_hint.rect_position = r.position + Vector2(34, 0)
+	_fog_hint.rect_size = r.size - Vector2(68, 0)
+	if _peek_label != null:
+		# 一行排下，贴近页面底部，和正文左缘对齐。
+		var peek_h = 34.0
+		_peek_label.rect_position = Vector2(r.position.x + 10,
+			r.position.y + r.size.y - peek_h - 20)
+		_peek_label.rect_size = Vector2(r.size.x - 20, peek_h)
+
+
+func _show_fog(index):
+	if _fog_tween != null:
+		_fog_tween.stop_all()
+		_fog_tween.remove_all()
+	_place_fog()
+	var chapter = CHAPTERS[index]
+	_fog_hint.text = chapter.get("fog",
+		"这一页被灰色的雾气盖住了。\n\n继续在魔瓶里探索，等时机到了，雾气会自行散开。")
+	_fog.modulate = Color(1, 1, 1, 1)
+	_fog_hint.modulate = Color(1, 1, 1, 1)
+	_fog.visible = true
+	_fog_hint.visible = true
+	if _peek_label != null:
+		var peek = chapter.get("peek", "")
+		_peek_label.text = peek
+		_peek_label.modulate = Color(1, 1, 1, 1)
+		_peek_label.visible = peek != ""
+
+
+func _dissolve_fog():
+	if not _fog.visible or _fog_tween == null:
+		return
+	# 正文已经露出来了，提示与雾外的末句立即退场，避免和正文叠字。
+	if _fog_hint != null:
+		_fog_hint.visible = false
+	if _peek_label != null:
+		_peek_label.visible = false
+		_peek_label.modulate = Color(1, 1, 1, 1)
+	_fog_tween.stop_all()
+	_fog_tween.remove_all()
+	_fog_tween.interpolate_property(_fog, "modulate:a", _fog.modulate.a, 0.0, 0.55,
+		Tween.TRANS_SINE, Tween.EASE_OUT)
+	_fog_tween.interpolate_callback(self, 0.58, "_hide_fog")
+	_fog_tween.start()
+
+
+func _hide_fog():
+	_fog.visible = false
+	_fog_hint.visible = false
+	if _peek_label != null:
+		_peek_label.visible = false
+		_peek_label.modulate = Color(1, 1, 1, 1)
+
+
+func _process(_delta):
+	if visible and _fog != null and _fog.visible:
+		_place_fog()
+
+
 func _refresh_toc():
 	for i in range(_toc_buttons.size()):
-		_toc_buttons[i].visible = _page_visible(i)
+		var b = _toc_buttons[i]
+		b.visible = _page_visible(i)
+		var locked = not _is_unlocked(i)
+		var idle = Color(0.47, 0.42, 0.37, 0.55) if locked else Color(0.30, 0.19, 0.12)
+		var hot = Color(0.40, 0.35, 0.30, 0.70) if locked else Color(0.20, 0.11, 0.06)
+		b.add_color_override("font_color", idle)
+		b.add_color_override("font_color_hover", hot)
+		b.add_color_override("font_color_pressed", hot)
+		b.add_color_override("font_color_focus", idle)
+		b.hint_tooltip = "这一页还被雾气盖着" if locked else ""
 
 
-# 页面按手记里的解锁时机逐页显形；夹页、前三页和最后一页始终可见。
-# 强制阅读期间只保留指定页，最后一页也会暂时藏起来。
+# 目录保留所有章节；强制阅读期间只保留指定页。
 func _page_visible(index):
-	if not _is_unlocked(index):
-		return false
 	if _restricted and not _required_pages.has(index):
 		return false
 	return true
@@ -146,28 +268,39 @@ func _is_unlocked(index):
 	var chapter = CHAPTERS[index]
 	if chapter.get("always", false):
 		return true
+	var special = chapter.get("special", "")
+	if special == "previous_owner":
+		return _previous_owner_unlocked()
+	if special == "creator":
+		return _creator_unlocked()
 	var flag = chapter.get("flag", "")
 	if flag == "":
 		return false
 	return Flags.get(flag) == true
 
 
+# 上一位拥有者的最后一页：前面所有页都解锁，并且见过一次瓶子碎裂。
+func _previous_owner_unlocked():
+	if not Flags.get("guide_bottle_shattered"):
+		return false
+	for i in range(0, 9):
+		if not _is_unlocked(i):
+			return false
+	return true
+
+
+# 创造者的留言：图鉴完整后才显露。
+func _creator_unlocked():
+	if not has_node("/root/Encyclopedia"):
+		return false
+	var enc = get_node("/root/Encyclopedia")
+	return enc.discovered_count() >= enc.total_entries()
+
+
 func _entry_count():
 	if has_node("/root/Encyclopedia"):
 		return get_node("/root/Encyclopedia").discovered_count()
 	return 0
-
-
-func _chapter_body(index):
-	var chapter = CHAPTERS[index]
-	if not chapter.has("unlock"):
-		return chapter["body"]
-	var count = _entry_count()
-	if count >= chapter["unlock"]:
-		return chapter["body"]
-	if count >= chapter["mid_unlock"]:
-		return chapter["mid_body"] % count
-	return chapter["locked_body"] % count
 
 
 func select_chapter(index):
@@ -177,9 +310,17 @@ func select_chapter(index):
 		return
 	_current = index
 	_title_label.text = CHAPTERS[index]["title"]
-	_body_label.text = _chapter_body(index)
 	# 批注已经写在正文里，页边批注框不再使用。
 	_note_box.visible = false
+	if _is_unlocked(index):
+		_body_label.text = CHAPTERS[index]["body"]
+		_body_label.visible = true
+		if _fog != null and _fog.visible and _fog.modulate.a > 0.98:
+			_dissolve_fog()
+	else:
+		_body_label.text = ""
+		_body_label.visible = false
+		_show_fog(index)
 	if index < _toc_buttons.size():
 		_toc_buttons[index].pressed = true
 	_scroll.scroll_vertical = 0

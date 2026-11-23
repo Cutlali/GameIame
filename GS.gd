@@ -34,6 +34,7 @@ enum Action {
 
 enum Water {
 	W1x1,
+	W1x2,
 	W2x2,
 	W3x3
 }
@@ -147,6 +148,10 @@ class Card:
 	# 水晶球之水：打出时从水晶球存量里扣 1 点。
 	var from_orb = false
 
+	# 打在水晶球里时存入的水量；0 表示与每格水量相同。
+	# 浇地时始终用 quantity，这个值只影响“倒进球里”。
+	var orb_quantity = 0
+
 	func _init(title_: String, desc_: String, cost_: int, action_):
 		title = title_
 		desc = desc_
@@ -165,6 +170,10 @@ class Card:
 		
 	func with_quantity(amount_):
 		quantity = amount_
+		return self
+
+	func with_orb_quantity(amount_):
+		orb_quantity = amount_
 		return self
 		
 	func with_drain(amount_):
@@ -263,26 +272,26 @@ var card_water2_1x1 : Card = Card.new(
 
 var card_water1_2x2 : Card = Card.new(
 	"水壶",
-	"为 2x2 的区域施加 1 点水分",
+	"为 2x2 的区域施加 $DQ 点水分",
 	3,
 	Action.WATER
-).shape(Water.W2x2).with_cat(CAT_WATER).with_icon(preload("res://cards/icons/water_can.svg"))
+).shape(Water.W2x2).with_quantity(2).with_orb_quantity(4).with_cat(CAT_WATER).with_icon(preload("res://cards/icons/water_can.svg"))
 
 # Medium water cards
 
 var card_water1_3x3 : Card = Card.new(
 	"水桶",
-	"为 3x3 的区域施加 1 点水分",
-	3,
+	"为 3x3 的区域施加 $DQ 点水分",
+	5,
 	Action.WATER
-).shape(Water.W3x3).with_cat(CAT_WATER).with_icon(preload("res://cards/icons/water_barrel.svg"))
+).shape(Water.W3x3).with_quantity(2).with_orb_quantity(8).with_cat(CAT_WATER).with_icon(preload("res://cards/icons/water_barrel.svg"))
 
 var card_water2_2x2 : Card = Card.new(
 	"水管",
-	"为 2x2 的区域施加 2 点水分",
-	4,
+	"为 1x2 的区域施加 $DQ 点水分",
+	2,
 	Action.WATER
-).shape(Water.W2x2).with_quantity(2).with_cat(CAT_WATER).with_icon(preload("res://cards/icons/hose.svg"))
+).shape(Water.W1x2).with_quantity(2).with_orb_quantity(3).with_cat(CAT_WATER).with_icon(preload("res://cards/icons/hose.svg"))
 
 var card_drain3_rng5 : Card = Card.new(
 	"水爆",
@@ -440,6 +449,14 @@ var card_win_plant : Card = Card.new(
 	Action.PLANT
 ).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/mystical_seeds.svg")).with_species("moonflower")
 
+# 终局种子：图鉴集齐后由魔瓶送出，成熟时进入结局。
+var card_final_seed : Card = Card.new(
+	"最后的种子",
+	"从魔瓶最深处浮出的一颗种子。它不属于任何一季，却把四季都收在里面。",
+	1,
+	Action.PLANT
+).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/mystical_seeds.svg")).with_species("final_seed")
+
 var card_energy : Card = Card.new(
 	"免费能量",
 	"获得 1 点能量",
@@ -570,7 +587,8 @@ func build_card_registry():
 		"basic_plant": card_basic_plant,
 		"medium_plant": card_medium_plant,
 		"high_plant": card_high_plant,
-		"win_plant": card_win_plant
+		"win_plant": card_win_plant,
+		"final_seed": card_final_seed
 	}
 	for key in card_registry.keys():
 		card_registry[key].id = key
@@ -590,6 +608,10 @@ func make_basic_card():
 var Game = preload("res://Game.tscn")
 var MainMenu = preload("res://MainMenu.tscn")
 var Intro = preload("res://Intro.tscn")
+var Ending = preload("res://Ending.tscn")
+
+# 结局只播一次；重开新局时在 reset_all_state() 里清掉。
+var ending_started = false
 var HandCard = preload("res://cards/HandCard.tscn")
 var CardBase = preload("res://cards/CardBase.tscn")
 
@@ -774,7 +796,8 @@ func is_over_orb():
 func play_water_into_orb(card):
 	if card == null or card.from_orb or card.quantity <= 0:
 		return false
-	store_orb_water(card.quantity)
+	var stored = card.orb_quantity if card.orb_quantity > 0 else card.quantity
+	store_orb_water(stored)
 	energy -= card.cost
 	if energy < 0:
 		energy = 0
@@ -907,17 +930,25 @@ func _spawn_bug_at(pos, item):
 		# 精英虫：血更厚、有外壳、咬得更重。
 		bug.health = 6
 		bug.is_elite = true
+	# 年度成长：从第 2 年起，所有虫子的血量 +1/年。
+	bug.health += max(0, Season.year - 1)
 	tilemap.add_child(bug)
 	return true
 
 func build_spawn_config():
-	# 年度压力：第 2 年结伴、第 3 年瓶虱、第 4 年精英虫。
+	# 年度压力：虫子数量逐年增加，第 3 年出现瓶虱、第 4 年出现精英虫。
 	var year = Season.year
 	var cfg = spawn_configs[next_spawn].duplicate()
 	if Season.is_summer():
 		cfg.append(SpawnOpt.Bug3)
 	if year >= 2:
 		cfg.append(SpawnOpt.Bug2)
+	if year >= 3:
+		cfg.append(SpawnOpt.Bug3)
+	if year >= 4:
+		cfg.append(SpawnOpt.Bug5)
+	if year >= 5:
+		cfg.append(SpawnOpt.Bug3)
 	if year >= 3 and randf() < 0.45:
 		cfg.append(SpawnOpt.BottleBiter)
 	if year >= 4 and randf() < 0.40:
@@ -942,7 +973,8 @@ func spawn_enemies():
 
 	var count_enemys = get_tree().get_nodes_in_group("Enemy").size()
 	var summer = Season.is_summer()
-	var enemy_cap = 6 if summer else 5
+	# 场上虫子越多，年份越往后，能容纳的虫群上限也越高。
+	var enemy_cap = (7 if summer else 6) + max(0, year - 1)
 
 	# Three times
 	for item in cfg:
@@ -983,12 +1015,13 @@ func end_turn():
 	hand.clear_hand()
 	current_picked_up_card = null
 	
-	# You get 3 free turns between enemies...? Summer: 2.
+	# 空场时很快来虫；场上有虫时也会周期性增援，年份越高间隔越短。
+	var year = Season.year
 	var spawn_gap = 2 if Season.is_summer() else 3
-	if no_enemy_turns >= spawn_gap or some_enemy_turns >= 12:
+	var active_gap = max(3, 5 - int((year - 1) / 2))
+	if no_enemy_turns >= spawn_gap or some_enemy_turns >= active_gap:
 		spawn_enemies()
-		# Give some bonus for fighting enemies
-		no_enemy_turns = -int(some_enemy_turns / 2)
+		no_enemy_turns = 0
 		some_enemy_turns = 0
 	
 	turn_state = TurnState.UPDATING
@@ -1046,7 +1079,67 @@ func draw_card_to_hand():
 	add_card_to_hand(c)
 	
 var card_draw_count = 5
-		
+
+
+# 图鉴集齐之后，魔瓶会稳定送出一颗“最后的种子”。
+# 手牌里已经有这张卡、或者田里已经种着终局植物时不再重复发放。
+func has_final_seed_or_plant():
+	if hand != null and is_instance_valid(hand):
+		for c in hand.get_children():
+			if c.associated_card == card_final_seed:
+				return true
+	for p in get_tree().get_nodes_in_group("Plant"):
+		if is_instance_valid(p) and p.get("is_final_plant"):
+			return true
+	return false
+
+
+func maybe_grant_final_seed(announce = true):
+	if ending_started:
+		return false
+	if Encyclopedia.discovered_count() < Encyclopedia.total_entries():
+		return false
+	if has_final_seed_or_plant():
+		return false
+	if hand == null or not is_instance_valid(hand):
+		return false
+
+	# 种子可能还在牌堆/弃牌堆里，直接捞回手牌，避免又发一张。
+	var pile_index = draw_pile.find(card_final_seed)
+	if pile_index >= 0:
+		draw_pile.remove(pile_index)
+	else:
+		pile_index = discard_pile.find(card_final_seed)
+		if pile_index >= 0:
+			discard_pile.remove(pile_index)
+
+	add_card_to_hand(card_final_seed)
+	if announce:
+		Toast.show_message("图鉴已经完整。魔瓶深处浮出一颗新的种子。")
+	return true
+
+
+# 终局植物成熟：淡出农场，播放结局分镜。
+func start_ending():
+	if ending_started:
+		return
+	ending_started = true
+	if has_node("/root/BottleManager"):
+		BottleManager.force_close()
+	if has_node("/root/HarvestManager"):
+		HarvestManager.force_close()
+	if has_node("/root/EncyclopediaUI"):
+		EncyclopediaUI.close()
+	if has_node("/root/YearSummary"):
+		YearSummary.reset_all()
+	waiting_for_card_selection = false
+	harvest_open = false
+	bottle_open = false
+	bestiary_open = false
+	year_summary_open = false
+	SceneTransitions.change_scene_to(Ending)
+
+
 func deal_new_hand():
 	Season.advance_round()
 	
@@ -1092,7 +1185,10 @@ func _deal_cards():
 	for i in range(carried):
 		add_card_to_hand(card_mature)
 		mature_rewards_this_round += 1
-	
+
+	# 图鉴集齐后的保底：即使上一次没种下，也会重新出现在手牌里。
+	maybe_grant_final_seed()
+
 	turn_state = TurnState.PLAYING_CARDS
 	
 	energy = energy_max
@@ -1208,6 +1304,7 @@ var some_enemy_turns = 0
 var auto_water = false
 	
 func reset_all_state():
+	ending_started = false
 	tutorial = true # SHould this get reset?
 	tutorial_allow_guide = false
 	tutorial_allow_end_turn = false

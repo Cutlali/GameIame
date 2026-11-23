@@ -3,7 +3,7 @@ class_name Cursor
 
 onready var cursors = [$Red, $CursorPlant, 
 $CursorAttack, 
-$CursorWater1x1, $CursorWater2x2, $CursorWater3x3,
+$CursorWater1x1, $CursorWater1x2, $CursorWater2x2, $CursorWater3x3,
  $CursorWaterDrain, $CursorGeneral,
 $CursorDefense]
 
@@ -33,8 +33,12 @@ func new_plant(associated_card):
 	var scene = null
 	var sid = associated_card.species_id
 	var level = 1
-	
-	if sid != "":
+
+	if associated_card == GS.card_final_seed:
+		# 终局种子借用月见草的生长画面，但走的是独立结局流程。
+		scene = GS.PlantWin
+		level = 4
+	elif sid != "":
 		scene = GameData.scene_for(sid)
 		var sp = GameData.species(sid)
 		if sp != null:
@@ -56,6 +60,7 @@ func new_plant(associated_card):
 	var p = scene.instance()
 	p.species_id = sid
 	p.card_level = level
+	p.is_final_plant = (associated_card == GS.card_final_seed)
 	p.position = position
 	get_parent().add_child(p)
 	
@@ -81,6 +86,8 @@ func water(card):
 		height = 3
 	if card.water_shape == GS.Water.W2x2:
 		width = 2
+		height = 2
+	if card.water_shape == GS.Water.W1x2:
 		height = 2
 
 	var watered = false
@@ -356,6 +363,8 @@ func is_any_tile_plant_in_square(card):
 	if card.water_shape == GS.Water.W2x2:
 		width = 2
 		height = 2
+	if card.water_shape == GS.Water.W1x2:
+		height = 2
 		
 	for i in range(0, width):
 		for j in range(0, height):
@@ -370,6 +379,8 @@ func is_any_tile_plant_in_square(card):
 func show_water_cursor(card):
 	if card.water_shape == GS.Water.W1x1:
 		$CursorWater1x1.show()
+	if card.water_shape == GS.Water.W1x2:
+		$CursorWater1x2.show()
 	if card.water_shape == GS.Water.W2x2:
 		$CursorWater2x2.show()
 	if card.water_shape == GS.Water.W3x3:

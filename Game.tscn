@@ -855,15 +855,23 @@ theme = ExtResource( 56 )
 text = "下一步"
 script = ExtResource( 10 )
 
-[node name="Panel" type="Panel" parent="CanvasLayer"]
-anchor_left = 1.0
+[node name="Panel" type="Control" parent="CanvasLayer"]
 anchor_right = 1.0
-margin_left = -260.0
-margin_top = 9.0
-margin_right = -9.0
-margin_bottom = 134.0
+anchor_bottom = 1.0
+mouse_filter = 2
 theme = ExtResource( 8 )
 script = ExtResource( 55 )
+
+[node name="Frame" type="Panel" parent="CanvasLayer/Panel"]
+show_behind_parent = true
+anchor_left = 1.0
+anchor_right = 1.0
+margin_left = -272.0
+margin_top = 10.0
+margin_right = -10.0
+margin_bottom = 150.0
+mouse_filter = 2
+theme = ExtResource( 8 )
 
 [node name="PauseMenu" parent="." instance=ExtResource( 1 )]
 layer = 140

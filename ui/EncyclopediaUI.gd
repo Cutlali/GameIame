@@ -114,9 +114,26 @@ func _build_ui():
 	_detail_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_detail_plate.add_child(_detail_image)
 
+	# 详情文字较长时用滚动条，避免超出面板。
+	var detail_scroll = ScrollContainer.new()
+	detail_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	detail_scroll.scroll_horizontal_enabled = false
+	detail_box.add_child(detail_scroll)
+
 	_detail = _make_label("选择一个条目查看详情。", 15, Color(0.38, 0.25, 0.15))
-	_detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	detail_box.add_child(_detail)
+	_detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_scroll.add_child(_detail)
+
+	var bar = detail_scroll.get_v_scrollbar()
+	bar.rect_min_size = Vector2(10, 0)
+	bar.add_stylebox_override("scroll", _flat_box(
+		Color(0.72, 0.62, 0.47, 0.30), Color(0, 0, 0, 0), 0, 4))
+	bar.add_stylebox_override("grabber", _flat_box(
+		Color(0.55, 0.39, 0.24, 0.75), Color(0, 0, 0, 0), 0, 4))
+	bar.add_stylebox_override("grabber_highlight", _flat_box(
+		Color(0.45, 0.30, 0.18, 0.90), Color(0, 0, 0, 0), 0, 4))
+	bar.add_stylebox_override("grabber_pressed", _flat_box(
+		Color(0.38, 0.24, 0.14, 0.95), Color(0, 0, 0, 0), 0, 4))
 
 	var bottom = HBoxContainer.new()
 	bottom.alignment = BoxContainer.ALIGN_END
