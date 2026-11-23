@@ -27,7 +27,9 @@ enum Action {
 
 	ATTACK_ALL,
 	HEAL_BOTTLE,
-	THORNS
+	THORNS,
+
+	MATURE
 }
 
 enum Water {
@@ -48,6 +50,14 @@ const CAT_DEF = 2
 const CAT_ATK = 3
 const CAT_SEED = 4
 
+# 能量：基础 3 点，第一年结束后 +2，之后只靠开垦新田 +1，总上限 7。
+const BASE_ENERGY = 3
+const ENERGY_CAP = 7
+const YEAR_ENERGY_BONUS = 2
+
+# 植物生命、水分、护盾的统一上限。
+const PLANT_WATER_MAX = 7
+
 var CardTexWater = preload("res://cards/card_water.svg")
 var CardTexDef = preload("res://cards/card_tank.svg")
 var CardTexAtk = preload("res://cards/card_attak.svg")
@@ -60,6 +70,16 @@ var card_selector_ui = null
 var gold = 0
 var energy = 3
 var energy_max = 3
+
+# 来自图鉴/开垦/商店的永久能量加成，瓶碎重开后保留。
+var permanent_energy_bonus = 0
+
+# 水晶球储水。无上限，瓶碎重开后清空。
+var orb_water = 0
+
+# 虫子死亡奖励：每轮最多 3 张速成卡，敌方回合拿到的顺延到下一轮。
+var mature_rewards_this_round = 0
+var pending_mature_rewards = 0
 
 var shop_open = false
 var upper_panel_mouse = false
@@ -120,7 +140,13 @@ class Card:
 	
 	# 种子卡对应的植物物种 ID；非种子卡为空
 	var species_id = ""
-	
+
+	# 临时卡：打出或回合结束消失，不进入弃牌堆。
+	var transient = false
+
+	# 水晶球之水：打出时从水晶球存量里扣 1 点。
+	var from_orb = false
+
 	func _init(title_: String, desc_: String, cost_: int, action_):
 		title = title_
 		desc = desc_
@@ -159,6 +185,15 @@ class Card:
 		
 	func with_species(s):
 		species_id = s
+		return self
+
+	func as_transient():
+		transient = true
+		return self
+
+	func from_crystal_orb():
+		from_orb = true
+		transient = true
 		return self
 
 # The "global state" node. This is where global variables are usually stored,
@@ -472,6 +507,22 @@ var card_thorns_armor : Card = Card.new(
 	Action.THORNS
 ).with_quantity(2).with_drain(2).with_cat(CAT_DEF).with_icon(preload("res://cards/icons/thorns.svg"))
 
+# 虫子死亡奖励：0 费，让一株植物立刻成熟。
+var card_mature : Card = Card.new(
+	"速成",
+	"让一株植物立刻成熟，结束回合时收获。",
+	0,
+	Action.MATURE
+).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/power_crystal.svg")).as_transient()
+
+# 水晶球取水：0 费，打出时从储水里扣 1 点。
+var card_orb_water : Card = Card.new(
+	"水晶球之水",
+	"从水晶球取出 1 点水，浇给一株植物。",
+	0,
+	Action.WATER
+).shape(Water.W1x1).with_quantity(1).with_cat(CAT_WATER).with_icon(preload("res://cards/icons/water_drop.svg")).from_crystal_orb()
+
 # 卡牌 ID → 卡牌实例。魔瓶池、基础抽卡、调试都通过这里取牌。
 var card_registry = {}
 
@@ -514,6 +565,8 @@ func build_card_registry():
 		"swarm": card_swarm,
 		"patch": card_patch,
 		"thorns_armor": card_thorns_armor,
+		"mature": card_mature,
+		"orb_water": card_orb_water,
 		"basic_plant": card_basic_plant,
 		"medium_plant": card_medium_plant,
 		"high_plant": card_high_plant,
@@ -548,6 +601,31 @@ var PlantWin = preload("res://plants/winplant/WinPlant.tscn")
 var Bug = preload("res://bugs/Bug.tscn")
 
 var hand = null
+# 右上角 HUD，水晶球的命中判定由它提供。
+var hud = null
+# 游戏内的《瓶中手记》，教程和事件提示都要直接翻到某一页。
+var guide = null
+
+# 教程阶段锁：只允许当前阶段需要的操作。
+var tutorial_allow_guide = false
+var tutorial_allow_end_turn = false
+var tutorial_allowed_action = ""
+
+
+# 教程期间只放行当前阶段需要的卡牌，避免把关键牌浪费在空地上。
+func tutorial_card_allowed(card):
+	if not tutorial:
+		return true
+	if card == null:
+		return false
+	match tutorial_allowed_action:
+		"plant":
+			return card.action == Action.PLANT
+		"water":
+			return card.action == Action.WATER
+		"attack":
+			return card.action == Action.ATTACK
+	return false
 
 var current_picked_up_card = null
 var cursor: Cursor = null
@@ -650,6 +728,8 @@ func get_lowest_health_enemy(exclude = null):
 
 
 func add_card_to_hand(card: Card):
+	if hand == null or not is_instance_valid(hand):
+		return
 	var h = HandCard.instance()
 	var b = get_card_base(card)
 	
@@ -660,6 +740,68 @@ func add_card_to_hand(card: Card):
 	h.add_child(b)
 	
 	hand.add_child(h)
+
+
+# 能量上限 = 基础 3 + 首年结束 +2 + 永久加成（开垦/图鉴/商店），最高 7。
+func refresh_energy_max():
+	var year_bonus = 0
+	if has_node("/root/Season") and Season.year >= 2:
+		year_bonus = YEAR_ENERGY_BONUS
+	var target = BASE_ENERGY + year_bonus + permanent_energy_bonus
+	if target > ENERGY_CAP:
+		target = ENERGY_CAP
+	energy_max = target
+
+
+func add_permanent_energy(amount):
+	permanent_energy_bonus += amount
+	refresh_energy_max()
+
+
+func store_orb_water(amount):
+	if amount <= 0:
+		return
+	orb_water += amount
+
+
+# 鼠标是否正停在水晶球上（拖拽水牌时用来判断投放目标）。
+func is_over_orb():
+	return hud != null and is_instance_valid(hud) and hud.is_mouse_over_orb()
+
+
+# 把水牌直接打在水晶球上：水量全部存进球里，不浇地、不溢出。
+# 水晶球之水本身是从球里取出来的，不能再存回去。
+func play_water_into_orb(card):
+	if card == null or card.from_orb or card.quantity <= 0:
+		return false
+	store_orb_water(card.quantity)
+	energy -= card.cost
+	if energy < 0:
+		energy = 0
+	return true
+
+
+# 手牌里已经取出的水晶球之水数量，用来限制从 HUD 重复取水。
+func orb_water_in_hand():
+	var n = 0
+	if hand == null or not is_instance_valid(hand):
+		return 0
+	for c in hand.get_children():
+		if c.associated_card != null and c.associated_card.from_orb:
+			n += 1
+	return n
+
+
+# 一只虫子死亡 → 一张 0 费速成卡。
+# 手牌存在时直接进手牌；敌方回合拿到的先存着，下一轮发牌时补进来。
+func grant_mature_reward():
+	if mature_rewards_this_round >= 3:
+		return
+	mature_rewards_this_round += 1
+	if turn_state == TurnState.PLAYING_CARDS and hand != null and is_instance_valid(hand):
+		add_card_to_hand(card_mature)
+	else:
+		pending_mature_rewards += 1
 
 func _ready():
 	OS.set_window_maximized(true)
@@ -832,6 +974,9 @@ func end_turn():
 	# Must be in PLAYING_CARDS or WAITING_FOR_TUTORIAL state
 	if turn_state != TurnState.PLAYING_CARDS or shatter_open:
 		return
+	# 教程没教到“结束回合”之前，按钮和快捷键都不该生效。
+	if tutorial and not tutorial_allow_end_turn:
+		return
 	
 	SFX.end_turn.play_sfx()
 	
@@ -920,6 +1065,8 @@ func deal_new_hand():
 
 # 只发这一轮的手牌，不推进季节。瓶碎重开时也走这里。
 func _deal_cards():
+	mature_rewards_this_round = 0
+
 	var draws = card_draw_count + bonus_draws
 	for i in range(0, draws):
 		var c = draw_card()
@@ -938,6 +1085,13 @@ func _deal_cards():
 	if get_tree().get_nodes_in_group("Plant").size() > 0 and _hand_water_count() == 0:
 		add_card_to_hand(card_free_1x1_water)
 		Toast.show_message("手牌里没有水牌，补一张水滴应急。")
+
+	# 敌方回合（反伤/护甲）杀掉的虫子，奖励顺延到这一轮。
+	var carried = pending_mature_rewards
+	pending_mature_rewards = 0
+	for i in range(carried):
+		add_card_to_hand(card_mature)
+		mature_rewards_this_round += 1
 	
 	turn_state = TurnState.PLAYING_CARDS
 	
@@ -1004,7 +1158,11 @@ func restart_after_shatter():
 	RunStats.reset_year()
 	RunStats.mutation_pity = 0
 
-	# energy_max / bonus_draws 来自图鉴与开垦，属于要保留的进度。
+	# 永久加成（图鉴/开垦）保留；年份带来的能量回退到基础值。
+	refresh_energy_max()
+	orb_water = 0
+	mature_rewards_this_round = 0
+	pending_mature_rewards = 0
 	energy = energy_max
 	_deal_cards()
 
@@ -1051,21 +1209,32 @@ var auto_water = false
 	
 func reset_all_state():
 	tutorial = true # SHould this get reset?
+	tutorial_allow_guide = false
+	tutorial_allow_end_turn = false
+	tutorial_allowed_action = ""
+	guide = null
 	if has_node("/root/TutorialSteps"):
 		TutorialSteps.tutorial = null
 		TutorialSteps.reset_all_state()
 	
 	if has_node("/root/CardCreation"):
 		CardCreation.reset_all_state()
-	
+
+	if has_node("/root/Flags"):
+		Flags.reset_guide_unlocks()
+
 	turn_state = TurnState.UNDEFINED
 	waiting_for_card_selection = false
 
 	card_selector_ui = null
 	gold = 0
 	
-	energy_max = 3
+	permanent_energy_bonus = 0
+	energy_max = BASE_ENERGY
 	energy = energy_max
+	orb_water = 0
+	mature_rewards_this_round = 0
+	pending_mature_rewards = 0
 	
 	hand = null
 

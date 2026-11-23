@@ -124,10 +124,10 @@ bus = "SFX"
 script = ExtResource( 2 )
 
 [node name="YearEnd" type="AudioStreamPlayer" parent="."]
+pause_mode = 2
 stream = ExtResource( 20 )
 volume_db = -3.0
 bus = "SFX"
-pause_mode = 2
 script = ExtResource( 2 )
 
 [node name="Mutation" type="AudioStreamPlayer" parent="."]

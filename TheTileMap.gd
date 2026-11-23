@@ -101,8 +101,9 @@ func claim_parcel(index):
 	# 新田需要配套的照顾能力，否则只会多出一块空地。
 	# 抽牌解决“有没有牌”，能量上限解决“打不打得出去”。
 	GS.bonus_draws += 1
-	GS.energy_max += 1
-	if GS.turn_state == GS.TurnState.PLAYING_CARDS:
+	var before = GS.energy_max
+	GS.add_permanent_energy(1)
+	if GS.turn_state == GS.TurnState.PLAYING_CARDS and GS.energy_max > before:
 		GS.energy = min(GS.energy + 1, GS.energy_max)
 
 	rebuild_farm_edges()

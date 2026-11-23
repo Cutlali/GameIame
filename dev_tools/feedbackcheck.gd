@@ -19,6 +19,7 @@ var season = null
 var run_stats = null
 var harvest = null
 var year_summary = null
+var gamedata = null
 
 
 func _idle(_delta):
@@ -32,6 +33,7 @@ func _idle(_delta):
 		run_stats = get_root().get_node("RunStats")
 		harvest = get_root().get_node("HarvestManager")
 		year_summary = get_root().get_node("YearSummary")
+		gamedata = get_root().get_node("GameData")
 		get_root().get_node("Flags").skip_tutorial = true
 		game = load("res://Game.tscn").instance()
 		get_root().add_child(game)
@@ -107,8 +109,17 @@ func _check_variant_popup():
 		failures.append("harvest popup photo caption wrong")
 	if harvest._title.text.find("变异") < 0:
 		failures.append("variant title missing")
-	print("variant popup: title=%s, caption=%s" % [
-		harvest._title.text, harvest._photo_caption.text])
+	# 变种弹窗的图片必须是完整的变异色，不能还是原种的样子。
+	if harvest._pending_entry == null or not harvest._pending_entry["is_variant"]:
+		failures.append("variant popup lost pending variant entry")
+	else:
+		var want = gamedata.variant_color(
+			harvest._pending_entry["species_id"], harvest._pending_entry["variant_index"])
+		var got = harvest._photo.modulate
+		if abs(got.r - want.r) > 0.01 or abs(got.g - want.g) > 0.01 or abs(got.b - want.b) > 0.01:
+			failures.append("variant photo tint mismatch: got %s want %s" % [got, want])
+	print("variant popup: title=%s, caption=%s, tint=%s" % [
+		harvest._title.text, harvest._photo_caption.text, str(harvest._photo.modulate)])
 
 
 func _check_year_end_sfx():

@@ -104,6 +104,8 @@ func play_self():
 		GS.cursor.heal_bottle(associated_card)
 	if associated_card.action == GS.Action.THORNS:
 		GS.cursor.thorns_armor(associated_card)
+	if associated_card.action == GS.Action.MATURE:
+		GS.cursor.mature(associated_card)
 		
 	GS.energy -= associated_card.cost
 	discard()
@@ -116,11 +118,30 @@ func discard():
 	new_parent.add_child(self)
 	
 	state = STATE_DISCARD
-	GS.discard_pile.push_back(associated_card)
+	# 速成/水晶球之水是一次性卡，不污染牌库循环。
+	if associated_card != null and not associated_card.transient:
+		GS.discard_pile.push_back(associated_card)
 	
 func try_play_self():
 	GS.release_current_card(self)
-	
+
+	# 教程期间只放行当前阶段需要的牌，避免把种子/水滴浪费在空地上。
+	if not GS.tutorial_card_allowed(associated_card):
+		Toast.show_message("先按手记的提示来。")
+		state = STATE_HOVER
+		return
+
+	# 水牌可以直接拖到右上角的水晶球上，把水量存起来。
+	if associated_card.action == GS.Action.WATER and GS.is_over_orb():
+		if GS.play_water_into_orb(associated_card):
+			Toast.show_message("水晶球存下了 %d 点水。" % associated_card.quantity)
+			discard()
+			SFX.card_play.play_sfx()
+			return
+		# 水晶球之水是从球里取出来的，不能再存回去。
+		state = STATE_HOVER
+		return
+
 #	if associated_card.action == GS.Action.PLANT \
 #		or associated_card.action == GS.Action.WATER \
 #		or associated_card.action == GS.Action.ATTACK \
@@ -134,6 +155,8 @@ func try_play_self():
 	
 func update_modulate():
 	var playable = (associated_card.cost <= GS.energy)
+	if associated_card.from_orb and GS.orb_water <= 0:
+		playable = false
 	var mod = Color.white
 	if not playable:
 		mod = Color(0.4, 0.4, 0.4, 1.0)

@@ -1,68 +1,77 @@
 extends CanvasLayer
 
-# 《四季图鉴指南》
-# 一本随时可以翻开的书：左边目录，右边章节正文。
-# 新手教程只讲最基础的一步；世界观与详细机制都收在这里。
-# 页边的「旧园丁批注」会随图鉴收录条数逐条解锁。
+# 《瓶中手记》
+# 上一个拿到魔瓶的人留下的笔记，最后一页由创造者写成。
+# 页面正文与《四季魔瓶_指南完整文本_v1.5.2.docx》保持一致：
+# 只保留手记正文与批注，不包含制作说明和灰色的解锁提示。
 
 const CHAPTERS = [
 	{
-		"title": "序章 · 魔瓶与图鉴",
-		"body": "在乡下，你得到了一座荒废已久的农场。整理旧物时，你在石头下发现了两样东西：一只蒙尘的魔瓶，和一本空白的图鉴。\n\n魔瓶里藏着一座微小的世界。据说，那是某个已经消失的世界留下的最后一片土壤——那里所有的植物，都被虫子吃尽了。\n\n有人赶在最后一刻，把仅剩的种子封进瓶里；图鉴则记下了这些种子，也记下了前一位园丁的经验。\n\n你种下的每一株植物，都会在瓶中生根。每收录一条，魔瓶的力量就苏醒一分。",
-		"note": "瓶子不是留给我的，是留给下一个还能种下去的人。",
-		"note_unlock": 0
+		"title": "夹在最前面的一页",
+		"always": true,
+		"body": "墨迹比其他页新，像是后来塞进去的。\n\n如果你翻开这本手记，说明瓶子已经认可了你。\n\n我不知道你是谁，也不知道你从哪里来。\n\n这本笔记，是我刚得到瓶子时写下的，应该能帮到你。我用某种方法把它和魔瓶关联在了一起——你使用魔瓶时，它会自己出现。可我没料到，笔记的内容也会跟着瓶中的变化走。等我发现这一点时，已经没时间了。\n\n剩下的页，只能靠你在探索魔瓶的过程中，一点点读全。\n\n你不是第一个拿起这个瓶子的人。但也许，你会是最后一个。"
 	},
 	{
-		"title": "四季的轮转",
-		"body": "魔瓶以自身的力量维持着瓶中的四季。一年有 24 轮，每季 6 轮，春夏秋冬依次轮转。四季不只是风景——瓶中的生机靠它积攒，瓶中的虫子也靠它压制。\n\n春：瓶中生机最盛。每次浇水会推进 2 个生长帧，植物成熟得更快。\n\n夏：虫害频繁，但植物也更容易发生变异。变异会形成独立的图鉴条目。\n\n秋：收获时，魔瓶会给出四张候选牌，你可以从中选两张。\n\n冬：魔瓶会给出五张候选牌，只能选一张，但可以刷新一次候选。\n\n冬去春来，年份继续。四季不会停，除非魔瓶碎裂。",
-		"note": "春天最像从前。我总在春天骗自己，一切还来得及。",
-		"note_unlock": 2
+		"title": "01  扉页 · 一只不该存在的瓶子",
+		"always": true,
+		"body": "一次偶然的机会，我得到了这个瓶子。\n\n它似乎有神奇的魔力——在瓶中可以种下作物，而作物成熟后会被图鉴收录。\n\n那些植物我从未见过。叶片的形状、花的颜色、甚至成熟时的气味，都不像是这个世界该有的东西。\n\n我试着种下第一颗种子，浇水，它真的活了。\n\n批注：\n· 种子要落在翻好的土地上。\n· 浇水可以使植物成长。"
 	},
 	{
-		"title": "耕作基础",
-		"body": "农场上的每一件事，都要通过卡牌完成。\n\n选中手牌，把它拖到农场上：种子牌落在翻好的土地上；水滴牌为植物补水；防护牌替植物挡下伤害。\n\n每株植物都有生命、水分与免疫三项属性，上限都是 10。每次回合结束时，水分会减少；水分耗尽，植物就会受伤。免疫则会在你的回合开始时减少 1 点。\n\n植物成熟后，你可以把它收录进图鉴，或交给魔瓶，换取一次抽取卡牌的机会。已经收录过的植物再次收获时，魔瓶会自动开始抽取。",
-		"note": "先让一株植物活过一季，再谈别的。",
-		"note_unlock": 0
+		"title": "02  第一页 · 土里的规矩",
+		"always": true,
+		"body": "随着对魔瓶的探索，我渐渐发现每株植物好像都有共通点。\n\n所有的植物都需要浇水，倘若缺少水分，植物便会失去活力停止生长，魔瓶中也提供了储存水的水晶球，不同的植物似乎对缺水的耐受性不同，我试图记录这些植物的特性，慢慢地我发现了规律。\n\n影响植物活力的，我姑且称之为生命之源，每个植物都有生命之源，到目前为止，我尚且没有发现生命之源数超过7的植物。当水分耗尽时植物的生命之源便会流逝并停止生长，生命之源耗尽会怎么样我并未尝试，所以尚不清楚。\n\n此外，当植物成熟后，我发现图鉴中显现出了这株植物的样子，而植物消失了，看起来就像图鉴将这株植物吃掉了，而后当我再次种出相同的植物时，魔瓶将其吸收了，并给予了我一些特别的道具，这些道具拥有奇妙的力量，其中有一种似乎可以抵消对生命之源的消耗，即使植物缺少水分会停止生长，但在这种力量的保护下生命之源并不会流逝，不过在每次开始这种能量似乎会自行消散一部分，而有的道具甚至可以恢复生命之源...我试图给一株植物一直施加这些道具，但当到达一定限度时便不起作用了\n\n这个限度似乎是7？\n\n批注：\n· 植物的许多上限是 7。\n· 水分耗尽会消耗生命之源，能抵消生命之源损耗的力量会自行消散。\n· 魔瓶中的水晶球可以储存水\n· 未被图鉴收录的植物可以被收录图鉴，收录后会被魔瓶自动吸收，并换取道具。"
 	},
 	{
-		"title": "卡牌与能量",
-		"body": "屏幕底部的卡牌就是你的手牌。滚动鼠标滚轮，可以左右翻看。\n\n每张牌右上角标着它的能量消耗；左下角的能量球显示本回合剩余的能量。能量不足时，这张牌无法打出。\n\n结束回合后，用过的牌会进入弃牌堆。抽牌堆耗尽时，弃牌堆会重新洗回抽牌堆。所以不必害怕用牌，但要算好这一回合的力气。",
-		"note": "力气要用在活着的东西上。",
-		"note_unlock": 3
+		"title": "03  第二页 · 瓶子里的魔力",
+		"always": true,
+		"body": "瓶子里的行为是消耗魔力的。\n\n在瓶中，大多数行为需要消耗魔力，而魔力似乎是有限的，这导致有些道具我还没来的及使用就被魔瓶收走了，真是不讲理的瓶子。但似乎随着培育魔力值会上升\n\n批注：\n· 每个行为有魔力消耗，魔力不足无法使用对应道具甚至种植。\n· 回合结束所有的道具都会被魔瓶回收。\n· 第一年结束时，魔力值 +2"
 	},
 	{
-		"title": "虫害与守护",
-		"body": "瓶中的小世界并不安宁。那些虫子，从一开始就跟着种子一起被封了进来。\n\n你耕作得越久，瓶中的生机越盛，虫子就越早被唤醒。它们不是从外面来的——它们一直就在瓶子里，等着植物重新长起来。\n\n虫子会在回合结束时攻击植物。给植物附加免疫，1 点免疫就能替它挡下 1 点伤害；防护网与其他守护牌都能做到这一点。\n\n有些虫子会直接啃咬魔瓶；有些精英虫外壳坚硬、咬得更重。虫子杀不完，只能守住这一季。",
-		"note": "我试过停手，虫子就安静。可停手，瓶子也会慢慢死去。",
-		"note_unlock": 2
+		"title": "04  第三页 · 四季会轮转",
+		"flag": "guide_season_changed",
+		"body": "今天种植时发现，瓶中竟然有四季的轮转。\n\n一年有 24 轮，每季 6 轮，春夏秋冬依次轮转。四季不只是风景——不同的季节对于种植似乎有不同的影响，春天浇水会让植物快速生长。夏天的植物似乎总和别的季节不同。秋天收获时，魔瓶能让你挑选更多的道具，冬天有更多的道具候选，虽然只能选一次，但遇到不合适的道具貌似可以重置。\n\n批注：\n· 一年 24 轮，每季 6 轮。\n· 四个季节各有特色"
 	},
 	{
-		"title": "魔瓶的损伤",
-		"body": "植物与魔瓶命运相连。植物被虫子杀死时，魔瓶会失去 1 滴血，最多只有 3 滴。那不是普通的伤——是虫子在啃食瓶壁。\n\n当最后一滴血耗尽，虫灾就到了无法挽回的地步，四季会停滞。但这正是魔瓶最后的保险：它会连同虫群一起重置，退回第一年的春天。\n\n图鉴与已经开垦的农田都会保留下来。魔瓶会自行修复，而你已经种过、见过的东西，仍留在图鉴里。\n\n这道重启机制，是最后一位园丁在临终前加进去的。他没等到瓶子复原，但他给后来的人留下了重来一次的机会。\n\n瓶塞与修补类的卡牌，可以为你争取更多容错。",
-		"note": "我把最后一滴力气，用来刻下重启的纹路。别谢我，继续种。",
-		"note_unlock": 3
+		"title": "05  第四页 · 变异的植物",
+		"flag": "guide_variant_seen",
+		"body": "今天收获时，我发现一株植物竟和往常所种植出的不一样。\n\n它的颜色、形状都和同种不一样。图鉴把它吸收了，并给了它一个单独的名字记成了独立的一条。\n\n我起初以为这是坏事。\n\n后来发现，在收获时这些变异的植物往往带着奇怪的本事：有的能护住旁边的植物，有的能让植物长得更加迅速，有的甚至能对瓶子产生影响。\n\n这种情况在夏季发生的频率尤为高，不知道它们为什么会有这样的变异，这瓶子还有多少我未曾了解的地方？\n\n批注：\n· 变异植物是独立图鉴条目。\n· 变异特性在收获时结算。"
 	},
 	{
-		"title": "图鉴与成长",
-		"body": "图鉴记录的是你真正种出过的植物。它不会因为魔瓶碎裂而清空。\n\n图鉴不只是账本。它每完整一分，魔瓶就找回一分被虫子夺走的力量；当所有植物都被重新收录，魔瓶就能恢复完整，把瓶中的虫子彻底清除。\n\n收录得越多，魔瓶能给你的也越多：\n\n· 基础植物收录到 2 种时，能量上限 +1。\n· 基础植物收录到 3 种时，每回合多抽 1 张牌。\n· 基础植物收录到 4 种时，可以开垦一块新农田，并获得每轮抽牌 +1、能量上限 +1。\n· 累计收录 8 条图鉴时，可以再开垦一块新农田，并再次获得同样的成长。\n\n变异植物会形成独立的图鉴条目。把植物交给魔瓶，不会让这个条目永久错过——下次再种出来，仍然可以收录。",
-		"note": "图鉴不是纪念册，是钥匙。把它填满。",
-		"note_unlock": 4
+		"title": "06  第五页 · 瓶子里的虫",
+		"flag": "guide_pest_seen",
+		"body": "今天，虫子出现了。\n\n不是从外面来的，是瓶子中的。\n\n随着我的耕种，瓶中生命的气息愈发强烈，但这种气息似乎吸引了这群不速之客。\n\n这些虫子会啃食我的植物！它们会让植物的生命之源快速流逝，但好在那种可以阻止生命之源流逝的力量也能阻挡虫子的攻击。我用的锄头赶走了它们，但它们总会卷土重来。魔瓶似乎料想到了这些虫群，给出的道具中有很多可以驱逐杀死这些虫子。\n\n虫子死后会加速我植株的生长，这倒是一个意外之喜。\n\n批注：\n· 虫子一直封在瓶里，生机越盛，醒得越快。\n· 虫子会在回合结束攻击植物。\n· 有的道具可以抵御虫子的进攻\n虫子杀不完，只能守住这一季。"
 	},
 	{
-		"title": "魔瓶的真相",
+		"title": "07  第六页 · 瓶壁上的裂纹",
+		"flag": "guide_bottle_damaged",
+		"body": "今天没注意，一株植物被虫群啃食殆尽了。随着植株的消失，魔瓶似乎也受到影响。\n\n我这才发现，植物和瓶子是连在一起的。植物被虫子杀死时，瓶子会因此产生裂纹。我不知道瓶子还能抵挡几次这样的伤害，但一定不会太多。\n\n我在瓶底发现了一圈很旧的纹路，不像是自然长出来的。我还没弄懂它是做什么的。也许，它会有很关键的作用。\n\n批注：\n· 植物死亡，魔瓶会受到损伤产生裂痕。\n· 瓶底有一圈不明纹路。"
+	},
+	{
+		"title": "08  第七页 · 图鉴的分量",
+		"flag": "guide_milestone_seen",
+		"body": "今天图鉴又厚了一点，瓶子竟然也跟着有了变化，比从前光芒更盛。\n\n我隐隐觉得，图鉴并非只是单纯的吸收植物。它每完整一分，瓶子就恢复部分力量。\n\n收录得越多，瓶子恢复的越多，或许我就能明白这瓶子的来历。\n\n批注：\n· 随着图鉴的解锁，瓶子也会随之发生变化"
+	},
+	{
+		"title": "09  最后一页 · 瓶子里的世界",
+		"always": true,
 		"unlock": 8,
 		"mid_unlock": 4,
-		"locked_body": "这一页被一层薄薄的雾气盖住了。你只能辨认出一行字：\n\n“继续种下去。等图鉴足够厚，瓶子会自己开口。”\n\n（当前收录 %d 条。收录 4 条后，雾气会散开一些。）",
-		"mid_body": "图鉴厚了一些，雾气散开了几行：\n\n魔瓶里的世界，曾经也是一个真正的世界。虫子先吃光了那里的植物，又啃穿了大地。最后一个人把仅剩的种子封进瓶里，也把虫子一起封了进去。\n\n他试过种回去。可生机越盛，虫子醒得越快。他没能等到图鉴填满的那一天。\n\n还有半页被撕掉了。剩下的字迹要等图鉴再厚一些才会显形。\n\n（当前收录 %d 条。收录 8 条后，这一页会完整显露。）",
-		"body": "图鉴终于接近完整，最后一页的字迹也清晰了：\n\n那个世界是被虫子吃空的。最后一位园丁把仅剩的种子封进魔瓶，却没能把虫子挡在外面。他试过一次又一次——生机越盛，虫灾越重。最后，他在临终前给魔瓶刻下了重启的纹路：只要虫灾到了无法挽回的地步，魔瓶就会连同虫群一起重置。\n\n他没能走完的路，留给了你。\n\n图鉴不是纪念册，而是魔瓶的钥匙。把每一种植物都重新种出来、收录进去，魔瓶就能恢复完整的力量，把瓶中的虫子彻底清除。\n\n你不是第一个拿起这个瓶子的人。但也许，你会是最后一个。",
-		"note": "你不是第一个拿起这个瓶子的人。但也许，你会是最后一个。",
-		"note_unlock": 8
+		"locked_body": "阶段一 · 图鉴收录 0–3 条\n\n这一页被一层浓重的雾气盖住了。只能辨认出其中一行字：\n\n“这样的话，下一个得到瓶子的人，或许就不会落得我这般下场了吧”\n\n（当前收录 %d 条。收录 4 条后，雾气会散开一些。）",
+		"mid_body": "阶段二 · 图鉴收录 4–7 条\n\n图鉴厚了一些，雾气散开了几行：\n\n不知为何，在我所处的世界也渐渐发现了这种虫子，我并不认为这是一个好的预兆，瓶中的虫子有极强的破坏力，除了这些奇妙的植物几乎没有其他办法可以抵抗，收录到图鉴中的植物似乎可以取出种子，我将种子取出，在我的世界开始种植。\n\n直觉告诉我，一场灾难要来了。\n\n但等我明白这一点时，已经没时间了。大规模的虫群席卷了我的星球，我凭借种出的植物拼死抵抗，但瓶中的虫灾大大减缓了我培育植物的速度，一旦培养过快瓶中的虫灾便会迅速壮大，我不能让魔瓶损毁，这是最后的希望，这也让我最终无力回天。\n\n原来瓶底那圈纹路，是在魔瓶被创造时铭刻的——只要虫灾到了无法挽回的地步，瓶子会连同虫群一起重置。这是创造者为了让日后得到它的人能快速培育出植物的保底措施，但魔瓶却因为损坏了导致没有将创造者留下信息早些显露，我只能用最后的时间修复了这一圈纹路，并将这个魔瓶传送，希望可以帮助下一个世界。\n\n最后一页似乎与魔瓶相关联，或许当图鉴进一步集齐，魔瓶力量恢复后才会显露。\n\n（当前收录 %d 条。收录 8 条后，这一页会完整显露。）",
+		"body": "阶段三 · 图鉴收录 8 条及以上\n\n图鉴终于接近完整，最后一页的字迹也清晰了：\n\n我是魔瓶的创造者，当你看到这段话时，或许我的星球已经毁灭了，我将这段话与魔瓶相关联，希望可以提醒后来之人。\n\n我们星球的人对环境与植物不屑一顾，认为这些在科技面前不值一提，但突如其来的虫灾让他们付出了代价，这些虫子在星球之间迁徙，每到一个地方便将一个地方啃食殆尽，虫灾毁灭了我们的一切。唯有少数人依靠着培育奇妙的植物抵御虫灾活了下来，而魔瓶就是培育这些植物的容器，我们培育的所有植物都会记录在图鉴之中，但我们还是低估了虫群的力量，它们甚至入侵了魔瓶，在我们的培育中会出现虫群啃食我们的植物，所有植物都依托于魔瓶而存在，啃食植物也会让魔瓶受损，我们不得不给魔瓶一个重启机制，当虫灾到了无法挽回的地步就将魔瓶重启，我们已经是强弩之末，不过魔瓶被入侵后似乎有了定位的能力，指向了某个方向，我不知道这个定位意味着什么，但在临死前，我会将这个魔瓶传送到那个位置，或许是下一个虫灾肆虐的地方，但拥有魔瓶我想下一个世界的人应该拥有了抵抗虫灾的能力，但愿如此。"
 	}
 ]
 
 var _current = 0
 var _toc_buttons = []
 var _last_focus = null
+var _paused_by_guide = false
+
+# 强制阅读模式：只显示指定页，每页都要点开，读全之前合不上。
+var _restricted = false
+var _required_pages = []
+var _visited = {}
+var _restricted_callback = null
 
 onready var _title_label = $Root/Book/Margin/VBox/Body/Scroll/Content/ChapterTitle
 onready var _body_label = $Root/Book/Margin/VBox/Body/Scroll/Content/ChapterBody
@@ -71,14 +80,22 @@ onready var _note_label = $Root/Book/Margin/VBox/Body/Scroll/Content/Note/NoteBo
 onready var _scroll = $Root/Book/Margin/VBox/Body/Scroll
 onready var _toc = $Root/Book/Margin/VBox/Body/Toc
 onready var _close_button = $Root/Book/Margin/VBox/Header/Close
+onready var _footer = $Root/Book/Margin/VBox/Footer
 
 
 func _ready():
 	pause_mode = Node.PAUSE_MODE_PROCESS
 	visible = false
+	GS.guide = self
 	_build_toc()
 	_close_button.connect("pressed", self, "close")
 	select_chapter(0)
+	_update_restriction_ui()
+
+
+func _exit_tree():
+	if GS.guide == self:
+		GS.guide = null
 
 
 func _font(size):
@@ -92,13 +109,13 @@ func _build_toc():
 	var group = ButtonGroup.new()
 	for i in range(CHAPTERS.size()):
 		var b = Button.new()
-		b.text = "%02d  %s" % [i + 1, CHAPTERS[i]["title"]]
+		b.text = CHAPTERS[i]["title"]
 		b.align = Button.ALIGN_LEFT
 		b.toggle_mode = true
 		b.group = group
-		b.rect_min_size = Vector2(0, 40)
+		b.rect_min_size = Vector2(0, 36)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.add_font_override("font", _font(16))
+		b.add_font_override("font", _font(15))
 		b.add_color_override("font_color", Color(0.30, 0.19, 0.12))
 		b.add_color_override("font_color_hover", Color(0.20, 0.11, 0.06))
 		b.add_color_override("font_color_pressed", Color(0.20, 0.11, 0.06))
@@ -106,6 +123,32 @@ func _build_toc():
 		b.connect("pressed", self, "_on_chapter_pressed", [i])
 		_toc.add_child(b)
 		_toc_buttons.append(b)
+	_refresh_toc()
+
+
+func _refresh_toc():
+	for i in range(_toc_buttons.size()):
+		_toc_buttons[i].visible = _page_visible(i)
+
+
+# 页面按手记里的解锁时机逐页显形；夹页、前三页和最后一页始终可见。
+# 强制阅读期间只保留指定页，最后一页也会暂时藏起来。
+func _page_visible(index):
+	if not _is_unlocked(index):
+		return false
+	if _restricted and not _required_pages.has(index):
+		return false
+	return true
+
+
+func _is_unlocked(index):
+	var chapter = CHAPTERS[index]
+	if chapter.get("always", false):
+		return true
+	var flag = chapter.get("flag", "")
+	if flag == "":
+		return false
+	return Flags.get(flag) == true
 
 
 func _entry_count():
@@ -126,40 +169,102 @@ func _chapter_body(index):
 	return chapter["locked_body"] % count
 
 
-func _chapter_note(index):
-	var chapter = CHAPTERS[index]
-	if not chapter.has("note"):
-		return ""
-	if _entry_count() >= chapter["note_unlock"]:
-		return chapter["note"]
-	return "页边有几行褪色的字迹，还看不清。"
-
-
 func select_chapter(index):
 	if index < 0 or index >= CHAPTERS.size():
+		return
+	if not _page_visible(index):
 		return
 	_current = index
 	_title_label.text = CHAPTERS[index]["title"]
 	_body_label.text = _chapter_body(index)
-	var note = _chapter_note(index)
-	_note_box.visible = note != ""
-	_note_label.text = note
+	# 批注已经写在正文里，页边批注框不再使用。
+	_note_box.visible = false
 	if index < _toc_buttons.size():
 		_toc_buttons[index].pressed = true
 	_scroll.scroll_vertical = 0
+	if _restricted:
+		_visited[index] = true
+		_update_restriction_ui()
 
 
-func open():
+func open(pause_game = false, keep_restriction = false):
+	if not keep_restriction:
+		_clear_restriction()
+	if pause_game and not get_tree().paused:
+		get_tree().paused = true
+		_paused_by_guide = true
+	_refresh_toc()
+	if not _page_visible(_current):
+		_current = _required_pages[0] if _restricted and not _required_pages.empty() else 0
 	_last_focus = $Root.get_focus_owner()
 	visible = true
 	select_chapter(_current)
-	_close_button.grab_focus()
+	_update_restriction_ui()
+	if _close_button.disabled and not _toc_buttons.empty():
+		_toc_buttons[_current].grab_focus()
+	else:
+		_close_button.grab_focus()
+
+
+# 只翻开指定的几页，读完之前不让合上；读完关闭时回调，并解除暂停。
+func open_required(pages, callback = null):
+	_restricted = true
+	_required_pages = pages.duplicate()
+	_visited = {}
+	for p in _required_pages:
+		_visited[p] = false
+	_restricted_callback = callback
+	_current = _required_pages[0] if not _required_pages.empty() else 0
+	open(true, true)
+
+
+func _clear_restriction():
+	_restricted = false
+	_required_pages = []
+	_visited = {}
+	_restricted_callback = null
+	if _footer != null:
+		_footer.text = "按 Esc 合上指南"
+	if _close_button != null:
+		_close_button.disabled = false
+
+
+func _all_required_read():
+	for p in _required_pages:
+		if not _visited.get(p, false):
+			return false
+	return true
+
+
+func _update_restriction_ui():
+	if not _restricted:
+		_close_button.disabled = false
+		_footer.text = "按 Esc 合上指南"
+		return
+	var read = 0
+	for p in _required_pages:
+		if _visited.get(p, false):
+			read += 1
+	_close_button.disabled = read < _required_pages.size()
+	# 不提示“读完才能合上”，让页面自己说话。
+	_footer.text = ""
 
 
 func close():
+	if _restricted and not _all_required_read():
+		_update_restriction_ui()
+		return
 	visible = false
+	var callback = _restricted_callback
+	_restricted_callback = null
+	_clear_restriction()
+	if _paused_by_guide:
+		_paused_by_guide = false
+		get_tree().paused = false
 	if _last_focus != null and is_instance_valid(_last_focus):
 		_last_focus.grab_focus()
+	if callback != null:
+		callback.call_func()
 
 
 func _on_chapter_pressed(index):
@@ -170,5 +275,9 @@ func _unhandled_input(event):
 	if not visible:
 		return
 	if event.is_action_pressed("ui_cancel"):
+		if _restricted and not _all_required_read():
+			_update_restriction_ui()
+			get_tree().set_input_as_handled()
+			return
 		close()
 		get_tree().set_input_as_handled()

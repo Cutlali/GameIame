@@ -41,6 +41,50 @@ func _idle(_delta):
 	var bestiary = get_root().get_node("EncyclopediaUI")
 	print("ui roots: bottle=", bottle._root != null, " bestiary=", bestiary._root != null)
 
+	# --- 图鉴羊皮纸风格 ---
+	bestiary.open()
+	if not bestiary._root.visible:
+		print("FAIL: bestiary did not open")
+		ok = false
+	var title_color = bestiary._title.get_color("font_color", "Label")
+	if bestiary._root.theme == null or not (title_color.r < 0.4 and title_color.g < 0.3):
+		print("FAIL: bestiary not using parchment theme")
+		ok = false
+	bestiary.close()
+
+	# --- HUD 指南图标：打开时暂停，关闭时恢复 ---
+	if hud != null:
+		if hud._guide_button == null or hud._guide_button.icon == null:
+			print("FAIL: HUD guide icon missing")
+			ok = false
+		else:
+			hud._on_guide_pressed()
+			var game_guide = _game.get_node_or_null("GuideBook")
+			if game_guide == null or not (game_guide.visible and paused):
+				print("FAIL: HUD guide did not open and pause")
+				ok = false
+			else:
+				game_guide.close()
+				if game_guide.visible or paused:
+					print("FAIL: HUD guide close did not restore game")
+					ok = false
+
+				# 事件解锁新页：角标亮起，点头记直接翻到新页。
+				var flags = get_root().get_node("Flags")
+				flags.guide_season_changed = false
+				flags.unlock_guide("guide_season_changed", 4, "四季会轮转")
+				if hud._new_guide_index != 4 or not hud._guide_badge.visible:
+					print("FAIL: guide badge did not light up")
+					ok = false
+				hud._on_guide_pressed()
+				if game_guide._current != 4:
+					print("FAIL: guide did not jump to new page, current=%d" % game_guide._current)
+					ok = false
+				if hud._guide_badge.visible or hud._new_guide_index != -1:
+					print("FAIL: guide badge did not clear after reading")
+					ok = false
+				game_guide.close()
+
 	# --- 农田规模 ---
 	var tilemap = _game.get_node_or_null("TileMap")
 	if tilemap != null:
@@ -77,7 +121,7 @@ func _idle(_delta):
 		ok = false
 	else:
 		pause_menu.pause()
-		var pause_guide = pause_menu.get_node_or_null("GuideBook")
+		var pause_guide = _game.get_node_or_null("GuideBook")
 		if pause_guide == null:
 			print("FAIL: pause guide missing")
 			ok = false

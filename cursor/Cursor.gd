@@ -62,7 +62,11 @@ func new_plant(associated_card):
 	RunStats.plantings += 1
 		
 func water(card):
-	TutorialSteps.mark_have_watered()
+	# 水晶球之水：打出时先从储水里扣 1 点。
+	if card.from_orb:
+		if GS.orb_water <= 0:
+			return
+		GS.orb_water -= 1
 	
 	var sx = position.x
 	var sy = position.y
@@ -78,19 +82,26 @@ func water(card):
 	if card.water_shape == GS.Water.W2x2:
 		width = 2
 		height = 2
-	
+
+	var watered = false
 	for i in range(0, width):
 		for j in range(0, height):
 			var x = sx + i * 128
 			var y = sy + j * 128
 			var plant = GS.get_plant_at_map_lcoord(Vector2(x, y))
 			if plant != null:
-				plant.set_water(plant.water + card.quantity)
-				RunStats.water_spent += card.quantity
+				var room = GS.PLANT_WATER_MAX - plant.water
+				var applied = card.quantity
+				if applied > room:
+					applied = max(0, room)
+				plant.set_water(plant.water + applied)
+				RunStats.water_spent += applied
+				if applied > 0:
+					watered = true
+	if watered:
+		TutorialSteps.mark_have_watered()
 				
 func attack(card):
-	TutorialSteps.mark_have_attacked()
-	
 	var dmg = damage(card)
 	reset_damage()
 	
@@ -99,6 +110,7 @@ func attack(card):
 		return
 		
 	enemy.take_damage(dmg)
+	TutorialSteps.mark_have_attacked()
 	
 func defend(card):
 	TutorialSteps.mark_have_defended()
@@ -187,6 +199,13 @@ func hasten(card):
 			Toast.show_message("这株植物已经成熟，结束回合即可收获。")
 		else:
 			Toast.show_message("这株植物已经成熟，再浇 1 点水就能收获。")
+
+func mature(_card):
+	var plant = GS.get_plant_at_map_lcoord(position)
+	if plant == null:
+		return
+	plant.force_mature()
+	Toast.show_message("这株植物立刻成熟，结束回合时收获。")
 
 func graft(card):
 	var plant = GS.get_plant_at_map_lcoord(position)
@@ -301,6 +320,10 @@ func is_tile_clear_and_type(tile_type):
 func is_tile_plant():
 	var p = GS.get_plant_at_map_lcoord(position)
 	return p != null
+
+func is_tile_plant_with_water_room():
+	var p = GS.get_plant_at_map_lcoord(position)
+	return p != null and p.water < GS.PLANT_WATER_MAX
 	
 func is_tile_water(amount):
 	var p = GS.get_plant_at_map_lcoord(position)
@@ -377,7 +400,12 @@ func update_playable_and_display():
 			may_play = true
 	
 	if card.action == GS.Action.WATER:
-		if is_any_tile_plant_in_square(card):
+		if card.from_orb:
+			# 水晶球之水只能浇到还有空间、且球里确实有水的植物上。
+			if GS.orb_water > 0 and is_tile_plant_with_water_room():
+				show_water_cursor(card)
+				may_play = true
+		elif is_any_tile_plant_in_square(card):
 			show_water_cursor(card)
 			may_play = true
 		
@@ -393,7 +421,8 @@ func update_playable_and_display():
 		or card.action == GS.Action.DEF_DMG_NEAR \
 		or card.action == GS.Action.HASTEN \
 		or card.action == GS.Action.GRAFT \
-		or card.action == GS.Action.THORNS:
+		or card.action == GS.Action.THORNS \
+		or card.action == GS.Action.MATURE:
 		if is_tile_plant():
 			$CursorDefense.show() # TODO: Defend
 			may_play = true

@@ -21,7 +21,9 @@ func _on_ResumeButton_pressed():
 	unpause()
 
 func _on_GuideButton_pressed():
-	$GuideBook.open()
+	var guide = get_parent().get_node_or_null("GuideBook")
+	if guide != null:
+		guide.open()
 
 func _on_QuitButton_pressed():
 	# 中途退出先给一份年度总结，再由玩家决定回主菜单。
@@ -34,8 +36,12 @@ func _on_QuitButton_pressed():
 		SceneTransitions.change_scene_to(GS.MainMenu)
 	
 func _process(delta):
+	# 新手引导期间不接受暂停，先把这一小段走完。
+	if GS.tutorial:
+		return
 	# 指南打开时由书自己处理输入，避免 P 键把暂停菜单翻到书后面。
-	if has_node("GuideBook") and $GuideBook.visible:
+	var guide = get_parent().get_node_or_null("GuideBook")
+	if guide != null and guide.visible:
 		return
 	# 年度总结/开垦选择自己管理暂停，避免 P 键把冻结中的农场放出来。
 	if GS.year_summary_open or GS.farm_choice_open or GS.shatter_open:

@@ -5,6 +5,7 @@ extends SceneTree
 func _init():
 	var paths = [
 		"res://GS.gd",
+		"res://Flags.gd",
 		"res://GameData.gd",
 		"res://plants/Plant.gd",
 		"res://bugs/Bug.gd",
@@ -20,7 +21,12 @@ func _init():
 		"res://Intro.gd",
 		"res://tutorial/Tutorial.gd",
 		"res://ui/PauseMenu.gd",
-		"res://ui/GuideBook.gd"
+		"res://ui/GuideBook.gd",
+		"res://ui/GameHUD.gd",
+		"res://ui/FarmChoiceUI.gd",
+		"res://shop/ShopItem.gd",
+		"res://Encyclopedia.gd",
+		"res://TheTileMap.gd"
 	]
 	var failures = 0
 	for p in paths:

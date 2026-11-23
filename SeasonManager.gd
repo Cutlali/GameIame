@@ -231,6 +231,7 @@ func bind_tilemap(map):
 	year = 1
 	round_in_year = 1
 	RunStats.year = 1
+	GS.refresh_energy_max()
 	# 开局第一手牌就是第 1 轮，第一次 end_turn 时由 advance_round 推进到第 2 轮
 	rounds_in_season = 1
 	apply_textures()
@@ -322,6 +323,7 @@ func change_season(index, animate = true, reset_rounds = true):
 		return
 
 	_switching = true
+	Flags.unlock_guide("guide_season_changed", 4, "四季会轮转")
 
 	if not animate:
 		current_index = index
@@ -369,6 +371,8 @@ func advance_round():
 		year += 1
 		RunStats.year = year
 		RunStats.reset_year()
+		# 第一年结束后能量上限 +2；之后不再随年份增长。
+		GS.refresh_energy_max()
 
 		round_in_year = 1
 		rounds_in_season = 1

@@ -1,61 +1,323 @@
 extends Control
 
-# 序章：用羊皮纸一页页展开魔瓶与图鉴的来历。
-# 点击任意处或按回车继续；最后一段出现后，按钮带玩家进入农场。
+# 序章：一页一张大画面的顺序漫画。
+# 点击任意位置翻到下一格；淡入过程中再点一下会立刻完成，不会吞掉输入。
+# 右上角可以跳过，读完后点击画面进入农场。
 
-var _labels = []
-var _revealed = 1
-var _fading = false
+const PANELS = [
+	{
+		"path": "res://prologue/panel_1.jpg",
+		"text": "那天夜里，它从很远的地方飞来，\n像一颗落在田里的星星。"
+	},
+	{
+		"path": "res://prologue/panel_2.jpg",
+		"text": "第二天一早，我在田边的石头下面发现了它。"
+	},
+	{
+		"path": "res://prologue/panel_3.jpg",
+		"text": "旁边还压着一本旧手记，\n纸页被露水打湿了一点。"
+	},
+	{
+		"path": "res://prologue/panel_4.jpg",
+		"text": "我把它捧起来的时候，瓶底亮起一小团绿光。"
+	},
+	{
+		"path": "res://prologue/panel_5.jpg",
+		"text": "手记的第一页上，墨迹还是新的，\n像是刚刚有人写完。"
+	},
+	{
+		"path": "res://prologue/panel_6.jpg",
+		"text": "我在田边坐下来，\n一页一页地往下读。"
+	}
+]
+
+const INK = Color(0.24, 0.17, 0.11)
+const PAPER = Color(0.99, 0.97, 0.92, 0.98)
+const CAPTION_BG = Color(0.97, 0.93, 0.82, 0.97)
+
+var _frame = null
+var _photo = null
+var _caption_label = null
+var _dots_label = null
+var _hint_label = null
+var _next_button = null
+var _skip_button = null
+var _title_font = null
+var _body_font = null
+var _small_font = null
+var _button_font = null
+
+var _index = 0
+var _tween = null
 
 
 func _ready():
-	_labels = [
-		$Panel/Margin/VBox/Body/L1,
-		$Panel/Margin/VBox/Body/L2,
-		$Panel/Margin/VBox/Body/L3,
-		$Panel/Margin/VBox/Body/L4
-	]
-	for i in range(_labels.size()):
-		var alpha = 1.0 if i == 0 else 0.0
-		_labels[i].modulate = Color(1, 1, 1, alpha)
-	if Flags.skip_tutorial:
-		_labels[3].text = "你把石头下的旧卷轴留在了原地，只带走了魔瓶与图鉴。它们比想象中更沉。"
+	_make_fonts()
+	_build_background()
+	_build_page()
+	_show_panel(0, false)
 	_update_footer()
 
 
+func _make_fonts():
+	_title_font = DynamicFont.new()
+	_title_font.font_data = load("res://fonts/SimHei.ttf")
+	_title_font.size = 22
+
+	_body_font = DynamicFont.new()
+	_body_font.font_data = load("res://fonts/SimHei.ttf")
+	_body_font.size = 18
+
+	_small_font = DynamicFont.new()
+	_small_font.font_data = load("res://fonts/SimHei.ttf")
+	_small_font.size = 13
+
+	_button_font = DynamicFont.new()
+	_button_font.font_data = load("res://fonts/SimHei.ttf")
+	_button_font.size = 16
+
+
+func _build_background():
+	var bg = TextureRect.new()
+	bg.texture = load("res://prologue/paper.jpg")
+	bg.anchor_right = 1.0
+	bg.anchor_bottom = 1.0
+	bg.expand = true
+	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(bg)
+
+
+func _build_page():
+	var margin = MarginContainer.new()
+	margin.anchor_right = 1.0
+	margin.anchor_bottom = 1.0
+	margin.add_constant_override("margin_left", 100)
+	margin.add_constant_override("margin_right", 100)
+	margin.add_constant_override("margin_top", 66)
+	margin.add_constant_override("margin_bottom", 24)
+	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(margin)
+
+	var vbox = VBoxContainer.new()
+	vbox.alignment = VBoxContainer.ALIGN_CENTER
+	vbox.add_constant_override("separation", 12)
+	margin.add_child(vbox)
+
+	var title = Label.new()
+	title.text = "序 章   ·   石头下的瓶子"
+	title.align = Label.ALIGN_CENTER
+	title.add_font_override("font", _title_font)
+	title.add_color_override("font_color", INK)
+	vbox.add_child(title)
+
+	# 主画面：一张大图，不再切成表格。
+	_frame = Panel.new()
+	_frame.rect_min_size = Vector2(0, 512)
+	_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_frame.size_flags_vertical = Control.SIZE_FILL
+	_frame.add_stylebox_override("panel", _frame_box())
+	vbox.add_child(_frame)
+
+	var photo_margin = MarginContainer.new()
+	photo_margin.anchor_right = 1.0
+	photo_margin.anchor_bottom = 1.0
+	photo_margin.add_constant_override("margin_left", 8)
+	photo_margin.add_constant_override("margin_right", 8)
+	photo_margin.add_constant_override("margin_top", 8)
+	photo_margin.add_constant_override("margin_bottom", 8)
+	photo_margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_frame.add_child(photo_margin)
+
+	_photo = TextureRect.new()
+	_photo.expand = true
+	_photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_photo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	photo_margin.add_child(_photo)
+
+	# 旁白框：像漫画里的字幕格。
+	var caption = Panel.new()
+	caption.rect_min_size = Vector2(0, 70)
+	caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	caption.add_stylebox_override("panel", _caption_box())
+	vbox.add_child(caption)
+
+	var caption_margin = MarginContainer.new()
+	caption_margin.anchor_right = 1.0
+	caption_margin.anchor_bottom = 1.0
+	caption_margin.add_constant_override("margin_left", 18)
+	caption_margin.add_constant_override("margin_right", 18)
+	caption_margin.add_constant_override("margin_top", 8)
+	caption_margin.add_constant_override("margin_bottom", 8)
+	caption_margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	caption.add_child(caption_margin)
+
+	_caption_label = Label.new()
+	_caption_label.add_font_override("font", _body_font)
+	_caption_label.add_color_override("font_color", INK)
+	_caption_label.autowrap = true
+	_caption_label.valign = Label.VALIGN_CENTER
+	_caption_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	caption_margin.add_child(_caption_label)
+
+	var footer = HBoxContainer.new()
+	footer.alignment = BoxContainer.ALIGN_CENTER
+	footer.add_constant_override("separation", 16)
+	vbox.add_child(footer)
+
+	_dots_label = Label.new()
+	_dots_label.add_font_override("font", _small_font)
+	_dots_label.add_color_override("font_color", Color(0.42, 0.28, 0.18, 0.85))
+	_dots_label.valign = Label.VALIGN_CENTER
+	footer.add_child(_dots_label)
+
+	_hint_label = Label.new()
+	_hint_label.text = "点击画面继续"
+	_hint_label.add_font_override("font", _small_font)
+	_hint_label.add_color_override("font_color", Color(0.47, 0.31, 0.19, 0.75))
+	_hint_label.valign = Label.VALIGN_CENTER
+	footer.add_child(_hint_label)
+
+	_next_button = Button.new()
+	_next_button.text = "走进农场"
+	_next_button.rect_min_size = Vector2(150, 36)
+	_next_button.add_font_override("font", _button_font)
+	_next_button.focus_mode = Control.FOCUS_NONE
+	_next_button.visible = false
+	_next_button.connect("pressed", self, "_enter_game")
+	footer.add_child(_next_button)
+
+	# 跳过放在右上角的纸签上。
+	_skip_button = Button.new()
+	_skip_button.text = "跳过"
+	_skip_button.anchor_left = 1.0
+	_skip_button.anchor_right = 1.0
+	_skip_button.margin_left = -98
+	_skip_button.margin_right = -26
+	_skip_button.margin_top = 24
+	_skip_button.margin_bottom = 56
+	_skip_button.add_font_override("font", _small_font)
+	_skip_button.focus_mode = Control.FOCUS_NONE
+	_skip_button.connect("pressed", self, "_skip")
+	add_child(_skip_button)
+
+	# 装饰层全部放行鼠标，点击画面任意位置都能翻页。
+	_ignore_mouse_recursive(margin)
+
+
+func _ignore_mouse_recursive(node):
+	for c in node.get_children():
+		if c is Button:
+			continue
+		if c is Control:
+			c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_ignore_mouse_recursive(c)
+
+
+func _frame_box():
+	var sb = StyleBoxFlat.new()
+	sb.bg_color = PAPER
+	sb.border_color = Color(0.22, 0.15, 0.10, 0.92)
+	sb.border_width_left = 3
+	sb.border_width_right = 3
+	sb.border_width_top = 3
+	sb.border_width_bottom = 3
+	sb.corner_radius_top_left = 3
+	sb.corner_radius_top_right = 3
+	sb.corner_radius_bottom_left = 3
+	sb.corner_radius_bottom_right = 3
+	sb.shadow_color = Color(0.25, 0.17, 0.10, 0.22)
+	sb.shadow_size = 6
+	return sb
+
+
+func _caption_box():
+	var sb = StyleBoxFlat.new()
+	sb.bg_color = CAPTION_BG
+	sb.border_color = Color(0.42, 0.30, 0.20, 0.60)
+	sb.border_width_left = 2
+	sb.border_width_right = 2
+	sb.border_width_top = 2
+	sb.border_width_bottom = 2
+	sb.corner_radius_top_left = 2
+	sb.corner_radius_top_right = 2
+	sb.corner_radius_bottom_left = 2
+	sb.corner_radius_bottom_right = 2
+	return sb
+
+
 func _unhandled_input(event):
-	if event.is_action_pressed("mouse") or event.is_action_pressed("ui_accept"):
-		_advance()
+	if event.is_action_pressed("ui_cancel"):
+		_skip()
+		return
+	if event.is_action_pressed("ui_accept"):
+		_on_click()
 
 
-func _on_Button_pressed():
+# 页面上的装饰控件都放行鼠标，点击会落到根节点。
+func _gui_input(event):
+	if event is InputEventMouseButton and event.button_index == BUTTON_LEFT and event.pressed:
+		_on_click()
+		accept_event()
+
+
+func _on_click():
+	if _index >= PANELS.size() - 1:
+		_enter_game()
+		return
+	# 不做淡入锁：每点一下都立刻翻页，连点也跟得上。
 	_advance()
 
 
 func _advance():
-	if _fading:
-		return
-	if _revealed >= _labels.size():
-		SceneTransitions.change_scene_to(GS.Game)
-		return
-
-	var label = _labels[_revealed]
-	_revealed += 1
-	_fading = true
-	var tween = Tween.new()
-	add_child(tween)
-	tween.interpolate_property(label, "modulate", Color(1, 1, 1, 0), Color(1, 1, 1, 1),
-		0.45, Tween.TRANS_SINE, Tween.EASE_OUT)
-	tween.connect("tween_all_completed", self, "_on_fade_done")
-	tween.start()
+	_index += 1
+	_show_panel(_index, true)
 	_update_footer()
 
 
-func _on_fade_done():
-	_fading = false
+func _show_panel(index, animate):
+	_photo.texture = load(PANELS[index]["path"])
+	_caption_label.text = PANELS[index]["text"]
+
+	if _tween != null and is_instance_valid(_tween):
+		_tween.stop_all()
+		_tween.queue_free()
+		_tween = null
+
+	if not animate:
+		_photo.modulate = Color(1, 1, 1, 1)
+		return
+
+	_photo.modulate = Color(1, 1, 1, 0)
+	var tween = Tween.new()
+	add_child(tween)
+	_tween = tween
+	tween.interpolate_property(_photo, "modulate", Color(1, 1, 1, 0), Color(1, 1, 1, 1),
+		0.16, Tween.TRANS_SINE, Tween.EASE_OUT)
+	tween.start()
 
 
 func _update_footer():
-	var done = _revealed >= _labels.size()
-	$Panel/Margin/VBox/Button.text = "走进农场" if done else "继续"
-	$Panel/Margin/VBox/Hint.visible = not done
+	var total = PANELS.size()
+	var dots = ""
+	for i in range(total):
+		if i <= _index:
+			dots += "●"
+		else:
+			dots += "○"
+		if i < total - 1:
+			dots += " "
+	_dots_label.text = dots
+
+	var done = _index >= total - 1
+	_hint_label.visible = not done
+	_hint_label.text = "点击画面继续"
+	_next_button.visible = done
+
+
+func _enter_game():
+	SceneTransitions.change_scene_to(GS.Game)
+
+
+func _skip():
+	SceneTransitions.change_scene_to(GS.Game)

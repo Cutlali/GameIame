@@ -18,13 +18,18 @@ func _on_buy():
 	if bought:
 		return
 	
+	if is_energy and GS.energy_max >= GS.ENERGY_CAP:
+		return
+	
 	if GS.gold >= cost:
 		bought = true
 		GS.gold -= cost
 		
 		if is_energy:
-			GS.energy_max += 1
-			GS.energy += 1
+			var before = GS.energy_max
+			GS.add_permanent_energy(1)
+			if GS.energy_max > before:
+				GS.energy = min(GS.energy + 1, GS.energy_max)
 		else:
 			if up_num == 1 or up_num == 2:
 				GS.queue_farm_choice()
@@ -41,5 +46,5 @@ func _process(delta):
 		$Button.hide()
 	else:
 		$Button.show()
-		$Button.disabled = (GS.gold < cost)
+		$Button.disabled = (GS.gold < cost) or (is_energy and GS.energy_max >= GS.ENERGY_CAP)
 

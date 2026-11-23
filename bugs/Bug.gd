@@ -30,6 +30,7 @@ var base_modulate = Color(1, 1, 1)
 
 
 func _ready():
+	Flags.unlock_guide("guide_pest_seen", 6, "瓶子里的虫")
 	if is_elite:
 		bite_damage = 2
 		armor = 1
@@ -74,6 +75,10 @@ func dec_health():
 		var stats = get_node_or_null("/root/RunStats")
 		if stats != null:
 			stats.pests_killed += 1
+		# 虫子死亡奖励：一张 0 费速成卡，每轮最多 3 张。
+		var gs = get_node_or_null("/root/GS")
+		if gs != null:
+			gs.grant_mature_reward()
 		remove_from_group("Enemy")
 		remove_from_group("Object")
 		$AnimationPlayer.queue("OutOfHealth")

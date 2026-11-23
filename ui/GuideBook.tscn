@@ -66,12 +66,12 @@ custom_constants/separation = 14
 
 [node name="Title" type="Label" parent="Root/Book/Margin/VBox/Header"]
 custom_fonts/font = SubResource( 1 )
-text = "四季图鉴指南"
+text = "瓶中手记"
 
 [node name="Subtitle" type="Label" parent="Root/Book/Margin/VBox/Header"]
 custom_colors/font_color = Color( 0.47, 0.31, 0.19, 0.8 )
 custom_fonts/font = SubResource( 4 )
-text = "一本关于魔瓶、四季，以及前一位园丁的书"
+text = "上一个拿到魔瓶的人留下的笔记"
 valign = 1
 
 [node name="Spacer" type="Control" parent="Root/Book/Margin/VBox/Header"]
@@ -109,7 +109,7 @@ custom_constants/separation = 12
 
 [node name="ChapterTitle" type="Label" parent="Root/Book/Margin/VBox/Body/Scroll/Content"]
 custom_fonts/font = SubResource( 2 )
-text = "序章 · 魔瓶与图鉴"
+text = "夹在最前面的一页"
 autowrap = true
 
 [node name="ChapterBody" type="Label" parent="Root/Book/Margin/VBox/Body/Scroll/Content"]
@@ -128,7 +128,7 @@ custom_constants/separation = 4
 [node name="NoteTitle" type="Label" parent="Root/Book/Margin/VBox/Body/Scroll/Content/Note"]
 custom_colors/font_color = Color( 0.47, 0.31, 0.19, 0.85 )
 custom_fonts/font = SubResource( 4 )
-text = "旧园丁批注"
+text = "批注"
 
 [node name="NoteBody" type="Label" parent="Root/Book/Margin/VBox/Body/Scroll/Content/Note"]
 custom_colors/font_color = Color( 0.36, 0.24, 0.15, 0.95 )

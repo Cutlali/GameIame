@@ -178,8 +178,8 @@ func _show_photo(entry):
 	if entry["is_variant"]:
 		var c = GameData.variant_color(entry["species_id"], entry["variant_index"])
 		border = Color(c.r, c.g, c.b, 0.95)
-		# 只做很轻的染色，保留图片本身的辨识度，同时让变种有一点颜色倾向。
-		_photo.modulate = Color(1, 1, 1).linear_interpolate(Color(c.r, c.g, c.b), 0.18)
+		# 与成熟植物和图鉴保持一致：变种用完整颜色，而不是只染一点点。
+		_photo.modulate = c
 
 	_photo_plate.add_stylebox_override("panel",
 		_flat_box(Color(0.055, 0.065, 0.075, 0.95), border, 2, 12))
@@ -248,6 +248,7 @@ func handle_harvest(plant):
 
 	if entry["is_variant"]:
 		RunStats.variants_found += 1
+		Flags.unlock_guide("guide_variant_seen", 5, "变异的植物")
 
 	var species = GameData.species(entry["species_id"])
 	var pool = "basic"

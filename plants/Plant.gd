@@ -40,6 +40,9 @@ var died_by_pest = false
 # shown, and the plant should be queue_freed()
 var consumed = false
 
+# 速成卡：即使没有水，也会在本回合结束时成熟收获。
+var forced_mature = false
+
 var spawn_sfx_timer = 0.15
 
 func nowater_sfx():
@@ -142,14 +145,11 @@ func take_turn():
 	
 	anim.queue("Delay")
 	
-	if water >= 1:
-		#print($Plant.frame)
-		#print($Plant.frames.frames.size() - 1)
-		if $Plant.frame == $Plant.frames.get_frame_count("default") - 1:
-			anim.queue("PlantIsDone")
-			consumed = true
-		else:
-			anim.queue("WaterPlant")
+	if $Plant.frame == max_growth_frame() and (water >= 1 or forced_mature):
+		anim.queue("PlantIsDone")
+		consumed = true
+	elif water >= 1:
+		anim.queue("WaterPlant")
 	else:
 		anim.queue("NoWater")
 		
@@ -180,8 +180,8 @@ func set_health(amount):
 	if health <= 0:
 		return
 	
-	if amount > 10:
-		amount = 10
+	if amount > 7:
+		amount = 7
 	health = amount
 	
 	$HeartFX.play("Pop")
@@ -206,8 +206,8 @@ func _count_death():
 			bottle.damage(1)
 		
 func set_defense(amount):
-	if amount > 10:
-		amount = 10
+	if amount > 7:
+		amount = 7
 	if amount < 0:
 		amount = 0
 	defense = amount
@@ -215,8 +215,8 @@ func set_defense(amount):
 	$ShieldFX.play("Pop")
 	
 func set_water(amount):
-	if amount > 10:
-		amount = 10
+	if amount > GS.PLANT_WATER_MAX:
+		amount = GS.PLANT_WATER_MAX
 	if amount < 0:
 		amount = 0
 	water = amount
@@ -383,6 +383,12 @@ func upgrade_plant():
 	roll_mutation_if_needed()
 	_apply_variant_setup()
 	advance_growth(growth_steps())
+
+# 速成：直接推到成熟帧，并在本回合结束时结算收获。
+func force_mature():
+	$Plant.frame = max_growth_frame()
+	forced_mature = true
+	_update_variant_tint()
 	
 func turn_over():
 	# If we are being polled about our turn, then the card selection

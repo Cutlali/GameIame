@@ -7,7 +7,7 @@ signal entry_discovered(entry_id)
 signal milestone_claimed(text)
 
 const MILESTONES = [
-	{"species": 2, "type": "energy", "amount": 1, "text": "能量上限 +1"},
+	{"species": 2, "type": "draw", "amount": 1, "text": "每回合多抽 1 张"},
 	{"species": 3, "type": "draw", "amount": 1, "text": "每回合多抽 1 张"},
 	{"species": 4, "type": "plots", "text": "可以开垦一块新农田（每轮抽牌 +1，能量上限 +1）"},
 	{"entries": 8, "type": "plots", "text": "可以再开垦一块新农田（每轮抽牌 +1，能量上限 +1）"}
@@ -78,10 +78,11 @@ func _check_milestones():
 
 
 func _apply_milestone(m):
+	Flags.unlock_guide("guide_milestone_seen", 8, "图鉴的分量")
 	match m["type"]:
 		"energy":
-			GS.energy_max += m["amount"]
-			GS.energy += m["amount"]
+			GS.add_permanent_energy(m["amount"])
+			GS.energy = min(GS.energy + m["amount"], GS.energy_max)
 		"draw":
 			GS.bonus_draws += m["amount"]
 		"plots":

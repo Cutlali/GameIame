@@ -206,8 +206,13 @@ func _refresh():
 		_apply_button_style(b, claimed, i == _selected)
 
 	var draw_total = GS.card_draw_count + GS.bonus_draws
-	_status.text = "开垦后：每轮抽牌 +1（当前 %d 张），能量上限 +1（当前 %d）" % [
-		draw_total, GS.energy_max]
+	var energy_after = min(GS.energy_max + 1, GS.ENERGY_CAP)
+	if energy_after > GS.energy_max:
+		_status.text = "开垦后：每轮抽牌 +1（当前 %d 张），能量上限 %d → %d" % [
+			draw_total, GS.energy_max, energy_after]
+	else:
+		_status.text = "开垦后：每轮抽牌 +1（当前 %d 张），能量已达上限 %d" % [
+			draw_total, GS.energy_max]
 	_confirm.disabled = _selected < 0
 
 

@@ -184,7 +184,9 @@ func _physics_process(delta):
 	
 	if current_card == null:
 		
-		if (not ignoring_interactions) and Input.is_action_just_pressed("mouse"):
+		# 教程期间画面固定，避免玩家把镜头拖走看不到自己的田。
+		if (not ignoring_interactions) and not GS.tutorial \
+				and Input.is_action_just_pressed("mouse"):
 			drag_camera = true
 			drag_center = get_local_mouse_position()
 			

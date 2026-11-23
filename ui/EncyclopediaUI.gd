@@ -22,12 +22,13 @@ func _ready():
 
 func _build_ui():
 	_root = Control.new()
+	_root.theme = load("res://ui/MenuTheme.tres")
 	_root.set_anchors_and_margins_preset(Control.PRESET_WIDE)
 	_root.visible = false
 	add_child(_root)
 
 	var dim = ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.70)
+	dim.color = Color(0.03, 0.02, 0.02, 0.78)
 	dim.set_anchors_and_margins_preset(Control.PRESET_WIDE)
 	_root.add_child(dim)
 
@@ -40,7 +41,6 @@ func _build_ui():
 	panel.margin_top = -340.0
 	panel.margin_right = 550.0
 	panel.margin_bottom = 340.0
-	panel.add_stylebox_override("panel", _flat_box(Color(0.09, 0.10, 0.12, 0.97), Color(0.55, 0.70, 0.62, 0.9), 2, 16))
 	_root.add_child(panel)
 
 	var margin = MarginContainer.new()
@@ -59,15 +59,17 @@ func _build_ui():
 	header.add_constant_override("separation", 18)
 	vbox.add_child(header)
 
-	_title = _make_label("植物图鉴", 32, Color(0.94, 0.97, 0.90))
+	_title = _make_label("植物图鉴", 32, Color(0.30, 0.19, 0.12))
 	_title.autowrap = false
 	header.add_child(_title)
 
-	_milestone = _make_label("", 17, Color(0.80, 0.86, 0.78))
+	_milestone = _make_label("", 17, Color(0.47, 0.31, 0.19))
 	_milestone.autowrap = false
 	_milestone.align = Label.ALIGN_RIGHT
 	_milestone.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_milestone)
+
+	vbox.add_child(HSeparator.new())
 
 	var content = HBoxContainer.new()
 	content.add_constant_override("separation", 16)
@@ -83,7 +85,8 @@ func _build_ui():
 
 	var detail_panel = Panel.new()
 	detail_panel.rect_min_size = Vector2(330, 0)
-	detail_panel.add_stylebox_override("panel", _flat_box(Color(0.12, 0.13, 0.15), Color(0.35, 0.40, 0.36), 1, 10))
+	detail_panel.add_stylebox_override("panel",
+		_flat_box(Color(0.88, 0.78, 0.61, 0.55), Color(0.48, 0.33, 0.22, 0.45), 1, 10))
 	content.add_child(detail_panel)
 
 	var detail_margin = MarginContainer.new()
@@ -111,7 +114,7 @@ func _build_ui():
 	_detail_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_detail_plate.add_child(_detail_image)
 
-	_detail = _make_label("选择一个条目查看详情。", 15, Color(0.84, 0.86, 0.83))
+	_detail = _make_label("选择一个条目查看详情。", 15, Color(0.38, 0.25, 0.15))
 	_detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	detail_box.add_child(_detail)
 
@@ -148,6 +151,7 @@ func _make_label(text, size, color):
 	font.size = size
 	label.add_font_override("font", font)
 	label.add_color_override("font_color", color)
+	label.add_constant_override("line_spacing", 4)
 	return label
 
 
@@ -159,13 +163,6 @@ func _make_flat_button(text, min_size):
 	font.font_data = load("res://fonts/SimHei.ttf")
 	font.size = 20
 	b.add_font_override("font", font)
-	b.add_color_override("font_color", Color(0.96, 0.97, 0.93))
-	b.add_color_override("font_color_hover", Color(1, 1, 1))
-	b.add_color_override("font_color_pressed", Color(0.85, 1.0, 0.85))
-	b.add_stylebox_override("normal", _flat_box(Color(0.17, 0.19, 0.21), Color(0.45, 0.50, 0.44), 1, 8))
-	b.add_stylebox_override("hover", _flat_box(Color(0.23, 0.26, 0.28), Color(0.65, 0.78, 0.60), 1, 8))
-	b.add_stylebox_override("pressed", _flat_box(Color(0.16, 0.26, 0.18), Color(0.60, 0.90, 0.58), 2, 8))
-	b.add_stylebox_override("focus", StyleBoxEmpty.new())
 	return b
 
 
@@ -230,13 +227,13 @@ func _create_entry_button(entry_id):
 	b.rect_min_size = Vector2(160, 138)
 	b.add_stylebox_override("focus", StyleBoxEmpty.new())
 	if found:
-		b.add_stylebox_override("normal", _flat_box(Color(0.15, 0.22, 0.17), Color(0.50, 0.78, 0.52), 2, 8))
-		b.add_stylebox_override("hover", _flat_box(Color(0.20, 0.29, 0.22), Color(0.65, 0.95, 0.66), 2, 8))
-		b.add_stylebox_override("pressed", _flat_box(Color(0.12, 0.19, 0.14), Color(0.65, 0.95, 0.66), 3, 8))
+		b.add_stylebox_override("normal", _flat_box(Color(0.87, 0.76, 0.56), Color(0.50, 0.34, 0.21), 1, 8))
+		b.add_stylebox_override("hover", _flat_box(Color(0.93, 0.83, 0.63), Color(0.58, 0.39, 0.23), 2, 8))
+		b.add_stylebox_override("pressed", _flat_box(Color(0.80, 0.66, 0.46), Color(0.40, 0.26, 0.16), 2, 8))
 	else:
-		b.add_stylebox_override("normal", _flat_box(Color(0.14, 0.15, 0.16), Color(0.28, 0.30, 0.29), 1, 8))
-		b.add_stylebox_override("hover", _flat_box(Color(0.19, 0.20, 0.21), Color(0.45, 0.48, 0.45), 1, 8))
-		b.add_stylebox_override("pressed", _flat_box(Color(0.16, 0.18, 0.16), Color(0.45, 0.48, 0.45), 2, 8))
+		b.add_stylebox_override("normal", _flat_box(Color(0.81, 0.71, 0.55, 0.68), Color(0.58, 0.45, 0.32, 0.55), 1, 8))
+		b.add_stylebox_override("hover", _flat_box(Color(0.86, 0.76, 0.59, 0.82), Color(0.62, 0.48, 0.34, 0.75), 1, 8))
+		b.add_stylebox_override("pressed", _flat_box(Color(0.76, 0.65, 0.49, 0.82), Color(0.50, 0.37, 0.25, 0.8), 2, 8))
 	b.connect("pressed", self, "_on_entry_pressed", [entry_id])
 
 	var margin = MarginContainer.new()
@@ -255,10 +252,10 @@ func _create_entry_button(entry_id):
 
 	var name_text = "？？？"
 	var sub_text = "未收录"
-	var name_color = Color(0.58, 0.60, 0.58)
+	var name_color = Color(0.52, 0.43, 0.33)
 	if found:
 		name_text = entry["name"]
-		name_color = Color(0.96, 0.98, 0.92)
+		name_color = Color(0.28, 0.18, 0.11)
 		sub_text = "变异品种" if entry["is_variant"] else entry["season_name"] + "季作物"
 	# 未收录条目不显示“由什么变来”，避免剧透。
 
@@ -281,7 +278,7 @@ func _create_entry_button(entry_id):
 	if found:
 		plate.add_stylebox_override("panel", StyleBoxEmpty.new())
 	else:
-		plate.add_stylebox_override("panel", _flat_box(Color(0.80, 0.82, 0.76), Color(0.80, 0.82, 0.76), 0, 6))
+		plate.add_stylebox_override("panel", _flat_box(Color(0.93, 0.85, 0.70), Color(0.93, 0.85, 0.70), 0, 6))
 	plate.add_child(photo)
 	vbox.add_child(plate)
 
@@ -290,7 +287,8 @@ func _create_entry_button(entry_id):
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(name_label)
 
-	var sub_label = _make_label(sub_text, 14, Color(0.62, 0.66, 0.62))
+	var sub_label = _make_label(sub_text, 14,
+		Color(0.47, 0.35, 0.24) if found else Color(0.55, 0.46, 0.36))
 	sub_label.align = Label.ALIGN_CENTER
 	sub_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(sub_label)
@@ -324,7 +322,7 @@ func _show_detail(entry_id):
 		_detail_plate.add_stylebox_override("panel", StyleBoxEmpty.new())
 	else:
 		_detail_plate.add_stylebox_override("panel", _flat_box(
-			Color(0.80, 0.82, 0.76), Color(0.80, 0.82, 0.76), 0, 8))
+			Color(0.93, 0.85, 0.70), Color(0.93, 0.85, 0.70), 0, 8))
 
 	if not found:
 		var lines = PoolStringArray()

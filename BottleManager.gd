@@ -264,6 +264,7 @@ func damage(amount = 1):
 		return 0
 
 	hp = max(0, hp - amount)
+	Flags.unlock_guide("guide_bottle_damaged", 7, "瓶壁上的裂纹")
 	emit_signal("hp_changed", hp, MAX_HP)
 	_flash_damage()
 	if hp <= 0:
