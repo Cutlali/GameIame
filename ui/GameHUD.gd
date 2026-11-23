@@ -120,6 +120,8 @@ func _make_button(pos, size):
 	b.add_stylebox_override("hover", _flat_box(Color(0.93, 0.83, 0.63), Color(0.55, 0.36, 0.20), 2, 7))
 	b.add_stylebox_override("pressed", _flat_box(Color(0.80, 0.66, 0.46), Color(0.35, 0.21, 0.12), 2, 7))
 	b.add_stylebox_override("focus", StyleBoxEmpty.new())
+	b.connect("mouse_entered", SFX.button_hover, "play_sfx")
+	b.connect("pressed", SFX.button_click, "play_sfx")
 	return b
 
 

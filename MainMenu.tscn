@@ -204,6 +204,7 @@ focus_mode = 0
 mouse_default_cursor_shape = 2
 icon = ExtResource( 11 )
 expand_icon = true
+script = ExtResource( 4 )
 
 [node name="GuideBook" parent="." instance=ExtResource( 10 )]
 

@@ -88,7 +88,7 @@ func _ready():
 	visible = false
 	GS.guide = self
 	_build_toc()
-	_close_button.connect("pressed", self, "close")
+	_close_button.connect("pressed", self, "_on_close_pressed")
 	select_chapter(0)
 	_update_restriction_ui()
 
@@ -121,6 +121,7 @@ func _build_toc():
 		b.add_color_override("font_color_pressed", Color(0.20, 0.11, 0.06))
 		b.add_color_override("font_color_focus", Color(0.30, 0.19, 0.12))
 		b.connect("pressed", self, "_on_chapter_pressed", [i])
+		b.connect("mouse_entered", SFX.button_hover, "play_sfx")
 		_toc.add_child(b)
 		_toc_buttons.append(b)
 	_refresh_toc()
@@ -268,7 +269,13 @@ func close():
 
 
 func _on_chapter_pressed(index):
+	SFX.button_click.play_sfx()
 	select_chapter(index)
+
+
+func _on_close_pressed():
+	SFX.button_click.play_sfx()
+	close()
 
 
 func _unhandled_input(event):

@@ -201,8 +201,16 @@ func _build_page():
 	_skip_button.connect("pressed", self, "_skip")
 	add_child(_skip_button)
 
+	_add_button_sfx(_next_button)
+	_add_button_sfx(_skip_button)
+
 	# 装饰层全部放行鼠标，点击画面任意位置都能翻页。
 	_ignore_mouse_recursive(margin)
+
+
+func _add_button_sfx(btn):
+	btn.connect("mouse_entered", SFX.button_hover, "play_sfx")
+	btn.connect("pressed", SFX.button_click, "play_sfx")
 
 
 func _ignore_mouse_recursive(node):
@@ -271,6 +279,7 @@ func _on_click():
 
 func _advance():
 	_index += 1
+	SFX.card_deal.play_sfx()
 	_show_panel(_index, true)
 	_update_footer()
 
