@@ -101,13 +101,15 @@ func _idle(_delta):
 				failures.append("restart did not return to spring round 1")
 			if not encyclopedia.is_discovered("tomato"):
 				failures.append("restart should keep encyclopedia")
-			if gs.tilemap.claimed_parcels.size() != 1:
+			if gs.tilemap.claimed_plots.size() != 1:
 				failures.append("restart should keep claimed farmland")
-			if gs.energy_max != 4 or gs.bonus_draws != 1:
-				failures.append("restart should keep farm upgrades")
-			var expected_hand = gs.card_draw_count + gs.bonus_draws
-			if gs.hand == null or gs.hand.get_child_count() != expected_hand:
+			if gs.energy_max != 4 or gs.bonus_draws != 0:
+				failures.append("restart should keep farm upgrades (energy only, v1.8 cap rule)")
+			# 瓶碎重开后的第一手：固定 3 张且含水牌保证。
+			if gs.hand == null or gs.hand.get_child_count() < gs.card_draw_count:
 				failures.append("restart did not deal a fresh hand")
+			if gs._hand_water_count() < 1:
+				failures.append("restart hand lacks guaranteed water card")
 			if not gs.get_tree().get_nodes_in_group("Plant").empty():
 				failures.append("restart should clear plants")
 			if gs.shatter_open:

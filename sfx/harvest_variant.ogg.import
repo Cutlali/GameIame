@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/harvest_variant.ogg-40a4081246cb149283cd8fb9a689fea8.oggstr"
+
+[deps]
+
+source_file="res://sfx/harvest_variant.ogg"
+dest_files=[ "res://.import/harvest_variant.ogg-40a4081246cb149283cd8fb9a689fea8.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

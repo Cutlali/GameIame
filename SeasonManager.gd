@@ -193,15 +193,53 @@ func bottle_can_refresh():
 func threat_text_for_year(y):
 	match y:
 		2:
-			return "明年的新威胁：虫子开始结伴出现。蜂群可以一次清理一片。"
+			return "明年的新威胁：虫子开始结伴出现，还有飞虫隔着半块田扑向最渴的那株。蜂群可以一次清理一片。"
 		3:
-			return "明年的新威胁：瓶虱会直接啃咬魔瓶。记得带上瓶塞与修补。"
+			return "明年的新威胁：瓶虱会直接啃咬魔瓶。瓶血不会恢复也修不回来——看住你的植物。"
 		4:
 			return "明年的新威胁：精英虫登场，外壳更硬、咬得更重。护盾与反伤能救场。"
 		_:
 			if y > 4:
 				return "明年的新威胁：四季的侵蚀仍在加深，虫群会越来越难缠。"
 	return ""
+
+
+# ---- 季门与换季播报 ----
+
+# 绝对季门 = (年份-1)*4 + 季节序号。首次走过某个季门时播报新进池的种子，
+# 并把最高到过的季门记进存档：瓶碎回第一年后种子不缩池，也不重复播报。
+var _last_announced_gate = -1
+
+
+func _sync_gate():
+	var gate = (year - 1) * 4 + current_index
+	var sv = get_node_or_null("/root/SaveGame")
+	# gate 0 是开局自带的基础三种，教程已经教过，不播。
+	if gate > _last_announced_gate and gate > 0 and is_in_game() \
+			and (sv == null or not sv.enabled or gate > int(sv.max_gate_reached)):
+		_announce_seed_wave(gate)
+	if sv != null:
+		sv.note_gate_reached(gate)
+	_last_announced_gate = gate
+
+
+func _announce_seed_wave(gate):
+	var ids = GameData.seed_ids_at_gate(gate)
+	if ids.empty():
+		return
+	var names = []
+	for id in ids:
+		var nm = ""
+		var card = GS.card_by_id(id)
+		if card != null:
+			if card.species_id != "" and GameData.species(card.species_id) != null:
+				nm = GameData.species(card.species_id)["name"]
+			else:
+				nm = card.title
+		else:
+			nm = id
+		names.append(nm)
+	Toast.show_message("新种子进池：%s，收获对应植物也会给魔瓶蓄能。" % PoolStringArray(names).join("、"))
 
 
 # 由 TheTileMap 在 _ready 时调用。每次进入 Game 场景都重置回春季。
@@ -238,6 +276,7 @@ func bind_tilemap(map):
 
 	_hud_layer.visible = true
 	_update_hud()
+	_sync_gate()
 
 	if not map.is_connected("tree_exited", self, "_on_tilemap_exited"):
 		map.connect("tree_exited", self, "_on_tilemap_exited")
@@ -312,6 +351,26 @@ func apply_textures():
 			node.texture = tex
 
 
+# 读档 / 瓶碎重开用：直接落历法，不播换季动画、不解锁手记页。
+# 与 change_season 不同，这里连"已经是春天"的情况也会把轮数归位。
+func restore_calendar(new_year, new_round_in_year, new_index, new_rounds):
+	if new_index < 0 or new_index >= SEASONS.size():
+		new_index = 0
+	year = new_year
+	round_in_year = new_round_in_year
+	current_index = new_index
+	current_season = SEASONS[new_index]
+	rounds_in_season = new_rounds
+	RunStats.year = new_year
+	GS.refresh_energy_max()
+	apply_textures()
+	_update_hud()
+	if _hud_layer != null:
+		_hud_layer.visible = is_in_game()
+	# 读档/瓶碎回到的历法：把季门标记为“已播报”，避免重复弹通知。
+	_last_announced_gate = (year - 1) * 4 + current_index
+
+
 # 切换季节。index: 0=春 1=夏 2=秋 3=冬
 # reset_rounds: 手动切换时重置为第 1 轮；自动换季由 advance_round 自行管理计数
 func change_season(index, animate = true, reset_rounds = true):
@@ -336,6 +395,8 @@ func change_season(index, animate = true, reset_rounds = true):
 		return
 
 	# 淡入黑场 -> 换纹理 -> 显示季节名 -> 淡出
+	# 转场音从黑幕开始响，切完季节名就截停（时长不重要）。
+	SFX.play_season_transition(index)
 	yield(_fade_to(1.0, FADE_IN_TIME), "completed")
 
 	current_index = index
@@ -352,6 +413,7 @@ func change_season(index, animate = true, reset_rounds = true):
 	yield(get_tree().create_timer(0.7), "timeout")
 	_hide_season_name()
 
+	SFX.stop_season_sfxs()
 	_switching = false
 
 
@@ -371,6 +433,10 @@ func advance_round():
 		year += 1
 		RunStats.year = year
 		RunStats.reset_year()
+		# SaveGame 是排在最后的 autoload，运行时取节点避免编译期成环。
+		var sv = get_node_or_null("/root/SaveGame")
+		if sv != null:
+			sv.note_year_reached(year)
 		# 第一年结束后能量上限 +2；之后不再随年份增长。
 		GS.refresh_energy_max()
 
@@ -379,6 +445,7 @@ func advance_round():
 		# 年度切换直接回到春天，避免黑场动画盖住年终总结。
 		change_season(0, false, false)
 		_update_hud()
+		_sync_gate()
 
 		YearSummary.show_summary(finished_year, false, lines, discovered, total,
 			threat_text_for_year(year))
@@ -392,6 +459,7 @@ func advance_round():
 		var next_index = (current_index + 1) % SEASONS.size()
 		change_season(next_index, true, false)
 		_update_hud()
+		_sync_gate()
 		return true
 
 	_update_hud()

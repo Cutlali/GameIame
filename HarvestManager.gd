@@ -173,6 +173,9 @@ func _show_photo(entry):
 	_photo.texture = GameData.photo_for(entry["species_id"])
 	_photo.modulate = Color.white
 
+	# v1.8：收获反馈音——普通作物随机四选一，变异作物专属一声。
+	SFX.rand_harvest(entry["is_variant"])
+
 	var gold = Color(0.72, 0.68, 0.46, 0.9)
 	var border = gold
 	if entry["is_variant"]:
@@ -221,13 +224,12 @@ func _apply_harvest_perks(plant, entry, pool):
 			notes.append("%d 株相邻植物获得 %d 点护盾" % [count, amount])
 
 	if perk.has("harvest_charge"):
-		BottleManager.add_charge(pool, true)
-		notes.append("魔瓶额外充能 +%d" % int(perk["harvest_charge"]))
-
-	if perk.has("harvest_heal_bottle"):
-		var healed = BottleManager.heal(int(perk["harvest_heal_bottle"]))
-		if healed > 0:
-			notes.append("魔瓶恢复 %d 点生命" % healed)
+		# 这一条原本给的是“魔瓶多抽一次”，玩家根本看不出来发生了什么。
+		# 现在统一改成攒瓶能：收获变种时直接 +3，与瓶能条对得上。
+		var gained = BottleManager.add_power(int(perk["harvest_charge"]), true)
+		if gained > 0:
+			notes.append("瓶能 +%d（%d / %d）" % [
+				gained, BottleManager.power, BottleManager.MAX_POWER])
 
 	return PoolStringArray(notes).join("，")
 
@@ -240,6 +242,14 @@ func handle_harvest(plant):
 	var entry = GameData.entry(entry_id)
 
 	RunStats.harvests += 1
+
+	# 瓶能：种活一株 +1，收下一株变异 +3。攒满 15 点后由玩家点击魔瓶释放：
+	# 固定给全场植物各浇 1 滴水，田里有虫时一并砸出伤害。
+	# 它和魔瓶自动抽卡是两套资源，互不影响。
+	if entry != null and entry["is_variant"]:
+		BottleManager.add_power(BottleManager.POWER_PER_VARIANT, true)
+	else:
+		BottleManager.add_power(BottleManager.POWER_PER_HARVEST, true)
 
 	if entry == null:
 		BottleManager.add_charge("basic", true)

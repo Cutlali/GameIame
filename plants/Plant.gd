@@ -39,7 +39,7 @@ var _resolved_id = ""
 # 只有被虫害打掉血才让魔瓶受损；牺牲卡主动杀掉植物不算。
 var died_by_pest = false
 
-# If the plant is "consumed", that means the card / gold popup has been
+# If the plant is "consumed", that means the harvest popup has been
 # shown, and the plant should be queue_freed()
 var consumed = false
 
@@ -346,8 +346,8 @@ func resolve_entry_id():
 		if not _mutation_rewarded:
 			_mutation_rewarded = true
 			RunStats.mutation_pity = 0
-			# 变异是高光时刻，用一段上扬的魔法音效强调，区别于普通收获。
-			SFX.mutation.play_usual()
+			# v1.8：变异的高光反馈统一放到收获弹窗的"收获变异植物"音效，
+			# 这里不再叠一段旧魔法音，避免双响。
 		return _resolved_id
 
 	RunStats.mutation_pity += 1

@@ -17,7 +17,7 @@ func _process(delta):
 		else:
 			visible = false
 	else:
-		visible = true
+		visible = not GS.farm_choice_open
 
 	GS.end_turn_mouse = (visible and contains_mouse(self))
 	

@@ -64,8 +64,8 @@ func _idle(_delta):
 		_check(_visible_buttons(toc) == 11, "all 11 pages listed, got %d"
 			% _visible_buttons(toc))
 		_check(not guide._is_unlocked(4), "season locked at start")
-		_check(not guide._is_unlocked(9), "previous owner page locked at start")
-		_check(not guide._is_unlocked(10), "creator page locked at start")
+		_check(not guide._is_unlocked(9), "milestone page locked at start")
+		_check(not guide._is_unlocked(10), "final page locked at start")
 		_check(guide._toc_buttons[4].hint_tooltip != "", "locked page gets fog tooltip")
 
 		var body = guide.get_node("Root/Book/Margin/VBox/Body/Scroll/Content/ChapterBody")
@@ -107,65 +107,66 @@ func _idle(_delta):
 		var title = guide.get_node("Root/Book/Margin/VBox/Body/Scroll/Content/ChapterTitle")
 		_check(not guide._fog.visible, "fog hidden after dissolve")
 
-		# 解锁虫害页。
+		# 解锁虫害页（新编号 07）。
 		flags.guide_pest_seen = true
 		guide._refresh_toc()
-		guide.select_chapter(6)
-		_check(title.text == "06  第五页 · 瓶子里的虫", "pest chapter title")
-		_check(body.text.find("虫子杀不完") >= 0, "pest page comments")
+		guide.select_chapter(7)
+		_check(title.text == "07  第六页 · 瓶子里的虫", "pest chapter title")
+		_check(body.text.find("抵御虫子的进攻") >= 0, "pest page comments")
 
-		# 其余章节解锁后，最后一页还差“亲眼见过瓶碎”。
+		# 瓶子力量是新增的常驻页（06）。
+		_check(guide._is_unlocked(6), "bottle power page always visible")
+		_check(guide.CHAPTERS[6]["title"].find("瓶子的力量") >= 0, "new chapter inserted")
+
+		# 最后一页：前七种集齐之前只有雾 + 引子句。
 		flags.guide_variant_seen = true
 		flags.guide_bottle_damaged = true
 		flags.guide_milestone_seen = true
 		guide._refresh_toc()
-		_check(not guide._is_unlocked(9), "previous owner needs a shatter")
-		guide.select_chapter(9)
-		_check(title.text == "09  最后一页 · 瓶子里的世界", "last chapter title")
-		_check(not body.visible, "previous owner body hidden before shatter")
-		_check(guide._fog.visible, "previous owner fog visible")
-		_check(guide._fog_hint.text.find("碎裂") >= 0, "fog hint mentions shatter")
+		_check(not guide._is_unlocked(10), "final page still foged below seven species")
+		guide.select_chapter(10)
+		_check(title.text == "10  最后一页 · 瓶子里的世界", "final chapter title")
+		_check(not body.visible, "final body hidden before seven species")
+		_check(guide._fog.visible, "final page fog visible")
+		_check(guide._fog_hint.text.find("七种") >= 0, "fog hint mentions seven species")
 		# 雾气盖住正文，但最后一句要露出来当引子。
-		_check(guide._peek_label.visible, "previous owner peek line visible")
+		_check(guide._peek_label.visible, "peek line visible under fog")
 		_check(guide._peek_label.text.find("灾难迎来终结") >= 0, "peek line text")
 		_check(guide._peek_label.get_line_count() == 1, "peek line stays on one row, got %d"
 			% guide._peek_label.get_line_count())
 		_check(guide._peek_label.rect_position.y > guide._fog.rect_position.y + guide._fog.rect_size.y * 0.6,
 			"peek line sits at the bottom of the page")
 
-		flags.guide_bottle_shattered = true
+		# 收录到 7 个物种：阶段二（上一位拥有者的手记）散开。
+		var enc = get_root().get_node("Encyclopedia")
+		var old_entries = enc.discovered
+		var gd = get_root().get_node("GameData")
+		var seven = {}
+		for i in range(7):
+			seven[gd.SPECIES_ORDER[i]] = true
+		enc.discovered = seven
 		guide._refresh_toc()
-		_check(guide._is_unlocked(9), "previous owner unlocked after shatter")
-		guide.select_chapter(9)
-		_check(body.visible, "previous owner body visible after shatter")
-		_check(body.text.find("下一个得到瓶子的人") >= 0, "previous owner text")
-		_check(body.text.find("看着魔瓶") >= 0, "new discovery paragraph")
-		_check(body.text.find("图鉴集齐后我便会知晓") >= 0, "new bestiary foreshadow")
-		_check(body.text.find("阶段") < 0, "no stage labels left")
+		_check(guide._is_unlocked(10), "final page opens at seven species")
+		guide.select_chapter(10)
+		_check(body.visible, "stage 2 body visible after seven species")
+		_check(body.text.find("下一个得到瓶子的人") >= 0, "stage 2 previous-owner text")
+		_check(body.text.find("看着魔瓶") >= 0, "stage 2 discovery paragraph")
+		_check(body.text.find("我是魔瓶的创造者") < 0, "stage 3 hidden before full species")
+		_check(body.text.find("阶段") < 0, "no stage labels in body")
 		guide._hide_fog()
 		_check(not guide._peek_label.visible, "peek line gone once page is open")
 
-		# 创造者的留言：图鉴完整才显露。
-		var enc = get_root().get_node("Encyclopedia")
-		var old_entries = enc.discovered
-		_check(not guide._is_unlocked(10), "creator locked before full bestiary")
-		guide.select_chapter(10)
-		_check(title.text == "10  创造者的留言", "creator chapter title")
-		_check(not body.visible, "creator body hidden before full bestiary")
-		_check(guide._fog_hint.text.find("图鉴完整") >= 0, "creator fog hint")
-		_check(not guide._peek_label.visible, "creator page has no peek line")
-
-		var gd = get_root().get_node("GameData")
+		# 集齐所有植物：阶段三（创造者留言）接在同一个后页上。
 		var full = {}
-		for id in gd.all_entry_ids():
-			full[id] = true
+		for sid in gd.SPECIES_ORDER:
+			full[sid] = true
 		enc.discovered = full
 		guide._refresh_toc()
-		_check(guide._is_unlocked(10), "creator unlocked at full bestiary")
 		guide.select_chapter(10)
-		_check(body.visible, "creator body visible at full bestiary")
+		_check(body.visible, "stage 3 visible at full species")
 		_check(body.text.find("我是魔瓶的创造者") >= 0, "creator text")
 		_check(body.text.find("奇迹的种子") >= 0, "creator seed hint")
+		_check(body.text.find("下一个得到瓶子的人") >= 0, "stage 2 kept below stage 3")
 		enc.discovered = old_entries
 
 		guide.close()

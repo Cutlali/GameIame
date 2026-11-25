@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/season_spring.ogg-6afb1225deba1b2c8e0a3731446d39e9.oggstr"
+
+[deps]
+
+source_file="res://sfx/season_spring.ogg"
+dest_files=[ "res://.import/season_spring.ogg-6afb1225deba1b2c8e0a3731446d39e9.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

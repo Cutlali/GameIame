@@ -89,19 +89,21 @@ func play_self():
 		GS.draw_card_to_hand()
 		GS.draw_card_to_hand()
 	if associated_card.action == GS.Action.PLUS_ENERGY:
-		GS.energy += 1
+		# 数量就是这张牌给几点能量（凝露 1 / 甘泉 2 / 涌泉 3）。
+		# 免费能量那张没设数量，按 1 点算，保持老行为。
+		var wanted = max(1, associated_card.quantity)
+		var room = max(0, GS.energy_max - GS.energy)
+		GS.energy += min(wanted, room)
+		if wanted > room:
+			Toast.show_message("能量已经顶到上限，多出来的 %d 点散掉了。" % (wanted - room))
 	if associated_card.action == GS.Action.HASTEN:
 		GS.cursor.hasten(associated_card)
 	if associated_card.action == GS.Action.GRAFT:
 		GS.cursor.graft(associated_card)
-	if associated_card.action == GS.Action.CORK:
-		GS.cursor.cork(associated_card)
 	if associated_card.action == GS.Action.NET:
 		GS.cursor.net(associated_card)
 	if associated_card.action == GS.Action.ATTACK_ALL:
 		GS.cursor.attack_all(associated_card)
-	if associated_card.action == GS.Action.HEAL_BOTTLE:
-		GS.cursor.heal_bottle(associated_card)
 	if associated_card.action == GS.Action.THORNS:
 		GS.cursor.thorns_armor(associated_card)
 	if associated_card.action == GS.Action.MATURE:
@@ -109,18 +111,53 @@ func play_self():
 		
 	GS.energy -= associated_card.cost
 	discard()
-	
+
+	_play_card_sfx()
+
+# v1.8 声包：特定牌用专属音效，其余仍走通用出牌声。
+func _play_card_sfx():
+	var b = associated_card
+	if b == GS.card_water1_3x3:
+		SFX.water_barrel.play_sfx()
+		return
+	if b == GS.card_water2_2x2:
+		SFX.water_hose.play_sfx()
+		return
+	if b.action == GS.Action.HEAL_DMG_NEAR:
+		# 吸血獠牙（低费）与吸血斩（高费）分档。
+		if b.cost <= 1:
+			SFX.drain_low.play_sfx()
+		else:
+			SFX.drain_high.play_sfx()
+		return
+	if b.action == GS.Action.HEAL_ALL_DMG:
+		SFX.drain_high.play_sfx()
+		return
+	if b == GS.card_small_attack:
+		SFX.attack_single.play_sfx()
+		return
+	if b == GS.card_dmg2:
+		SFX.attack_heavy.play_sfx()
+		return
 	SFX.card_play.play_sfx()
 	
 func discard():
-	var new_parent = get_node("../../CardDummy")
-	get_parent().remove_child(self)
-	new_parent.add_child(self)
-	
+	_move_to_dummy()
 	state = STATE_DISCARD
 	# 速成/水晶球之水是一次性卡，不污染牌库循环。
 	if associated_card != null and not associated_card.transient:
 		GS.discard_pile.push_back(associated_card)
+
+# 回合末整理时被弃掉的牌：走同一段飞出动画，但不回弃牌堆，
+# 从本局循环里真正删掉（牌库越打越薄，留强弃弱）。
+func destroy():
+	_move_to_dummy()
+	state = STATE_DISCARD
+
+func _move_to_dummy():
+	var new_parent = get_node("../../CardDummy")
+	get_parent().remove_child(self)
+	new_parent.add_child(self)
 	
 func try_play_self():
 	GS.release_current_card(self)

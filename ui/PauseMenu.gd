@@ -43,8 +43,8 @@ func _process(delta):
 	var guide = get_parent().get_node_or_null("GuideBook")
 	if guide != null and guide.visible:
 		return
-	# 年度总结/开垦选择自己管理暂停，避免 P 键把冻结中的农场放出来。
-	if GS.year_summary_open or GS.farm_choice_open or GS.shatter_open:
+	# 年度总结/开垦选择/手牌整理自己管理暂停，避免 P 键把冻结中的农场放出来。
+	if GS.year_summary_open or GS.farm_choice_open or GS.shatter_open or GS.hand_keep_open:
 		return
 	if Input.is_action_just_pressed("pause_button"):
 		toggle_pause()

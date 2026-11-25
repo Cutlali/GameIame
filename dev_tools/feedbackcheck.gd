@@ -93,10 +93,12 @@ func _open_variant():
 	var eid = plant.resolve_entry_id()
 	if eid.find("_v") < 0:
 		failures.append("forced mutation did not produce variant id")
-	if not sfx.mutation.playing:
-		failures.append("mutation sfx did not start")
+	if sfx.mutation.playing:
+		failures.append("mutation reveal must not stack the old sfx anymore")
 
 	harvest.handle_harvest(plant)
+	if not sfx.harvest_variant.playing:
+		failures.append("variant harvest jingle did not start")
 	if not harvest._root.visible:
 		failures.append("variant harvest popup did not open")
 	print("variant entry: " + eid)

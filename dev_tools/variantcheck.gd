@@ -61,7 +61,7 @@ func _check_data():
 
 
 func _check_cards():
-	for id in ["hasten", "graft", "cork", "net"]:
+	for id in ["hasten", "graft", "net"]:
 		if gs.card_by_id(id) == null:
 			failures.append("new card missing: " + id)
 
@@ -141,39 +141,46 @@ func _check_harvest_perks():
 	if note.find("护盾") < 0:
 		failures.append("teddy bear perk note missing")
 
-	# 奶油南瓜：额外充能。
+	# 奶油南瓜：第二轮把这条特性从“多抽一张”改成真正攒瓶能，
+	# 所以既要看瓶能到账 +3，也要确认它不再偷偷加抽取。
 	var charges_before = bottle.charges.size()
+	bottle.power = 0
 	harvest._apply_harvest_perks(
 		teddy, game_data.entry("pumpkin_v0"), "high")
-	if bottle.charges.size() != charges_before + 1:
-		failures.append("butternut extra bottle charge did not apply")
+	if bottle.power != 3:
+		failures.append("butternut bottle power did not apply: %d" % bottle.power)
+	if bottle.charges.size() != charges_before:
+		failures.append("butternut still grants draw charges")
 
-	# 柠檬日落月见草：恢复 1 点瓶血。
-	bottle.hp = 2
+	# 柠檬日落月见草：v1.8 起回血词条删除，改成收获瓶能 +2。
+	bottle.power = 0
+	var hp_before = bottle.hp
 	harvest._apply_harvest_perks(
 		teddy, game_data.entry("moonflower_v1"), "rare")
-	if bottle.hp != 3:
-		failures.append("lemon sunset did not heal the bottle")
+	if bottle.power != 2:
+		failures.append("lemon sunset should grant 2 bottle power, got %d" % bottle.power)
+	if bottle.hp != hp_before:
+		failures.append("lemon sunset must not touch bottle hp anymore")
 
-	print("harvest perks: shield, charge, bottle heal checked")
+	print("harvest perks: shield, charge checked (bottle heal removed)")
 
 
 func _check_bottle_perks():
-	bottle.hp = 3
-	bottle.cork_charges = 0
-	bottle.add_cork(1)
-	var hp_before = bottle.hp
-	bottle.damage(1)
-	if bottle.hp != hp_before:
-		failures.append("cork did not absorb bottle damage")
-	if bottle.cork_charges != 0:
-		failures.append("cork charge was not consumed")
-
-	bottle.hp = 1
-	bottle.heal(1)
-	if bottle.hp != 2:
-		failures.append("bottle heal failed")
-	print("bottle: cork and heal checked")
+	# v1.8：瓶塞整体删除——卡、池子、抵挡机制都不该再存在。
+	if gs.card_by_id("cork") != null:
+		failures.append("cork card should be removed")
+	for pool_id in game_data.BOTTLE_POOLS.keys():
+		for e in game_data.BOTTLE_POOLS[pool_id]:
+			if e["id"] == "cork":
+				failures.append("cork still in pool " + pool_id)
+	for e in game_data.BASIC_POOL:
+		if e["id"] == "cork":
+			failures.append("cork still in basic pool")
+	if bottle.has_method("add_cork"):
+		failures.append("BottleManager.add_cork should be gone")
+	if bottle.get("cork_charges") != null:
+		failures.append("cork_charges should be gone")
+	print("bottle: cork fully removed")
 
 
 func _check_net():

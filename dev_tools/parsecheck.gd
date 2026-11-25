@@ -7,6 +7,8 @@ func _init():
 		"res://GS.gd",
 		"res://Flags.gd",
 		"res://GameData.gd",
+		"res://SaveGame.gd",
+		"res://RunStats.gd",
 		"res://plants/Plant.gd",
 		"res://bugs/Bug.gd",
 		"res://HarvestManager.gd",
@@ -25,7 +27,6 @@ func _init():
 		"res://ui/GuideBook.gd",
 		"res://ui/GameHUD.gd",
 		"res://ui/FarmChoiceUI.gd",
-		"res://shop/ShopItem.gd",
 		"res://Encyclopedia.gd",
 		"res://TheTileMap.gd"
 	]

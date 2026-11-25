@@ -3,6 +3,8 @@ extends Control
 # 游戏内常驻界面：
 # 左上角手记，右上角图鉴 + 魔瓶，左下角水晶球（与魔力球并排）。
 # 魔瓶维持着四季，所以瓶内液体与光晕会跟随当前季节变色。
+# 瓶身下方那条是“瓶能”：收获植物攒满 15 点后，点魔瓶释放——
+# 固定给全场植物各浇 1 滴水，田里有虫时一并砸出伤害。
 
 var _bestiary_button: Button
 var _bestiary_label: Label
@@ -10,6 +12,7 @@ var _guide_button: Button
 var _guide_badge: Label
 var _orb_button: Button
 var _orb_holder: Control
+var _power_button: Button
 
 # 最近一次解锁的手记页；有值说明玩家还没去看。
 var _new_guide_index = -1
@@ -20,6 +23,10 @@ var _hp = 3
 var _hp_max = 3
 var _glow = Color(0.45, 0.85, 0.45)
 var _damage_flash = 0.0
+
+# 瓶能读数，跟着 BottleManager 走；攒满时整条槽发亮、可以点瓶子释放。
+var _power = 0
+var _power_max = 15
 
 # 正拖着一张水牌悬在水晶球上时，给球体加一圈高亮。
 var _orb_drag_hover = false
@@ -82,6 +89,20 @@ func _ready():
 
 	if not Flags.is_connected("guide_page_unlocked", self, "_on_guide_page_unlocked"):
 		Flags.connect("guide_page_unlocked", self, "_on_guide_page_unlocked")
+
+	# 瓶能攒满后，整个瓶身就是释放按钮；没满时不拦截鼠标。
+	_power_button = Button.new()
+	_power_button.rect_position = Vector2(126, 24)
+	_power_button.rect_size = Vector2(64, 114)
+	_power_button.flat = true
+	_power_button.focus_mode = Control.FOCUS_NONE
+	_power_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_power_button.hint_tooltip = "瓶能已满：点魔瓶给全场植物各浇一滴水，有虫时一并砸出伤害"
+	for pstate in ["normal", "hover", "pressed", "focus"]:
+		_power_button.add_stylebox_override(pstate, StyleBoxEmpty.new())
+	_power_button.connect("pressed", self, "_on_power_pressed")
+	_power_button.visible = false
+	frame.add_child(_power_button)
 
 	_title_font = DynamicFont.new()
 	_title_font.font_data = load("res://fonts/SimHei.ttf")
@@ -220,9 +241,16 @@ func _process(delta):
 			_damage_flash = 1.0
 		_hp = new_hp
 		_hp_max = BottleManager.MAX_HP
+		_power = BottleManager.power
+		_power_max = BottleManager.MAX_POWER
 	else:
 		_hp = 3
 		_hp_max = 3
+		_power = 0
+		_power_max = 15
+
+	if _power_button != null and is_instance_valid(_power_button):
+		_power_button.visible = _power >= _power_max and _hp > 0
 
 	_glow = _glow.linear_interpolate(_season_color(Season.current_season),
 		clamp(delta * 3.0, 0.0, 1.0))
@@ -255,6 +283,10 @@ func _draw_bottle(f):
 	var pulse = 0.9 + 0.1 * sin(OS.get_ticks_msec() / 520.0)
 	draw_circle(Vector2(cx, y + 94), 36.0,
 		Color(_glow.r, _glow.g, _glow.b, 0.10 * pulse))
+	# 瓶能攒满时再套一圈紫光，配合下方提示告诉玩家可以点了。
+	if _power >= _power_max and _hp > 0:
+		var charge_pulse = 0.6 + 0.4 * sin(OS.get_ticks_msec() / 240.0)
+		draw_circle(Vector2(cx, y + 94), 46.0, Color(0.72, 0.52, 0.96, 0.20 * charge_pulse))
 	draw_circle(Vector2(cx, y + 134), 25.0, Color(0.0, 0.0, 0.0, 0.18))
 
 	# 瓶塞与瓶颈。
@@ -311,6 +343,49 @@ func _draw_bottle(f):
 	draw_string(_small_font, Vector2(f.x + 206, y + 62), "%d / %d" % [_hp, _hp_max],
 		Color(0.78, 0.80, 0.76))
 
+	_draw_bottle_power(f)
+
+
+# 瓶能槽：15 格小方块一行排开，左右读齐；满格时整条发亮，
+# 提示文字居中落在槽下方、仍在面板内。
+func _draw_bottle_power(f):
+	var bar_y = f.y + 140
+	var x0 = f.x + 52
+	var cell = 9.0
+	var gap = 2.0
+	var bar_w = float(_power_max) * cell + float(_power_max - 1) * gap
+	var full = _power >= _power_max and _hp > 0
+	var pulse = 0.75 + 0.25 * sin(OS.get_ticks_msec() / 220.0)
+
+	# draw_string 的 y 是基线：取格子上沿 +9 才能和 10px 高的格子齐平。
+	draw_string(_small_font, Vector2(f.x + 10, bar_y + 9), "瓶能",
+		Color(0.88, 0.82, 0.96) if full else Color(0.70, 0.68, 0.74))
+
+	for i in range(_power_max):
+		var r = Rect2(x0 + i * (cell + gap), bar_y, cell, 10)
+		if i < _power:
+			var c = Color(0.72, 0.56, 0.95)
+			if full:
+				c = Color(0.84, 0.66, 1.0, 0.60 + 0.40 * pulse)
+			draw_rect(r, c)
+			draw_rect(Rect2(r.position.x, r.position.y, r.size.x, 3),
+				Color(0.94, 0.88, 1.0, 0.45))
+		else:
+			draw_rect(r, Color(0.17, 0.16, 0.22, 0.9))
+			draw_rect(r, Color(0.40, 0.38, 0.48, 0.75), false, 1.0)
+
+	draw_string(_small_font,
+		Vector2(x0 + bar_w + 6, bar_y + 9),
+		"%d/%d" % [_power, _power_max],
+		Color(0.92, 0.88, 1.0) if full else Color(0.72, 0.70, 0.78))
+
+	if full:
+		var hint = "瓶能已满 · 点击魔瓶：全场浇水，有虫加伤"
+		var hw = _small_font.get_string_size(hint).x
+		draw_string(_small_font,
+			Vector2(x0 + bar_w / 2.0 - hw / 2.0, bar_y + 26),
+			hint, Color(0.93, 0.86, 1.0, 0.60 + 0.40 * pulse))
+
 
 # 水晶球：存下的水没有上限，球体本身只表示“有没有水”，数量写在中间。
 func _draw_crystal_orb():
@@ -342,6 +417,14 @@ func _draw_crystal_orb():
 
 func _on_bestiary_pressed():
 	EncyclopediaUI.open()
+
+
+# 点击瓶身释放瓶能。和取水一样，只在自己的回合里可以操作。
+func _on_power_pressed():
+	if GS.turn_state != GS.TurnState.PLAYING_CARDS:
+		Toast.show_message("等回到你的回合再释放瓶能。")
+		return
+	BottleManager.release_power()
 
 
 func _on_orb_pressed():

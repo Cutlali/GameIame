@@ -7,27 +7,27 @@ extends Control
 const PANELS = [
 	{
 		"path": "res://prologue/panel_1.jpg",
-		"text": "那天夜里，它从很远的地方飞来，\n像一颗落在田里的星星。"
+		"text": "某天夜里，它从很远的地方飞来，像一颗落在田里的星星。"
 	},
 	{
 		"path": "res://prologue/panel_2.jpg",
-		"text": "第二天一早，我在田边的石头下面发现了它。"
+		"text": "次日一早，我在田边的石头下面发现了它。"
 	},
 	{
 		"path": "res://prologue/panel_3.jpg",
-		"text": "旁边还压着一本旧手记，\n纸页被露水打湿了一点。"
+		"text": "旁边还压着一本图鉴，纸页被露水打湿了一点。"
 	},
 	{
 		"path": "res://prologue/panel_4.jpg",
-		"text": "我把它捧起来的时候，瓶底亮起一小团绿光。"
+		"text": "我把它捧了起来，瓶底亮起一小团绿光。"
 	},
 	{
 		"path": "res://prologue/panel_5.jpg",
-		"text": "手记的第一页上，墨迹还是新的，\n像是刚刚有人写完。"
+		"text": "就在我放下瓶子时，旁边突然出现了一本笔记"
 	},
 	{
 		"path": "res://prologue/panel_6.jpg",
-		"text": "我在田边坐下来，\n一页一页地往下读。"
+		"text": "我在田边坐了下来，一页一页地往下读。"
 	}
 ]
 
@@ -135,8 +135,8 @@ func _build_page():
 	_photo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	photo_margin.add_child(_photo)
 
-	# 旁白框：像漫画里的字幕格。
-	var caption = Panel.new()
+	# 旁白框：像漫画里的字幕格。用 PanelContainer，文字折行变多时框子自己长高。
+	var caption = PanelContainer.new()
 	caption.rect_min_size = Vector2(0, 70)
 	caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	caption.add_stylebox_override("panel", _caption_box())
@@ -325,8 +325,10 @@ func _update_footer():
 
 
 func _enter_game():
+	SaveGame.mark_prologue_seen()
 	SceneTransitions.change_scene_to(GS.Game)
 
 
 func _skip():
+	SaveGame.mark_prologue_seen()
 	SceneTransitions.change_scene_to(GS.Game)

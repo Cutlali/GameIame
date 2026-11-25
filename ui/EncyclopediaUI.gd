@@ -1,7 +1,7 @@
 extends CanvasLayer
 
-# 植物图鉴：4 种植物 × 3 个条目（基础 + 2 个变种），共 12 条。
-# 收录基础物种会推进里程碑：能量上限、每回合抽卡数、农田扩建。
+# 植物图鉴：15 种植物 × 3 个条目（基础 + 2 个变种），共 45 条。
+# 里程碑按图鉴条目数推进：每回合抽卡、农田扩建。
 
 var _root: Control
 var _title: Label
@@ -76,12 +76,21 @@ func _build_ui():
 	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(content)
 
+	# 条目变多后网格会超高，套一层滚动容器；一列一个物种，竖排更好读。
+	var grid_scroll = ScrollContainer.new()
+	grid_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	grid_scroll.scroll_horizontal_enabled = false
+	content.add_child(grid_scroll)
+	_style_scroll_bar(grid_scroll.get_v_scrollbar())
+
 	_grid = GridContainer.new()
-	_grid.columns = 4
+	_grid.columns = 3
 	_grid.add_constant_override("hseparation", 12)
 	_grid.add_constant_override("vseparation", 12)
+	_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content.add_child(_grid)
+	grid_scroll.add_child(_grid)
 
 	var detail_panel = Panel.new()
 	detail_panel.rect_min_size = Vector2(330, 0)
@@ -124,16 +133,7 @@ func _build_ui():
 	_detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_scroll.add_child(_detail)
 
-	var bar = detail_scroll.get_v_scrollbar()
-	bar.rect_min_size = Vector2(10, 0)
-	bar.add_stylebox_override("scroll", _flat_box(
-		Color(0.72, 0.62, 0.47, 0.30), Color(0, 0, 0, 0), 0, 4))
-	bar.add_stylebox_override("grabber", _flat_box(
-		Color(0.55, 0.39, 0.24, 0.75), Color(0, 0, 0, 0), 0, 4))
-	bar.add_stylebox_override("grabber_highlight", _flat_box(
-		Color(0.45, 0.30, 0.18, 0.90), Color(0, 0, 0, 0), 0, 4))
-	bar.add_stylebox_override("grabber_pressed", _flat_box(
-		Color(0.38, 0.24, 0.14, 0.95), Color(0, 0, 0, 0), 0, 4))
+	_style_scroll_bar(detail_scroll.get_v_scrollbar())
 
 	var bottom = HBoxContainer.new()
 	bottom.alignment = BoxContainer.ALIGN_END
@@ -157,6 +157,18 @@ func _flat_box(bg, border, width, radius):
 	sb.corner_radius_bottom_left = radius
 	sb.corner_radius_bottom_right = radius
 	return sb
+
+
+func _style_scroll_bar(bar):
+	bar.rect_min_size = Vector2(10, 0)
+	bar.add_stylebox_override("scroll", _flat_box(
+		Color(0.72, 0.62, 0.47, 0.30), Color(0, 0, 0, 0), 0, 4))
+	bar.add_stylebox_override("grabber", _flat_box(
+		Color(0.55, 0.39, 0.24, 0.75), Color(0, 0, 0, 0), 0, 4))
+	bar.add_stylebox_override("grabber_highlight", _flat_box(
+		Color(0.45, 0.30, 0.18, 0.90), Color(0, 0, 0, 0), 0, 4))
+	bar.add_stylebox_override("grabber_pressed", _flat_box(
+		Color(0.38, 0.24, 0.14, 0.95), Color(0, 0, 0, 0), 0, 4))
 
 
 func _make_label(text, size, color):
@@ -187,7 +199,7 @@ func open():
 	if _root == null or _root.visible:
 		return
 	if GS.bottle_open or GS.harvest_open or GS.year_summary_open \
-			or GS.farm_choice_open or GS.shatter_open:
+			or GS.farm_choice_open or GS.shatter_open or GS.hand_keep_open:
 		return
 	GS.bestiary_open = true
 	_root.visible = true
@@ -299,8 +311,16 @@ func _create_entry_button(entry_id):
 	plate.add_child(photo)
 	vbox.add_child(plate)
 
-	var name_label = _make_label(name_text, 19, name_color)
+	# 格子里能写的宽度只有 144（160 减左右边距），真实品种名动辄七八个字，
+	# 自动换行会把整行卡片顶歪。这里按字数把字号压下来，并锁死单行高度，
+	# 万一还是写不下就裁掉——完整名字在右侧详情栏里。
+	# 中文字形一个字宽正好等于字号，所以按 140 而不是 144 估算，留 1 像素余量。
+	var name_size = int(clamp(140.0 / max(1.0, float(name_text.length())), 13.0, 19.0))
+	var name_label = _make_label(name_text, name_size, name_color)
 	name_label.align = Label.ALIGN_CENTER
+	name_label.autowrap = false
+	name_label.clip_text = true
+	name_label.rect_min_size = Vector2(0, 28)
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(name_label)
 

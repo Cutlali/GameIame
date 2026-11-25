@@ -52,6 +52,14 @@ func _idle(_delta):
 		ok = false
 	bestiary.close()
 
+	# --- 魔力球可见性（2026-11-25 曾因删节点残留 visible=false 被整颗藏掉） ---
+	var orb = _game.get_node_or_null("CanvasLayer/EnergyOrbHolder/EnergyOrb")
+	if orb == null or not orb.visible:
+		print("FAIL: EnergyOrb (魔力球) missing or hidden")
+		ok = false
+	else:
+		print("energy orb visible")
+
 	# --- HUD 指南图标：打开时暂停，关闭时恢复 ---
 	if hud != null:
 		if hud._guide_button == null or hud._guide_button.icon == null:

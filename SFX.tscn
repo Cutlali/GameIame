@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=2]
+[gd_scene load_steps=47 format=2]
 
 [ext_resource path="res://SFX.gd" type="Script" id=1]
 [ext_resource path="res://SFXRand.gd" type="Script" id=2]
@@ -19,10 +19,33 @@
 [ext_resource path="res://sfx/plant_jingle.wav" type="AudioStream" id=17]
 [ext_resource path="res://sfx/nowater2.wav" type="AudioStream" id=18]
 [ext_resource path="res://music/win_jingle.ogg" type="AudioStream" id=19]
-[ext_resource path="res://sfx/year_end.wav" type="AudioStream" id=20]
-[ext_resource path="res://sfx/mutation.wav" type="AudioStream" id=21]
+[ext_resource path="res://sfx/year_change.wav" type="AudioStream" id=23]
+[ext_resource path="res://sfx/mutation_soft.wav" type="AudioStream" id=21]
 [ext_resource path="res://sfx/plant_jingle_soft.wav" type="AudioStream" id=22]
-[ext_resource path="res://sfx/year_end_soft.wav" type="AudioStream" id=23]
+[ext_resource path="res://sfx/year_end.wav" type="AudioStream" id=20]
+[ext_resource path="res://sfx/plant_1.ogg" type="AudioStream" id=24]
+[ext_resource path="res://sfx/plant_2.ogg" type="AudioStream" id=25]
+[ext_resource path="res://sfx/plant_3.ogg" type="AudioStream" id=26]
+[ext_resource path="res://sfx/plant_4.ogg" type="AudioStream" id=27]
+[ext_resource path="res://sfx/plant_5.ogg" type="AudioStream" id=28]
+[ext_resource path="res://sfx/plant_6.ogg" type="AudioStream" id=29]
+[ext_resource path="res://sfx/harvest_1.ogg" type="AudioStream" id=30]
+[ext_resource path="res://sfx/harvest_2.ogg" type="AudioStream" id=31]
+[ext_resource path="res://sfx/harvest_3.ogg" type="AudioStream" id=32]
+[ext_resource path="res://sfx/harvest_4.ogg" type="AudioStream" id=33]
+[ext_resource path="res://sfx/harvest_variant.ogg" type="AudioStream" id=34]
+[ext_resource path="res://sfx/water_barrel.ogg" type="AudioStream" id=35]
+[ext_resource path="res://sfx/water_hose.ogg" type="AudioStream" id=36]
+[ext_resource path="res://sfx/drain_low.ogg" type="AudioStream" id=37]
+[ext_resource path="res://sfx/drain_high.ogg" type="AudioStream" id=38]
+[ext_resource path="res://sfx/attack_hit.ogg" type="AudioStream" id=39]
+[ext_resource path="res://sfx/bottle_hurt.ogg" type="AudioStream" id=41]
+[ext_resource path="res://sfx/bottle_power.ogg" type="AudioStream" id=42]
+[ext_resource path="res://sfx/bottle_shatter.ogg" type="AudioStream" id=43]
+[ext_resource path="res://sfx/season_spring.ogg" type="AudioStream" id=44]
+[ext_resource path="res://sfx/season_summer.wav" type="AudioStream" id=45]
+[ext_resource path="res://sfx/season_autumn.ogg" type="AudioStream" id=46]
+[ext_resource path="res://sfx/season_winter.ogg" type="AudioStream" id=47]
 
 [node name="SFX" type="Node"]
 pause_mode = 2
@@ -135,6 +158,152 @@ script = ExtResource( 2 )
 
 [node name="Mutation" type="AudioStreamPlayer" parent="."]
 stream = ExtResource( 21 )
-volume_db = -2.0
+volume_db = -6.0
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="Plant1" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 24 )
+volume_db = -6.5
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="Plant2" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 25 )
+volume_db = -6.5
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="Plant3" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 26 )
+volume_db = -6.5
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="Plant4" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 27 )
+volume_db = -6.5
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="Plant5" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 28 )
+volume_db = -6.5
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="Plant6" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 29 )
+volume_db = -6.5
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="Harvest1" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 30 )
+volume_db = -5.5
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="Harvest2" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 31 )
+volume_db = -5.5
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="Harvest3" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 32 )
+volume_db = -5.5
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="Harvest4" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 33 )
+volume_db = -5.5
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="HarvestVariant" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 34 )
+volume_db = -4.0
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="WaterBarrel" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 35 )
+volume_db = -7.0
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="WaterHose" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 36 )
+volume_db = -7.0
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="DrainLow" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 37 )
+volume_db = -7.0
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="DrainHigh" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 38 )
+volume_db = -6.0
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="AttackSingle" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 39 )
+volume_db = -6.0
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="AttackHeavy" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 39 )
+volume_db = -5.0
+pitch_scale = 0.72
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="BottleHurt" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 41 )
+volume_db = -4.0
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="BottlePower" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 42 )
+volume_db = -2.5
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="BottleShatter" type="AudioStreamPlayer" parent="."]
+pause_mode = 2
+stream = ExtResource( 43 )
+volume_db = -1.5
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="SeasonSpring" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 44 )
+volume_db = -6.0
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="SeasonSummer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 45 )
+volume_db = -6.0
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="SeasonAutumn" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 46 )
+volume_db = -6.0
+bus = "SFX"
+script = ExtResource( 2 )
+
+[node name="SeasonWinter" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 47 )
+volume_db = -6.0
 bus = "SFX"
 script = ExtResource( 2 )

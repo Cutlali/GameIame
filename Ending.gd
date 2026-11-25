@@ -6,19 +6,19 @@ extends Control
 const PANELS = [
 	{
 		"path": "res://prologue/ending_1.jpg",
-		"text": "最后一页合上时，魔瓶忽然亮了。\n瓶底浮起一颗种子，像是等了我很久。"
+		"text": "奇迹的种子成熟时，魔瓶忽然亮了。瓶中浮起这颗种子，像是等了我很久。"
 	},
 	{
 		"path": "res://prologue/ending_2.jpg",
-		"text": "天刚亮，我在田里挖开一小块土，\n把它和所有的四季一起埋了进去。"
+		"text": "我在田里挖开一小块土，将它埋了进去，等待着它的成熟"
 	},
 	{
 		"path": "res://prologue/ending_3.jpg",
-		"text": "这一次来的不是田里的虫，\n是现实里那场铺天盖地的虫灾。\n我举起了网，站在它前面。"
+		"text": "瓶里的虫出现在了现实，造成了铺天盖地的虫灾，那植物散发出了耀眼的光芒！"
 	},
 	{
 		"path": "res://prologue/ending_4.jpg",
-		"text": "天亮时，它还在。\n原来只要有人守着，四季就不会停。"
+		"text": "所有的虫子都被驱散了，魔瓶的使命似乎在我的手中迎来终结，我会将魔瓶中得到的植物播撒出去，守护好我的家园"
 	}
 ]
 
@@ -46,6 +46,7 @@ var _leaving = false
 
 
 func _ready():
+	Music.set_mode("ending")
 	_make_fonts()
 	_build_background()
 	_build_page()
@@ -148,7 +149,7 @@ func _build_page():
 	_finish_label.visible = false
 	_frame.add_child(_finish_label)
 
-	var caption = Panel.new()
+	var caption = PanelContainer.new()
 	caption.rect_min_size = Vector2(0, 70)
 	caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	caption.add_stylebox_override("panel", _caption_box())

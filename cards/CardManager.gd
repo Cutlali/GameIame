@@ -158,7 +158,7 @@ func _physics_process(delta):
 	dummy.position.y = position.y
 	#position.y = get_viewport().size.y / 2
 	
-	var ignoring_interactions = GS.shop_open or GS.upper_panel_mouse or GS.tutorial_mouse or GS.new_cards_mouse or GS.end_turn_mouse or GS.harvest_open or GS.bottle_open or GS.bestiary_open or GS.year_summary_open or GS.farm_choice_open or GS.shatter_open
+	var ignoring_interactions = GS.upper_panel_mouse or GS.tutorial_mouse or GS.end_turn_mouse or GS.harvest_open or GS.bottle_open or GS.bestiary_open or GS.year_summary_open or GS.farm_choice_open or GS.shatter_open or GS.hand_keep_open
 	
 	var card_picked_up = card_is_picked_up()
 	

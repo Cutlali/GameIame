@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/drain_low.ogg-7d33b00208f6fe1e27c2c2babad5fea6.oggstr"
+
+[deps]
+
+source_file="res://sfx/drain_low.ogg"
+dest_files=[ "res://.import/drain_low.ogg-7d33b00208f6fe1e27c2c2babad5fea6.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

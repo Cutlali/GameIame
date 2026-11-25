@@ -227,9 +227,6 @@ func graft(card):
 	else:
 		Toast.show_message("嫁接：这株植物下次收获的变异率提高 %d%%。" % card.quantity)
 
-func cork(_card):
-	BottleManager.add_cork(1)
-
 func net(card):
 	var enemy = GS.get_enemy_at_map_lcoord(position)
 	if enemy == null:
@@ -250,13 +247,6 @@ func attack_all(card):
 		return
 	for enemy in enemies:
 		enemy.take_damage(dmg)
-
-func heal_bottle(card):
-	var gained = BottleManager.heal(card.quantity)
-	if gained > 0:
-		Toast.show_message("魔瓶恢复了 %d 点生命。" % gained)
-	else:
-		Toast.show_message("魔瓶现在不需要修补。")
 
 func thorns_armor(card):
 	var plant = GS.get_plant_at_map_lcoord(position)
@@ -438,16 +428,6 @@ func update_playable_and_display():
 			$CursorDefense.show() # TODO: Defend
 			may_play = true
 
-	if card.action == GS.Action.HEAL_BOTTLE:
-		if BottleManager.hp < BottleManager.MAX_HP:
-			snap = false
-			var cam_zoom = GS.camera.zoom.y
-			var bottom = GS.camera.global_position.y + get_viewport().size.y * 0.5 * cam_zoom
-			var thresh = bottom - 360 * GS.hand.scale.y
-			if get_global_mouse_position().y < thresh:
-				$CursorGeneral.show()
-				may_play = true
-			
 	if card.action == GS.Action.DRAIN_WATER_DMG_RNG \
 		or card.action == GS.Action.DRAIN_WATER_DMG_ALL:
 		if is_tile_water(card.drain):

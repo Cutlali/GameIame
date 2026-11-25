@@ -64,13 +64,15 @@ func _check_damage_bonus_display():
 	if graft.find("提高 30%") < 0:
 		failures.append("graft showed damage bonus: " + graft)
 
-	var whack = _display_desc(gs.card_by_id("whack"))
-	if whack.find("[color=#3d3]4[/color]") < 0:
-		failures.append("attack card did not show damage bonus: " + whack)
-
-	var net = _display_desc(gs.card_by_id("net"))
-	if net.find("[color=#3d3]4[/color]") < 0:
-		failures.append("net did not show damage bonus: " + net)
+	# 伤害数字要跟着卡面走，所以期望值从卡的 quantity 推出来，
+	# 免得以后调整基础伤害（第二轮就把重击从 1 抬到 3）时又把检查写死过期。
+	var bonus = gs.cursor.current_damage_add
+	for cid in ["whack", "net"]:
+		var card = gs.card_by_id(cid)
+		var shown = "[color=#3d3]" + str(card.quantity + bonus) + "[/color]"
+		var desc = _display_desc(card)
+		if desc.find(shown) < 0:
+			failures.append("%s did not show damage bonus: %s" % [cid, desc])
 
 	gs.cursor.current_damage_add = 0
 	print("damage bonus display: water / hasten / graft excluded, attack / net included")
@@ -123,14 +125,15 @@ func _check_seed_guarantee():
 			gs.hand.remove_child(c)
 			c.queue_free()
 
+	# v1.8 发牌契约：每轮固定 3 张、水牌必到其一（旧的种子保底已废弃）。
 	var old_draws = gs.card_draw_count
-	gs.card_draw_count = 0
 	gs._deal_cards()
+	if gs.hand.get_child_count() != 3:
+		failures.append("round deal should give 3 cards, got %d" % gs.hand.get_child_count())
+	if gs._hand_water_count() < 1:
+		failures.append("round deal lacks the guaranteed water card")
 	gs.card_draw_count = old_draws
-
-	if gs._hand_seed_count() != 1:
-		failures.append("seed guarantee failed, seed count = %d" % gs._hand_seed_count())
-	print("seed guarantee: empty field + empty hand -> seed dealt")
+	print("deal contract: fixed 3 + water guarantee ok")
 
 
 func _color_close(a, b, eps = 0.001):

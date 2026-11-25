@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=2]
+[gd_scene load_steps=16 format=2]
 
 [ext_resource path="res://ui/VolumeBars.tscn" type="PackedScene" id=1]
 [ext_resource path="res://ui/MainMenu.gd" type="Script" id=2]
@@ -25,6 +25,9 @@ font_data = ExtResource( 9 )
 [sub_resource type="StyleBoxLine" id=8]
 color = Color( 0.87, 0.7, 0.44, 0.7 )
 thickness = 2
+
+[sub_resource type="DynamicFont" id=5]
+font_data = ExtResource( 9 )
 
 [sub_resource type="DynamicFont" id=4]
 size = 32
@@ -98,7 +101,7 @@ custom_styles/separator = SubResource( 8 )
 [node name="Panel" type="Panel" parent="Content"]
 margin_top = 200.0
 margin_right = 464.0
-margin_bottom = 672.0
+margin_bottom = 736.0
 
 [node name="Margin" type="MarginContainer" parent="Content/Panel"]
 anchor_right = 1.0
@@ -112,29 +115,75 @@ custom_constants/margin_bottom = 22
 margin_left = 24.0
 margin_top = 22.0
 margin_right = 440.0
-margin_bottom = 450.0
+margin_bottom = 514.0
 custom_constants/separation = 12
 alignment = 1
 
 [node name="VolumeBars" parent="Content/Panel/Margin/VBox" instance=ExtResource( 1 )]
-anchor_right = 0.023
-margin_left = 35.0
-margin_top = 31.0
+margin_left = 34.0
+margin_top = 10.0
 margin_right = 381.0
-margin_bottom = 193.0
+margin_bottom = 172.0
 rect_min_size = Vector2( 347, 162 )
 size_flags_horizontal = 4
 theme = ExtResource( 3 )
 
 [node name="Separator1" type="HSeparator" parent="Content/Panel/Margin/VBox"]
-margin_top = 205.0
+margin_top = 184.0
 margin_right = 416.0
-margin_bottom = 209.0
+margin_bottom = 188.0
+
+[node name="SaveInfo" type="Label" parent="Content/Panel/Margin/VBox"]
+margin_top = 200.0
+margin_right = 416.0
+margin_bottom = 217.0
+custom_colors/font_color = Color( 0.35, 0.26, 0.17, 1 )
+custom_fonts/font = SubResource( 5 )
+align = 1
+
+[node name="ContinueButton" type="Button" parent="Content/Panel/Margin/VBox"]
+margin_top = 229.0
+margin_right = 416.0
+margin_bottom = 305.0
+rect_min_size = Vector2( 0, 76 )
+size_flags_horizontal = 3
+script = ExtResource( 4 )
+
+[node name="Center" type="CenterContainer" parent="Content/Panel/Margin/VBox/ContinueButton"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Row" type="HBoxContainer" parent="Content/Panel/Margin/VBox/ContinueButton/Center"]
+margin_left = 126.0
+margin_top = 21.0
+margin_right = 290.0
+margin_bottom = 54.0
+mouse_filter = 2
+custom_constants/separation = 14
+
+[node name="Icon" type="TextureRect" parent="Content/Panel/Margin/VBox/ContinueButton/Center/Row"]
+margin_right = 22.0
+margin_bottom = 33.0
+rect_min_size = Vector2( 22, 32 )
+mouse_filter = 2
+texture = ExtResource( 8 )
+expand = true
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="Content/Panel/Margin/VBox/ContinueButton/Center/Row"]
+margin_left = 36.0
+margin_right = 164.0
+margin_bottom = 33.0
+custom_colors/font_color = Color( 0.3, 0.19, 0.12, 1 )
+custom_fonts/font = SubResource( 4 )
+text = "继续农场"
+valign = 1
 
 [node name="StartButton" type="Button" parent="Content/Panel/Margin/VBox"]
-margin_top = 221.0
+margin_top = 317.0
 margin_right = 416.0
-margin_bottom = 303.0
+margin_bottom = 393.0
 rect_min_size = Vector2( 0, 76 )
 size_flags_horizontal = 3
 script = ExtResource( 4 )
@@ -145,16 +194,16 @@ anchor_bottom = 1.0
 mouse_filter = 2
 
 [node name="Row" type="HBoxContainer" parent="Content/Panel/Margin/VBox/StartButton/Center"]
-margin_left = 121.0
-margin_top = 23.0
-margin_right = 295.0
-margin_bottom = 58.0
+margin_left = 126.0
+margin_top = 21.0
+margin_right = 290.0
+margin_bottom = 54.0
 mouse_filter = 2
 custom_constants/separation = 14
 
 [node name="Icon" type="TextureRect" parent="Content/Panel/Margin/VBox/StartButton/Center/Row"]
-margin_right = 24.0
-margin_bottom = 35.0
+margin_right = 22.0
+margin_bottom = 33.0
 rect_min_size = Vector2( 22, 32 )
 mouse_filter = 2
 texture = ExtResource( 8 )
@@ -162,18 +211,18 @@ expand = true
 stretch_mode = 5
 
 [node name="Label" type="Label" parent="Content/Panel/Margin/VBox/StartButton/Center/Row"]
-margin_left = 38.0
-margin_right = 174.0
-margin_bottom = 35.0
+margin_left = 36.0
+margin_right = 164.0
+margin_bottom = 33.0
 custom_colors/font_color = Color( 0.3, 0.19, 0.12, 1 )
 custom_fonts/font = SubResource( 4 )
 text = "开始游戏"
 valign = 1
 
 [node name="QuitButton" type="Button" parent="Content/Panel/Margin/VBox"]
-margin_top = 315.0
+margin_top = 405.0
 margin_right = 416.0
-margin_bottom = 397.0
+margin_bottom = 481.0
 rect_min_size = Vector2( 0, 76 )
 size_flags_horizontal = 3
 script = ExtResource( 4 )
@@ -184,17 +233,17 @@ anchor_bottom = 1.0
 mouse_filter = 2
 
 [node name="Row" type="HBoxContainer" parent="Content/Panel/Margin/VBox/QuitButton/Center"]
-margin_left = 122.0
-margin_top = 23.0
-margin_right = 294.0
-margin_bottom = 58.0
+margin_left = 127.0
+margin_top = 21.0
+margin_right = 289.0
+margin_bottom = 54.0
 mouse_filter = 2
 custom_constants/separation = 14
 
 [node name="Icon" type="ColorRect" parent="Content/Panel/Margin/VBox/QuitButton/Center/Row"]
 margin_top = 6.0
-margin_right = 22.0
-margin_bottom = 28.0
+margin_right = 20.0
+margin_bottom = 26.0
 rect_min_size = Vector2( 20, 20 )
 mouse_filter = 2
 size_flags_vertical = 4
@@ -207,9 +256,9 @@ mouse_filter = 2
 color = Color( 0.54902, 0.392157, 0.298039, 1 )
 
 [node name="Label" type="Label" parent="Content/Panel/Margin/VBox/QuitButton/Center/Row"]
-margin_left = 36.0
-margin_right = 172.0
-margin_bottom = 35.0
+margin_left = 34.0
+margin_right = 162.0
+margin_bottom = 33.0
 custom_colors/font_color = Color( 0.3, 0.19, 0.12, 1 )
 custom_fonts/font = SubResource( 4 )
 text = "退出游戏"
@@ -224,7 +273,7 @@ margin_right = 220.0
 margin_bottom = -14.0
 custom_colors/font_color = Color( 0.93, 0.85, 0.68, 0.55 )
 custom_fonts/font = SubResource( 6 )
-text = "v1.6.0"
+text = "v1.8.0"
 
 [node name="Credit" type="Label" parent="Content"]
 anchor_top = 1.0
@@ -238,5 +287,6 @@ custom_fonts/font = SubResource( 7 )
 text = "UI INSPIRED BY SPROUT LANDS"
 align = 2
 
+[connection signal="pressed" from="Content/Panel/Margin/VBox/ContinueButton" to="." method="_on_ContinueButton_pressed"]
 [connection signal="pressed" from="Content/Panel/Margin/VBox/StartButton" to="." method="_on_StartButton_pressed"]
 [connection signal="pressed" from="Content/Panel/Margin/VBox/QuitButton" to="." method="_on_QuitButton_pressed"]

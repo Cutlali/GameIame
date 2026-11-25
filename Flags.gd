@@ -29,3 +29,7 @@ func unlock_guide(flag, index, title):
 		return
 	set(flag, true)
 	emit_signal("guide_page_unlocked", index, title)
+	# SaveGame 排在 autoload 末尾，解析期不能直引，运行时取节点。
+	var sv = get_node_or_null("/root/SaveGame")
+	if sv != null:
+		sv.save_now()

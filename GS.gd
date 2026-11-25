@@ -22,7 +22,7 @@ enum Action {
 
 	HASTEN,
 	GRAFT,
-	CORK,
+	CORK, # 已废弃：瓶塞随第四次试玩移除，保留枚举防序号漂移
 	NET,
 
 	ATTACK_ALL,
@@ -67,8 +67,6 @@ var CardTexSeed = preload("res://cards/card_seeds.svg")
 var turn_state = TurnState.UNDEFINED
 var waiting_for_card_selection = false
 
-var card_selector_ui = null
-var gold = 0
 var energy = 3
 var energy_max = 3
 
@@ -82,10 +80,8 @@ var orb_water = 0
 var mature_rewards_this_round = 0
 var pending_mature_rewards = 0
 
-var shop_open = false
 var upper_panel_mouse = false
 var tutorial_mouse = false
-var new_cards_mouse = false
 var end_turn_mouse = false
 
 # 图鉴里程碑带来的额外抽卡数
@@ -98,22 +94,13 @@ var bestiary_open = false
 var year_summary_open = false
 var farm_choice_open = false
 var shatter_open = false
+var hand_keep_open = false
 
-# 图鉴里程碑触发的开垦选择，避免在收获/魔瓶界面弹出来。
-var pending_farm_choices = 0
+# v1.8 开垦名额：图鉴里程碑发放，玩家在任意 2×2 空地自选位置使用。
+var farm_quota = 0
 
 # 一轮结算结束后先处理魔瓶抽取，全部收下后再发新手牌。
 var pending_new_hand = false
-
-func popup_card_selection(card_set: Array):
-	waiting_for_card_selection = true
-	card_selector_ui.setup_cards(card_set)
-	card_selector_ui.popup()
-	
-func popup_card_winner():
-	waiting_for_card_selection = true
-	card_selector_ui.setup_win()
-	card_selector_ui.popup()
 
 class Card:
 	var title: String
@@ -217,7 +204,7 @@ var card_basic_plant : Card = Card.new(
 var card_medium_plant : Card = Card.new(
 	"向日葵种子",
 	"种下一株向日葵。向日葵是夏季作物，需要更多照料。",
-	2,
+	1,
 	Action.PLANT).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/middling_seeds.svg")).with_species("sunflower")
 	
 var card_high_plant : Card = Card.new(
@@ -225,6 +212,76 @@ var card_high_plant : Card = Card.new(
 	"种下一株南瓜。南瓜是秋季作物，藤蔓生长旺盛。",
 	3,
 	Action.PLANT).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/quality_seeds.svg")).with_species("pumpkin")
+
+# 第二年起的进阶种子，阶段④配专属像素图标。
+var card_cotton_seed : Card = Card.new(
+	"棉花种子",
+	"种下一株棉花。棉花是秋季作物，棉铃裂开时收下一团白绒。",
+	2,
+	Action.PLANT).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/cotton_seeds.png")).with_species("cotton")
+
+var card_rice_seed : Card = Card.new(
+	"水稻种子",
+	"种下一株水稻。水稻是夏季作物，整株生长都离不开水。",
+	3,
+	Action.PLANT).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/rice_seeds.png")).with_species("rice")
+
+var card_wintersweet_seed : Card = Card.new(
+	"腊梅种子",
+	"种下一株腊梅。腊梅是冬季开花的稀有木本，凌寒而开、香气清冽。",
+	3,
+	Action.PLANT).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/wintersweet_seeds.png")).with_species("wintersweet")
+
+# ===== 第二轮扩充的 8 个新物种种子。
+# 专属像素图标由素材脚本生成，build_card_registry 末尾按文件是否存在替换；
+# 这里先挂通用种子袋，素材缺席时游戏也照样能跑。
+var card_wheat_seed : Card = Card.new(
+	"小麦种子",
+	"种下一株小麦。麦苗挨过一冬，抽穗时穗子会把秆子压弯。",
+	1,
+	Action.PLANT).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/basic_seeds.svg")).with_species("wheat")
+
+var card_mint_seed : Card = Card.new(
+	"薄荷种子",
+	"种下一株薄荷。根茎横着走，掐一截又能另起一丛。",
+	1,
+	Action.PLANT).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/basic_seeds.svg")).with_species("mint")
+
+var card_flax_seed : Card = Card.new(
+	"亚麻种子",
+	"种下一株亚麻。茎细如鞭，天蓝的花早上开、午后就落。",
+	2,
+	Action.PLANT).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/basic_seeds.svg")).with_species("flax")
+
+var card_soybean_seed : Card = Card.new(
+	"大豆种子",
+	"种下一株大豆。根瘤自己制氮，收完的地力反而更好。",
+	2,
+	Action.PLANT).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/basic_seeds.svg")).with_species("soybean")
+
+var card_maize_seed : Card = Card.new(
+	"玉米种子",
+	"种下一株玉米。顶上一把雄穗，腰间接一穗苞叶裹着的果穗。",
+	3,
+	Action.PLANT).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/basic_seeds.svg")).with_species("maize")
+
+var card_potato_seed : Card = Card.new(
+	"马铃薯种子",
+	"种下一株马铃薯。能吃的是土里的块茎，秧子一枯就能挖。",
+	3,
+	Action.PLANT).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/basic_seeds.svg")).with_species("potato")
+
+var card_sugarcane_seed : Card = Card.new(
+	"甘蔗种子",
+	"种下一株甘蔗。节间贮满糖汁，入冬正是砍下来榨的时节。",
+	3,
+	Action.PLANT).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/mystical_seeds.svg")).with_species("sugarcane")
+
+var card_saffron_seed : Card = Card.new(
+	"藏红花种子",
+	"种下一株藏红花。秋末开淡紫的花，金贵的是花里那三根红柱头。",
+	3,
+	Action.PLANT).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/mystical_seeds.svg")).with_species("saffron")
 	
 var card_free_1x1_water : Card = Card.new(
 	"水滴",
@@ -245,7 +302,7 @@ var card_small_attack : Card = Card.new(
 	"对单个敌人造成 $DQ 点伤害",
 	1,
 	Action.ATTACK
-).with_quantity(1).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/whack.svg"))
+).with_quantity(3).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/whack.svg"))
 
 var card_small_defend : Card = Card.new(
 	"防护网",
@@ -367,7 +424,7 @@ var card_def3_dmg3 : Card = Card.new(
 var card_def2_all : Card = Card.new(
 	"魔法护盾",
 	"为所有植物施加 2 点免疫",
-	4,
+	3,
 	Action.DEF_ALL
 ).with_quantity(2).with_cat(CAT_DEF).with_icon(preload("res://cards/icons/magic_shield.svg")) # Drain is healing for this
 
@@ -385,7 +442,7 @@ var card_dmg2 : Card = Card.new(
 	"对单个敌人造成 $DQ 点伤害",
 	1,
 	Action.ATTACK
-).with_quantity(2).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/kapow.svg"))
+).with_quantity(4).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/kapow.svg"))
 
 var card_add1_expensive: Card = Card.new(
 	"力量菌菇",
@@ -399,7 +456,7 @@ var card_sacrif1_1enem : Card = Card.new(
 	"消耗 1 点植物生命，并对生命值最低的敌人造成 $DQ 点伤害",
 	1,
 	Action.SACRIF
-).with_quantity(4).with_drain(1).with_mult(1).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/blood_dagger.svg"))
+).with_quantity(5).with_drain(1).with_mult(1).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/blood_dagger.svg"))
 
 # Medium attack cards
 
@@ -413,16 +470,16 @@ var card_add2 : Card = Card.new(
 var card_sacrif2_2enem : Card = Card.new(
 	"血刃",
 	"消耗 2 点植物生命，并对生命值最低的 2 个敌人造成 $DQ 点伤害",
-	4,
+	3,
 	Action.SACRIF
-).with_quantity(4).with_drain(2).with_mult(2).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/blood_blade.svg"))
+).with_quantity(6).with_drain(2).with_mult(2).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/blood_blade.svg"))
 
 var card_free_atk : Card = Card.new(
 	"嗖！",
 	"对一个敌人造成 $DQ 点伤害",
 	0,
 	Action.ATTACK
-).with_quantity(1).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/zing.svg"))
+).with_quantity(2).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/zing.svg"))
 
 # Rare attack cards
 
@@ -436,9 +493,25 @@ var card_add1_cheap : Card = Card.new(
 var card_sacrifice : Card = Card.new(
 	"献祭",
 	"牺牲一株植物，并对所有敌人造成 $DQ 点伤害",
-	5,
+	4,
 	Action.SACRIF
 ).with_quantity(4).with_drain(0).with_mult(-1).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/sacrifice.svg"))
+
+# 虫群变大之后，全场伤害越来越难收掉高血量的那一只，
+# 所以补两张专注单体的硬伤害牌：一张中阶稳定出力，一张稀有阶一击定音。
+var card_trapper : Card = Card.new(
+	"捕虫夹",
+	"合拢夹住单个敌人，造成 $DQ 点伤害",
+	2,
+	Action.ATTACK
+).with_quantity(6).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/whack.svg"))
+
+var card_queen_sting : Card = Card.new(
+	"蜂后之刺",
+	"盯住最厚的那层壳扎下去：对单个敌人造成 $DQ 点伤害",
+	4,
+	Action.ATTACK
+).with_quantity(14).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/blood_blade.svg"))
 
 # GENERAL RARE CARDS
 
@@ -464,6 +537,29 @@ var card_energy : Card = Card.new(
 	Action.PLUS_ENERGY
 ).with_icon(preload("res://cards/icons/free_energy.svg"))
 
+# 临时魔法：把瓶里的魔力当场倒进这一回合。能量本来就每回合清零，
+# 所以这三张牌打出即弃，不留在牌库里占位置。
+var card_energy_dew : Card = Card.new(
+	"凝露",
+	"立刻获得 $DQ 点能量，用完即散。",
+	0,
+	Action.PLUS_ENERGY
+).with_quantity(1).with_icon(preload("res://cards/icons/free_energy.svg")).as_transient()
+
+var card_energy_spring : Card = Card.new(
+	"甘泉",
+	"立刻获得 $DQ 点能量，用完即散。",
+	0,
+	Action.PLUS_ENERGY
+).with_quantity(2).with_icon(preload("res://cards/icons/free_energy.svg")).as_transient()
+
+var card_energy_geyser : Card = Card.new(
+	"涌泉",
+	"立刻获得 $DQ 点能量，用完即散。",
+	0,
+	Action.PLUS_ENERGY
+).with_quantity(3).with_icon(preload("res://cards/icons/free_energy.svg")).as_transient()
+
 # GENERAL MED CARDS
 
 var card_cards : Card = Card.new(
@@ -488,19 +584,12 @@ var card_graft : Card = Card.new(
 	Action.GRAFT
 ).with_quantity(30).with_cat(CAT_SEED).with_icon(preload("res://cards/icons/technique.svg"))
 
-var card_cork : Card = Card.new(
-	"瓶塞",
-	"为魔瓶抵挡下一次伤害",
-	1,
-	Action.CORK
-).with_cat(CAT_DEF).with_icon(preload("res://cards/icons/tough_shield.svg"))
-
 var card_net : Card = Card.new(
 	"捕虫网",
 	"对一只虫子造成 $DQ 点伤害，并让它下回合无法攻击",
 	1,
 	Action.NET
-).with_quantity(1).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/zing.svg"))
+).with_quantity(2).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/zing.svg"))
 
 # 逐年解锁的应对工具：新压力到来的同一年，魔瓶会开始提供解法。
 var card_swarm : Card = Card.new(
@@ -510,12 +599,8 @@ var card_swarm : Card = Card.new(
 	Action.ATTACK_ALL
 ).with_quantity(2).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/vampire_blast.svg"))
 
-var card_patch : Card = Card.new(
-	"修补",
-	"为魔瓶恢复 $DQ 点生命",
-	2,
-	Action.HEAL_BOTTLE
-).with_quantity(1).with_cat(CAT_DEF).with_icon(preload("res://cards/icons/tough_shield.svg"))
+# 修补卡与瓶塞都已在 v1.8 删除：魔瓶 3 滴血不可逆、无缓兵之计。
+# HEAL_BOTTLE 枚举保留占位，避免后面的动作序号漂移。
 
 var card_thorns_armor : Card = Card.new(
 	"反伤甲",
@@ -575,23 +660,65 @@ func build_card_registry():
 		"sacrifice": card_sacrifice,
 		"draw3": card_cards,
 		"energy": card_energy,
+		"energy_dew": card_energy_dew,
+		"energy_spring": card_energy_spring,
+		"energy_geyser": card_energy_geyser,
+		"trapper": card_trapper,
+		"queen_sting": card_queen_sting,
 		"hasten": card_hasten,
 		"graft": card_graft,
-		"cork": card_cork,
 		"net": card_net,
 		"swarm": card_swarm,
-		"patch": card_patch,
 		"thorns_armor": card_thorns_armor,
 		"mature": card_mature,
 		"orb_water": card_orb_water,
 		"basic_plant": card_basic_plant,
 		"medium_plant": card_medium_plant,
+		"cotton_seed": card_cotton_seed,
 		"high_plant": card_high_plant,
+		"rice_seed": card_rice_seed,
+		"wintersweet_seed": card_wintersweet_seed,
+		"wheat_seed": card_wheat_seed,
+		"mint_seed": card_mint_seed,
+		"flax_seed": card_flax_seed,
+		"soybean_seed": card_soybean_seed,
+		"maize_seed": card_maize_seed,
+		"potato_seed": card_potato_seed,
+		"sugarcane_seed": card_sugarcane_seed,
+		"saffron_seed": card_saffron_seed,
 		"win_plant": card_win_plant,
 		"final_seed": card_final_seed
 	}
 	for key in card_registry.keys():
 		card_registry[key].id = key
+	apply_special_icons()
+
+
+# 第二轮新卡的专属像素图标。素材由 .promo 脚本生成，
+# 文件还没到位时退回上面挂的通用图标，保证游戏不会因为缺图崩掉。
+const SPECIAL_ICONS = {
+	"wheat_seed": "res://cards/icons/wheat_seeds.png",
+	"mint_seed": "res://cards/icons/mint_seeds.png",
+	"flax_seed": "res://cards/icons/flax_seeds.png",
+	"soybean_seed": "res://cards/icons/soybean_seeds.png",
+	"maize_seed": "res://cards/icons/maize_seeds.png",
+	"potato_seed": "res://cards/icons/potato_seeds.png",
+	"sugarcane_seed": "res://cards/icons/sugarcane_seeds.png",
+	"saffron_seed": "res://cards/icons/saffron_seeds.png",
+	"energy_dew": "res://cards/icons/energy_dew.png",
+	"energy_spring": "res://cards/icons/energy_spring.png",
+	"energy_geyser": "res://cards/icons/energy_geyser.png",
+	"trapper": "res://cards/icons/trapper.png",
+	"queen_sting": "res://cards/icons/queen_sting.png"
+}
+
+
+func apply_special_icons():
+	for cid in SPECIAL_ICONS.keys():
+		var path = SPECIAL_ICONS[cid]
+		var card = card_registry.get(cid, null)
+		if card != null and ResourceLoader.exists(path):
+			card.icon = load(path)
 
 
 func card_by_id(id):
@@ -603,6 +730,25 @@ func make_basic_card():
 	if c == null:
 		return card_free_1x1_water
 	return c
+
+
+# 每轮发牌的水位保证：从基础池的水牌里按权重随一张。
+func make_water_card():
+	var entries = []
+	var total = 0
+	for e in GameData.BASIC_POOL:
+		var c = card_by_id(String(e["id"]))
+		if c != null and c.cat == CAT_WATER:
+			entries.append(e)
+			total += int(e["weight"])
+	if entries.empty():
+		return card_free_1x1_water
+	var r = randi() % total
+	for e in entries:
+		r -= int(e["weight"])
+		if r < 0:
+			return card_by_id(String(e["id"]))
+	return card_by_id(String(entries[0]["id"]))
 
 
 var Game = preload("res://Game.tscn")
@@ -764,10 +910,16 @@ func add_card_to_hand(card: Card):
 	hand.add_child(h)
 
 
-# 能量上限 = 基础 3 + 首年结束 +2 + 永久加成（开垦/图鉴/商店），最高 7。
+# 能量上限 = 基础 3 + 历史最高年到过第 2 年再 +2 + 永久加成（开垦/图鉴/商店），最高 7。
+# 用历史最高年份是因为瓶碎回到第一年时，玩家攒下的力量不回落。
 func refresh_energy_max():
 	var year_bonus = 0
-	if has_node("/root/Season") and Season.year >= 2:
+	var gate_year = Season.year
+	# SaveGame 是排在最后的 autoload，编译期直引会成环，运行时取节点。
+	var sv = get_node_or_null("/root/SaveGame")
+	if sv != null and sv.enabled:
+		gate_year = max(Season.year, sv.max_year_reached)
+	if gate_year >= 2:
 		year_bonus = YEAR_ENERGY_BONUS
 	var target = BASE_ENERGY + year_bonus + permanent_energy_bonus
 	if target > ENERGY_CAP:
@@ -801,6 +953,7 @@ func play_water_into_orb(card):
 	energy -= card.cost
 	if energy < 0:
 		energy = 0
+	TutorialSteps.mark_stored_orb()
 	return true
 
 
@@ -855,8 +1008,12 @@ enum SpawnOpt {
 	Bug5,
 	Bug9,
 	BottleBiter,
-	Elite
+	Elite,
+	Giant,
+	Fly
 }
+
+var flyers_seen = false
 var spawn_1bug2 = [SpawnOpt.Bug2]
 var spawn_2bug2 = [SpawnOpt.Bug2, SpawnOpt.Bug2]
 var spawn_3bug2 = [SpawnOpt.Bug2, SpawnOpt.Bug2, SpawnOpt.Bug2]
@@ -907,11 +1064,14 @@ var spawn_configs = [
 ]
 
 var next_spawn = 0
+# 第一次遇到巨虫时给一句解释，之后不再啰嗦。
+var giants_seen = false
 
 func _spawn_bug_at(pos, item):
 	if get_object_at_map_lcoord(pos) != null:
 		return false
 
+	var year = Season.year
 	var bug = Bug.instance()
 	bug.position = pos
 	if item == SpawnOpt.Bug2:
@@ -930,8 +1090,26 @@ func _spawn_bug_at(pos, item):
 		# 精英虫：血更厚、有外壳、咬得更重。
 		bug.health = 6
 		bug.is_elite = true
-	# 年度成长：从第 2 年起，所有虫子的血量 +1/年。
-	bug.health += max(0, Season.year - 1)
+	elif item == SpawnOpt.Fly:
+		# 飞虫：血薄但每回合换位扑向最渴的植物，靠走位而不是血量制造压力。
+		bug.health = 2
+		bug.is_flyer = true
+		if not flyers_seen:
+			flyers_seen = true
+			Toast.show_message("一只飞虫贴着瓶壁盘旋：它不守原地，哪株最渴扑向哪株。")
+	elif item == SpawnOpt.Giant:
+		# 巨虫：大波次的压场角色。自带年份成长，动作慢但咬得狠。
+		bug.health = 10 + 2 * max(0, year - 2)
+		bug.is_giant = true
+		if not giants_seen:
+			giants_seen = true
+			Toast.show_message("一只巨虫挤进了瓶底：壳厚血多，得攒够单体伤害才打得动。")
+	if item != SpawnOpt.Giant and item != SpawnOpt.Fly:
+		# 年度成长：从第 2 年起把普通虫的最低血量抬到 3+年份
+		# （2 年 5 滴、3 年 6 滴、4 年 7 滴……），
+		# 一张砰！再也顺手带不掉一只虫，蜂群这类全场伤害也不再万能。
+		var hp_floor = 2 if year <= 1 else 3 + year
+		bug.health = max(bug.health + max(0, year - 1), hp_floor)
 	tilemap.add_child(bug)
 	return true
 
@@ -943,6 +1121,11 @@ func build_spawn_config():
 		cfg.append(SpawnOpt.Bug3)
 	if year >= 2:
 		cfg.append(SpawnOpt.Bug2)
+		# 飞虫从第 2 年起登场，第 4 年起可能成双。
+		if randf() < 0.55:
+			cfg.append(SpawnOpt.Fly)
+		if year >= 4 and randf() < 0.35:
+			cfg.append(SpawnOpt.Fly)
 	if year >= 3:
 		cfg.append(SpawnOpt.Bug3)
 	if year >= 4:
@@ -953,6 +1136,11 @@ func build_spawn_config():
 		cfg.append(SpawnOpt.BottleBiter)
 	if year >= 4 and randf() < 0.40:
 		cfg.append(SpawnOpt.Elite)
+	# 大波次必带一只巨虫：基础配置就有 3 只以上、且年份到第 2 年之后，
+	# 虫群里一定压着一只血厚壳硬的，单体攻击牌终于有值得打的靶子。
+	# 放在队首，避免被虫群上限挤掉。
+	if year >= 2 and spawn_configs[next_spawn].size() >= 3:
+		cfg.push_front(SpawnOpt.Giant)
 	return cfg
 
 func spawn_enemies():
@@ -1006,13 +1194,28 @@ func end_turn():
 	# Must be in PLAYING_CARDS or WAITING_FOR_TUTORIAL state
 	if turn_state != TurnState.PLAYING_CARDS or shatter_open:
 		return
+	# 开垦放置模式进行中不允许结束回合。
+	if farm_choice_open:
+		return
 	# 教程没教到“结束回合”之前，按钮和快捷键都不该生效。
 	if tutorial and not tutorial_allow_end_turn:
 		return
-	
+	if hand_keep_open:
+		return
+
+	# 第三轮试玩改：手牌跨回合保留，上限 = 5 + 里程碑/开垦加成。
+	# 只有超出上限时（多半是魔瓶成批进手）才弹“选留”面板，未保留的牌被魔瓶回收。
+	if _hand_count() > hand_cap():
+		HandKeepUI.open_panel()
+		return
+
+	_finish_end_turn()
+
+
+func _finish_end_turn():
 	SFX.end_turn.play_sfx()
-	
-	hand.clear_hand()
+
+	# 手牌保留，不再整手清掉；留在手上的牌继续占手牌位。
 	current_picked_up_card = null
 	
 	# 空场时很快来虫；场上有虫时也会周期性增援，年份越高间隔越短。
@@ -1054,6 +1257,23 @@ var draw_pile = []
 var discard_pile = []
 
 var camera = null
+
+# 调试一键集齐（F9）：只在编辑器进程或带 --devmode 启动时生效，
+# 正式导出的网页版不响应。收满图鉴后，下一次发牌魔瓶照规则
+# 送出"最后的种子"，可以直接走到结局。
+func _unhandled_input(event):
+	if not (Engine.editor_hint or OS.get_cmdline_args().has("--devmode")):
+		return
+	if event is InputEventKey and event.pressed and not event.echo \
+			and event.scancode == KEY_F9:
+		dev_collect_all()
+
+
+func dev_collect_all():
+	var ids = GameData.all_entry_ids()
+	for id in ids:
+		Encyclopedia.discover(id)
+	Toast.show_message("调试：图鉴已集齐（%d 条）。下一次发牌会送出最后的种子。" % ids.size())
 	
 func shuffle_cards():
 	discard_pile.shuffle()
@@ -1078,10 +1298,25 @@ func draw_card_to_hand():
 		return
 	add_card_to_hand(c)
 	
-var card_draw_count = 5
+
+# 手牌规则（第四轮试玩定稿）：每轮固定抽 3 张、其中 1 张必是水；
+# 保留制下回合结束最多留 5 张，成长（里程碑/棱彩卡组）最多加到 6 张封顶。
+var card_draw_count = 3
+
+const HAND_BASE = 5
+const HAND_CAP_MAX = 6
+
+func hand_cap():
+	return int(clamp(HAND_BASE + bonus_draws, HAND_BASE, HAND_CAP_MAX))
 
 
-# 图鉴集齐之后，魔瓶会稳定送出一颗“最后的种子”。
+func _hand_count():
+	if hand == null or not is_instance_valid(hand):
+		return 0
+	return hand.get_child_count()
+
+
+# 集齐所有植物（每个物种至少一条图鉴）之后，魔瓶会稳定送出一颗”最后的种子”。
 # 手牌里已经有这张卡、或者田里已经种着终局植物时不再重复发放。
 func has_final_seed_or_plant():
 	if hand != null and is_instance_valid(hand):
@@ -1097,7 +1332,7 @@ func has_final_seed_or_plant():
 func maybe_grant_final_seed(announce = true):
 	if ending_started:
 		return false
-	if Encyclopedia.discovered_count() < Encyclopedia.total_entries():
+	if not Encyclopedia.all_species_represented():
 		return false
 	if has_final_seed_or_plant():
 		return false
@@ -1115,7 +1350,7 @@ func maybe_grant_final_seed(announce = true):
 
 	add_card_to_hand(card_final_seed)
 	if announce:
-		Toast.show_message("图鉴已经完整。魔瓶深处浮出一颗新的种子。")
+		Toast.show_message("已集齐所有植物。魔瓶深处浮出一颗新的种子。")
 	return true
 
 
@@ -1137,6 +1372,9 @@ func start_ending():
 	bottle_open = false
 	bestiary_open = false
 	year_summary_open = false
+	var sv = get_node_or_null("/root/SaveGame")
+	if sv != null:
+		sv.save_now()
 	SceneTransitions.change_scene_to(Ending)
 
 
@@ -1160,24 +1398,17 @@ func deal_new_hand():
 func _deal_cards():
 	mature_rewards_this_round = 0
 
-	var draws = card_draw_count + bonus_draws
-	for i in range(0, draws):
+	# 第四轮定稿：每轮固定抽 3 张，第 1 张必是水牌，其余两张纯看运气。
+	# （旧的"补满上限 + 种子保底 + 无水兜底"整套移除——水由规则保证，
+	# 种子和其余牌交给池子概率，回合结束的上限由选留面板把关。）
+	var w = make_water_card()
+	if w != null:
+		add_card_to_hand(w)
+	for i in range(1, max(1, card_draw_count)):
 		var c = draw_card()
 		if c == null:
 			break
 		add_card_to_hand(c)
-	
-	# 田里一株植物都没有、手里也没有种子时，补一张番茄种子。
-	# 瓶碎重开后的第一手牌最容易出现这个问题。
-	if get_tree().get_nodes_in_group("Plant").empty() and _hand_seed_count() == 0:
-		add_card_to_hand(card_basic_plant)
-		Toast.show_message("田里还没有植物，补一张番茄种子。")
-
-	# 轻量兜底：只有在一张水牌都没有时补一张，避免整轮完全停滞。
-	# 不再按植物数量固定塞水牌。
-	if get_tree().get_nodes_in_group("Plant").size() > 0 and _hand_water_count() == 0:
-		add_card_to_hand(card_free_1x1_water)
-		Toast.show_message("手牌里没有水牌，补一张水滴应急。")
 
 	# 敌方回合（反伤/护甲）杀掉的虫子，奖励顺延到这一轮。
 	var carried = pending_mature_rewards
@@ -1186,14 +1417,17 @@ func _deal_cards():
 		add_card_to_hand(card_mature)
 		mature_rewards_this_round += 1
 
-	# 图鉴集齐后的保底：即使上一次没种下，也会重新出现在手牌里。
+	# 集齐植物后的终局保底：即使上一次没种下，也会重新出现在手牌里。
 	maybe_grant_final_seed()
 
 	turn_state = TurnState.PLAYING_CARDS
-	
+
 	energy = energy_max
-	
+
 	SFX.card_deal.play_sfx()
+	var sv = get_node_or_null("/root/SaveGame")
+	if sv != null:
+		sv.save_now()
 
 
 func _hand_water_count():
@@ -1216,7 +1450,9 @@ func _hand_seed_count():
 	return n
 
 
-# 瓶碎结算：图鉴与已开垦农田保留，只把年份、季节和场上单位清回起点。
+# 瓶碎结算：相当于一次"带着积累的软重开"。
+# 清空的只有场上虫与作物、手牌、水晶球和瓶血；
+# 图鉴、耕地、永久加成、历史最高年份（决定种子解锁与能量上限）全部保留。
 func restart_after_shatter():
 	if has_node("/root/BottleManager"):
 		BottleManager.force_close()
@@ -1249,12 +1485,12 @@ func restart_after_shatter():
 
 	Season.year = 1
 	Season.round_in_year = 1
-	Season.change_season(0, false, true)
+	Season.restore_calendar(1, 1, 0, 1)
 	RunStats.year = 1
 	RunStats.reset_year()
 	RunStats.mutation_pity = 0
 
-	# 永久加成（图鉴/开垦）保留；年份带来的能量回退到基础值。
+	# 永久加成与历史最高年份保留；能量上限按最高年份走，碎瓶不回落。
 	refresh_energy_max()
 	orb_water = 0
 	mature_rewards_this_round = 0
@@ -1323,8 +1559,6 @@ func reset_all_state():
 	turn_state = TurnState.UNDEFINED
 	waiting_for_card_selection = false
 
-	card_selector_ui = null
-	gold = 0
 	
 	permanent_energy_bonus = 0
 	energy_max = BASE_ENERGY
@@ -1350,15 +1584,13 @@ func reset_all_state():
 	
 	tilemap = null
 	
-	card_draw_count = 5 # Will be set by tutorial
+	card_draw_count = 3 # 教程也会设一遍
 	
 	no_enemy_turns = 0
 	some_enemy_turns = 0
 	
-	shop_open = false
 	upper_panel_mouse = false
 	tutorial_mouse = false
-	new_cards_mouse = false
 	end_turn_mouse = false
 	
 	bonus_draws = 0
@@ -1369,8 +1601,9 @@ func reset_all_state():
 	year_summary_open = false
 	farm_choice_open = false
 	shatter_open = false
+	hand_keep_open = false
 	
-	pending_farm_choices = 0
+	farm_quota = 0
 	pending_new_hand = false
 	
 	auto_water = false
@@ -1401,5 +1634,5 @@ func reset_all_state():
 
 # 图鉴里程碑给一次开垦机会，由玩家自己选位置。
 func queue_farm_choice():
-	pending_farm_choices += 1
+	farm_quota += 1
 

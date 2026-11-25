@@ -18,16 +18,10 @@ _global_script_classes=[ {
 "class": "Cursor",
 "language": "GDScript",
 "path": "res://cursor/Cursor.gd"
-}, {
-"base": "Control",
-"class": "SelectableCard",
-"language": "GDScript",
-"path": "res://cards/SelectableCard.gd"
 } ]
 _global_script_class_icons={
 "ButtonSFX": "",
-"Cursor": "",
-"SelectableCard": ""
+"Cursor": ""
 }
 
 [application]
@@ -57,6 +51,8 @@ HarvestManager="*res://HarvestManager.gd"
 EncyclopediaUI="*res://ui/EncyclopediaUI.gd"
 YearSummary="*res://ui/YearSummary.gd"
 FarmChoiceUI="*res://ui/FarmChoiceUI.gd"
+HandKeepUI="*res://ui/HandKeepUI.gd"
+SaveGame="*res://SaveGame.gd"
 
 [display]
 

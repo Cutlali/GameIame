@@ -44,3 +44,9 @@ func mark_have_ended_turn():
 func mark_have_attacked():
 	marked_step = max(marked_step, 5)
 	_notify("attacked")
+
+
+# v1.8 教程：把水牌拖上水晶球 = 储水成功。
+func mark_stored_orb():
+	marked_step = max(marked_step, 6)
+	_notify("stored_orb")

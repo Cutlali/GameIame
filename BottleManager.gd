@@ -41,8 +41,15 @@ var _batch_gained = 0
 const MAX_HP = 3
 var hp = MAX_HP
 
-# 瓶塞：每层抵挡一次伤害。
-var cork_charges = 0
+# 瓶能：收获植物攒下来的压力，攒满 15 点后玩家可以点击魔瓶释放——
+# 固定给全场每株植物浇 1 滴水，田里有虫时顺便一并砸出伤害。
+# 瓶碎重开时清零（它是这一轮的瓶压）。
+const MAX_POWER = 15
+const POWER_PER_HARVEST = 1
+const POWER_PER_VARIANT = 3
+var power = 0
+
+signal power_changed(current, max_power)
 
 signal hp_changed(current, max_hp)
 
@@ -171,7 +178,7 @@ func _build_shatter_ui():
 	_shatter_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(_shatter_body)
 
-	var restart = _make_flat_button("带着图鉴重新开始", Vector2(300, 56))
+	var restart = _make_flat_button("从第一年继续", Vector2(300, 56))
 	restart.connect("pressed", self, "_on_shatter_restart_pressed")
 	vbox.add_child(restart)
 
@@ -244,7 +251,7 @@ func _process(_delta):
 	if GS.current_turns != null:
 		return
 	if GS.harvest_open or GS.bestiary_open or GS.year_summary_open \
-			or GS.farm_choice_open or GS.shop_open:
+			or GS.farm_choice_open or GS.hand_keep_open:
 		return
 	open_bottle()
 
@@ -258,15 +265,13 @@ func damage(amount = 1):
 	if hp <= 0 or _shatter_pending or _shatter_open:
 		return 0
 
-	if cork_charges > 0:
-		cork_charges -= 1
-		Toast.show_message("瓶塞挡住了这次伤害！（剩余 %d 次）" % cork_charges)
-		return 0
-
 	hp = max(0, hp - amount)
-	Flags.unlock_guide("guide_bottle_damaged", 7, "瓶壁上的裂纹")
+	Flags.unlock_guide("guide_bottle_damaged", 8, "瓶壁上的裂纹")
 	emit_signal("hp_changed", hp, MAX_HP)
 	_flash_damage()
+	# v1.8：瓶身受击音。
+	if has_node("/root/SFX"):
+		SFX.bottle_hurt.play_usual()
 	if hp <= 0:
 		_shatter_pending = true
 		# 亲眼见过一次瓶碎，才满足最后一页的前置条件。
@@ -279,23 +284,76 @@ func damage(amount = 1):
 
 func refill():
 	hp = MAX_HP
-	cork_charges = 0
+	power = 0
 	_shatter_pending = false
 	emit_signal("hp_changed", hp, MAX_HP)
+	emit_signal("power_changed", power, MAX_POWER)
 
 
-func heal(amount = 1):
-	if hp <= 0 or _shatter_pending or _shatter_open:
+
+# 收获植物攒瓶能。变异植物攒 3 点，普通植株 1 点。
+func add_power(amount = 1, silent = false):
+	if hp <= 0:
 		return 0
-	var before = hp
-	hp = min(MAX_HP, hp + amount)
-	emit_signal("hp_changed", hp, MAX_HP)
-	return hp - before
+	var before = power
+	power = min(MAX_POWER, power + amount)
+	var gained = power - before
+	emit_signal("power_changed", power, MAX_POWER)
+	# 攒满的那一次一定要吭一声，其余时候交给 HUD 的瓶能条。
+	if gained > 0:
+		if power >= MAX_POWER:
+			Toast.show_message("瓶能已满！点一下魔瓶：给全场植物各浇一滴水，有虫还一并砸出伤害。")
+		elif not silent:
+			Toast.show_message("瓶能 +%d（%d / %d）" % [gained, power, MAX_POWER])
+	return gained
 
 
-func add_cork(amount = 1):
-	cork_charges += amount
-	Toast.show_message("魔瓶被瓶塞保护，可抵挡 %d 次伤害。" % cork_charges)
+func power_full():
+	return power >= MAX_POWER
+
+
+# 释放瓶能：固定给全场每株植物浇 1 滴水（还有空间才浇）；
+# 田里有虫时顺便一并砸出伤害（3 点起，每年 +1，虫群也一年比一年厚）。
+# 既没虫又没有可浇的植物时拒绝释放，避免误点浪费。
+func release_power():
+	if hp <= 0:
+		return 0
+	if not power_full():
+		Toast.show_message("瓶能还没攒满（%d / %d），再收获几株植物。" % [power, MAX_POWER])
+		return 0
+
+	var enemies = get_tree().get_nodes_in_group("Enemy")
+	var thirsty = []
+	for p in get_tree().get_nodes_in_group("Plant"):
+		if is_instance_valid(p) and p.water < GS.PLANT_WATER_MAX:
+			thirsty.append(p)
+
+	if enemies.empty() and thirsty.empty():
+		Toast.show_message("瓶能满了，可田里没虫、植物也都不缺水——先留着。")
+		return 0
+
+	var year = 1
+	if has_node("/root/Season"):
+		year = Season.year
+	var dmg = 3 + max(0, year - 1)
+
+	power = 0
+	emit_signal("power_changed", power, MAX_POWER)
+
+	var notes = PoolStringArray()
+	if not enemies.empty():
+		for enemy in enemies:
+			if is_instance_valid(enemy):
+				enemy.take_damage(dmg)
+		notes.append("全场虫子受到 %d 点伤害" % dmg)
+	if not thirsty.empty():
+		for p in thirsty:
+			p.set_water(p.water + 1)
+		notes.append("%d 株植物各浇下 1 滴水" % thirsty.size())
+	if has_node("/root/SFX"):
+		SFX.bottle_power.play_usual()
+	Toast.show_message("瓶能释放！" + notes.join("，") + "。")
+	return dmg
 
 
 func _flash_damage():
@@ -322,14 +380,13 @@ func _try_open_shatter():
 	if GS.current_turns != null:
 		return
 	if GS.harvest_open or GS.bestiary_open or GS.year_summary_open \
-			or GS.farm_choice_open or GS.shop_open:
+			or GS.farm_choice_open or GS.hand_keep_open:
 		return
 	_show_shatter()
 
 
 func _show_shatter():
 	charges.clear()
-	cork_charges = 0
 	if has_node("/root/Toast"):
 		Toast.clear()
 	_shatter_pending = false
@@ -342,7 +399,7 @@ func _show_shatter():
 	var entries = Encyclopedia.discovered_count()
 	var plots = 0
 	if GS.tilemap != null and is_instance_valid(GS.tilemap):
-		plots = GS.tilemap.claimed_parcels.size()
+		plots = GS.tilemap.claimed_plots.size()
 
 	var lines = PoolStringArray()
 	lines.append("维持四季的魔瓶耗尽了最后一点力量。")
@@ -350,10 +407,18 @@ func _show_shatter():
 	lines.append("你走到了第 %d 年。" % year)
 	lines.append("图鉴收录：%d 条（保留）" % entries)
 	lines.append("额外开垦农田：%d 块（保留）" % plots)
+	lines.append("解锁的种子与能量上限（保留）")
+	lines.append("攒着的瓶能随瓶壁一起碎了（清零）")
 	lines.append("")
-	lines.append("农场会回到第一年的春天重新开始，图鉴与农田不会丢失。")
+	lines.append("四季退回起点，虫群沉回瓶底——")
+	lines.append("你带着图鉴和整片农田，从第一年的春天继续。")
 	_shatter_body.text = lines.join("\n")
 	_shatter_root.visible = true
+	# v1.8：碎裂一声脆响，随后长曲一直放到玩家按下重开（实测口径没问题，保持）。
+	if has_node("/root/SFX"):
+		SFX.bottle_shatter.play_usual()
+	if has_node("/root/Music"):
+		Music.set_mode("shatter")
 
 
 func _on_shatter_restart_pressed():
@@ -363,6 +428,9 @@ func _on_shatter_restart_pressed():
 	_shatter_root.visible = false
 	GS.shatter_open = false
 	refill()
+	# 碎裂长曲只放到按下这一刻，回到农场恢复常规 BGM。
+	if has_node("/root/Music"):
+		Music.set_mode("game")
 	GS.restart_after_shatter()
 
 
@@ -390,7 +458,7 @@ func reset_all():
 	_batch_done = 0
 	_batch_gained = 0
 	hp = MAX_HP
-	cork_charges = 0
+	power = 0
 	_shatter_pending = false
 	_shatter_open = false
 	if _root != null:
@@ -408,7 +476,8 @@ func open_bottle():
 	if _shatter_pending or _shatter_open:
 		return
 	if GS.harvest_open or GS.bestiary_open or GS.year_summary_open \
-			or GS.farm_choice_open or GS.shop_open or GS.shatter_open:
+			or GS.farm_choice_open or GS.shatter_open \
+			or GS.hand_keep_open:
 		return
 	if GS.tilemap == null or not is_instance_valid(GS.tilemap):
 		return

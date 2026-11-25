@@ -7,7 +7,7 @@ var associated_card = null
 var last_checked = 0
 
 # 力量类卡牌只给“下一次造成伤害”的牌加成。
-# 水牌、催熟、嫁接、修补这些牌虽然也用 $DQ 占位，但不吃伤害加成。
+# 水牌、催熟、嫁接这些牌虽然也用 $DQ 占位，但不吃伤害加成。
 func _uses_damage_bonus():
 	if associated_card == null:
 		return false
@@ -55,6 +55,10 @@ func _ready():
 
 func _process(delta):
 	if not dynamic_display:
+		return
+	# 重开、读档这类时刻 GS.cursor 会短暂为 null，而手牌还挂在树上，
+	# 这时候不刷加成，等光标重新就位再说。
+	if GS.cursor == null:
 		return
 
 	# 不消耗伤害加成的牌永远显示自己的原始数值。

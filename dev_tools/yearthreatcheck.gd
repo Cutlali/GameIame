@@ -45,7 +45,7 @@ func _idle(_delta):
 
 
 func _check_cards():
-	for id in ["swarm", "patch", "thorns_armor"]:
+	for id in ["swarm", "thorns_armor"]:
 		if gs.card_by_id(id) == null:
 			failures.append("new card missing: " + id)
 
@@ -54,7 +54,23 @@ func _check_cards():
 		failures.append("swarm should be 3 cost / 2 damage")
 	if game_data.BASIC_POOL[0].get("min_year", 1) != 1:
 		failures.append("default min_year should be 1")
-	print("cards: swarm / patch / thorns_armor registered")
+
+	# v1.8：修补卡全删（卡、池子、回复渠道都不该再出现）。
+	if gs.card_by_id("patch") != null:
+		failures.append("patch card should be removed in v1.8")
+	for e in game_data.BASIC_POOL:
+		if e["id"] == "patch":
+			failures.append("patch still in basic pool")
+	for pool_id in game_data.BOTTLE_POOLS.keys():
+		for e in game_data.BOTTLE_POOLS[pool_id]:
+			if e["id"] == "patch":
+				failures.append("patch still in " + pool_id + " pool")
+
+	# 种子季门阶梯：15 物种最晚 2 年冬（gate 7）必须全部进池。
+	for e in game_data.SEED_CARDS:
+		if game_data.entry_gate(e) > 7:
+			failures.append("seed " + e["id"] + " gate %d > year2 winter" % game_data.entry_gate(e))
+	print("cards: swarm / thorns_armor registered, patch removed")
 
 
 func _check_year_gate():
@@ -63,12 +79,12 @@ func _check_year_gate():
 	season.year = 1
 	for i in range(300):
 		var id = game_data.roll_basic_card_id()
-		if id == "patch" or id == "thorns_armor" or id == "swarm":
+		if id == "thorns_armor" or id == "swarm":
 			failures.append("year 1 basic pool leaked: " + id)
 			break
 	var offer = game_data.roll_offer("medium", 7)
 	for id in offer:
-		if id == "patch" or id == "thorns_armor" or id == "swarm":
+		if id == "thorns_armor" or id == "swarm":
 			failures.append("year 1 medium offer leaked: " + id)
 
 	season.year = 2
@@ -81,12 +97,12 @@ func _check_year_gate():
 		failures.append("swarm should appear from year 2")
 
 	season.year = 4
-	var saw_all = {"swarm": false, "patch": false, "thorns_armor": false}
+	var saw_all = {"swarm": false, "thorns_armor": false}
 	for i in range(600):
 		var id = game_data.roll_basic_card_id()
 		if saw_all.has(id):
 			saw_all[id] = true
-		if saw_all["swarm"] and saw_all["patch"] and saw_all["thorns_armor"]:
+		if saw_all["swarm"] and saw_all["thorns_armor"]:
 			break
 	for k in saw_all.keys():
 		if not saw_all[k]:
@@ -162,7 +178,6 @@ func _check_bug_kinds():
 	biter.position = Vector2(256, 0)
 
 	bottle.hp = 3
-	bottle.cork_charges = 0
 	biter.take_turn()
 	biter.take_turn()
 	if bottle.hp != 3:
@@ -172,7 +187,33 @@ func _check_bug_kinds():
 		failures.append("bottle biter should damage the bottle on turn 3, hp %d" % bottle.hp)
 	biter.queue_free()
 	bottle.hp = 3
-	print("bug kinds: elite armor and bottle biter checked")
+
+	# 飞虫：锁定最渴的植物，落点必须紧贴它旁边一格。
+	# _make_plant() 已经把它挂到 TileMap 上了，这里只补位置和水分。
+	var p_wet = _make_plant()
+	p_wet.position = Vector2(-1024, 0)
+	p_wet.set_water(3)
+	var p_dry = _make_plant()
+	p_dry.position = Vector2(512, 512)
+	p_dry.set_water(0)
+	var fly = load("res://bugs/Bug.tscn").instance()
+	fly.is_flyer = true
+	fly.health = 2
+	fly.spawned = true
+	game.get_node("TileMap").add_child(fly)
+	fly.position = Vector2(-128, -128)
+	if fly.find_thirstiest() != p_dry:
+		failures.append("flyer should pick the driest plant")
+	var landing = fly._landing_cell(p_dry)
+	if abs(abs(landing.x - p_dry.position.x) + abs(landing.y - p_dry.position.y) - 128) > 1:
+		failures.append("flyer landing should hug the plant, got " + str(landing))
+	fly.take_turn()
+	if fly.current_plant_target != p_dry:
+		failures.append("flyer take_turn should commit to the driest plant")
+	fly.queue_free()
+	p_wet.queue_free()
+	p_dry.queue_free()
+	print("bug kinds: elite / bottle biter / flyer checked")
 
 
 func _make_plant(sid = "tomato"):
@@ -217,21 +258,15 @@ func _check_tools():
 	if bug2.attack_queue.size() != 1 or int(bug2.attack_queue[0]) != 2:
 		failures.append("swarm should hit every enemy for 2")
 
-	# 修补：恢复 1 点瓶血，满血时无效。
-	bottle.hp = 1
-	gs.cursor.heal_bottle(gs.card_by_id("patch"))
-	if bottle.hp != 2:
-		failures.append("patch should heal the bottle by 1")
-	gs.cursor.heal_bottle(gs.card_by_id("patch"))
-	gs.cursor.heal_bottle(gs.card_by_id("patch"))
-	if bottle.hp != 3:
-		failures.append("patch should not overheal the bottle")
+	# v1.8：修补渠道整体下线——瓶血只减不增。
+	if bottle.has_method("heal"):
+		failures.append("BottleManager.heal should be removed")
 	bottle.hp = 3
 
 	plant.queue_free()
 	bug.queue_free()
 	bug2.queue_free()
-	print("tools: thorns armor / swarm / patch checked")
+	print("tools: thorns armor / swarm checked (patch removed)")
 
 
 func _check_threat_text():
@@ -239,6 +274,8 @@ func _check_threat_text():
 		failures.append("missing threat text for year 2")
 	if season.threat_text_for_year(3).find("瓶") < 0:
 		failures.append("year 3 threat should mention the bottle")
+	if season.threat_text_for_year(3).find("修补") >= 0:
+		failures.append("year 3 threat should no longer promise patching")
 	if season.threat_text_for_year(4) == "":
 		failures.append("missing threat text for year 4")
 	if season.threat_text_for_year(9) == "":

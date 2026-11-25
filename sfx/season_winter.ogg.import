@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/season_winter.ogg-cb8f528f5c77ca8b9069779b4d2e5279.oggstr"
+
+[deps]
+
+source_file="res://sfx/season_winter.ogg"
+dest_files=[ "res://.import/season_winter.ogg-cb8f528f5c77ca8b9069779b4d2e5279.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0
