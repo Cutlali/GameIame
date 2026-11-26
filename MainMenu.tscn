@@ -273,7 +273,7 @@ margin_right = 220.0
 margin_bottom = -14.0
 custom_colors/font_color = Color( 0.93, 0.85, 0.68, 0.55 )
 custom_fonts/font = SubResource( 6 )
-text = "v1.8.0"
+text = "v1.8.1"
 
 [node name="Credit" type="Label" parent="Content"]
 anchor_top = 1.0

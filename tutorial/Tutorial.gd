@@ -159,6 +159,9 @@ func _refill_water_lesson():
 func _start_orb():
 	stage = Stage.ORB
 	GS.tutorial_allowed_action = "water"
+	# 常驻 HUD 在教程期间默认收起，但这一课必须看得见水晶球，
+	# 否则手里有水牌却没有可拖放的目标，流程会卡死。
+	GS.tutorial_show_orb = true
 	say("嗯？剩下的水别浪费——\n把水牌拖到左下角的水晶球里，球会把它存起来。")
 	# 这时刚打出的水牌还挂在手上（HandCard 要等 play_self 末尾才 discard），
 	# 当场检查会把它误算成“手里还有水”，结果发牌被跳过、教学卡死。
@@ -313,6 +316,7 @@ func end_tutorial():
 	GS.tutorial_allow_guide = false
 	GS.tutorial_allow_end_turn = false
 	GS.tutorial_allowed_action = ""
+	GS.tutorial_show_orb = false
 	GS.card_draw_count = 3
 	TutorialSteps.need_end_turn_button = false
 	TutorialSteps.tutorial = null

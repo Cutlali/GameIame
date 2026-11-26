@@ -35,7 +35,7 @@ func _idle(_delta):
 		_check(panel.get_global_rect().end.x <= 1080, "panel stays on screen")
 		_check(panel.get_global_rect().end.y <= 740, "panel stays above version label")
 		var version_label = scene.get_node("Content/Version")
-		_check(version_label.text == "v1.8.0", "version label %s" % version_label.text)
+		_check(version_label.text == "v1.8.1", "version label %s" % version_label.text)
 		_check(button.rect_size.y >= 70, "start button height %s" % button.rect_size.y)
 		_check(button.has_focus(), "start button has focus")
 		_check(button.is_connected("pressed", scene, "_on_StartButton_pressed"), "start signal")

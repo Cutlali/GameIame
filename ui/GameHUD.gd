@@ -233,7 +233,15 @@ func _season_color(season):
 
 
 func _process(delta):
-	visible = not GS.tutorial
+	# 教程期间收起常驻 HUD；但储水课必须露出左下角水晶球，
+	# 否则手里有水牌却没有可拖放的目标，流程会卡死。
+	var in_tutorial = GS.tutorial
+	var show_orb = in_tutorial and GS.tutorial_show_orb
+	visible = not in_tutorial or show_orb
+	$Frame.visible = not in_tutorial
+	_guide_button.visible = not in_tutorial
+	if _guide_badge != null:
+		_guide_badge.visible = not in_tutorial and _new_guide_index >= 0
 
 	if has_node("/root/BottleManager"):
 		var new_hp = BottleManager.hp
@@ -266,11 +274,15 @@ func _process(delta):
 
 	update()
 	GS.upper_panel_mouse = visible and (
-		contains_mouse($Frame) or contains_mouse(_guide_button) or is_mouse_over_orb())
+		($Frame.visible and contains_mouse($Frame)) \
+		or (_guide_button.visible and contains_mouse(_guide_button)) \
+		or is_mouse_over_orb())
 
 
 func _draw():
-	_draw_bottle($Frame.rect_position)
+	# 教程里只露水晶球；魔瓶、图鉴和手记入口等引导结束再画。
+	if not GS.tutorial:
+		_draw_bottle($Frame.rect_position)
 	_draw_crystal_orb()
 
 

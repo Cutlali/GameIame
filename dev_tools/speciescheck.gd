@@ -501,7 +501,8 @@ func _clear_enemies():
 
 
 func _check_deal_contract():
-	# v1.8 发牌契约：每轮固定 3 张，其中必有一张水牌；跑 30 轮抓漏。
+	# v1.8 发牌契约：每轮固定 3 张，其中必有一张水牌；
+	# v1.8.1 起还要必有一张已解锁种子。跑 30 轮抓漏。
 	for t in range(30):
 		for c in gs.hand.get_children():
 			c.queue_free()
@@ -513,6 +514,16 @@ func _check_deal_contract():
 			break
 		if gs._hand_water_count() < 1:
 			_fail("deal %d lacks the guaranteed water card" % t)
+			break
+		var seeds = gamedata.available_seed_card_ids()
+		var seed_ok = false
+		for c in gs.hand.get_children():
+			var ac = c.associated_card
+			if ac != null and ac.action == gs.Action.PLANT and String(ac.id) in seeds:
+				seed_ok = true
+				break
+		if not seed_ok:
+			_fail("deal %d lacks an unlocked seed" % t)
 			break
 	for c in gs.hand.get_children():
 		c.queue_free()

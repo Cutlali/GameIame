@@ -114,26 +114,36 @@ func _check_hasten_near_maturity():
 	print("hasten near maturity: max-1 -> mature, no overflow")
 
 
-# 3. 场上没有植物、手里也没有种子时，发牌必须补一张种子。
+# 3. 每轮发牌契约：固定 3 张，必有 1 张水牌、1 张已解锁种子。
 func _check_seed_guarantee():
 	for plant in get_nodes_in_group("Plant"):
 		plant.get_parent().remove_child(plant)
 		plant.queue_free()
 
-	if gs.hand != null and is_instance_valid(gs.hand):
-		for c in gs.hand.get_children():
-			gs.hand.remove_child(c)
-			c.queue_free()
-
-	# v1.8 发牌契约：每轮固定 3 张、水牌必到其一（旧的种子保底已废弃）。
 	var old_draws = gs.card_draw_count
-	gs._deal_cards()
-	if gs.hand.get_child_count() != 3:
-		failures.append("round deal should give 3 cards, got %d" % gs.hand.get_child_count())
-	if gs._hand_water_count() < 1:
-		failures.append("round deal lacks the guaranteed water card")
+	gs.pending_mature_rewards = 0
+	var available = game_data.available_seed_card_ids()
+	for r in range(20):
+		if gs.hand != null and is_instance_valid(gs.hand):
+			for c in gs.hand.get_children():
+				gs.hand.remove_child(c)
+				c.queue_free()
+
+		gs._deal_cards()
+		if gs.hand.get_child_count() != 3:
+			failures.append("deal %d: expected 3 cards, got %d"
+				% [r, gs.hand.get_child_count()])
+		if gs._hand_water_count() < 1:
+			failures.append("deal %d: lacks the guaranteed water card" % r)
+		var seed_ok = false
+		for c in gs.hand.get_children():
+			var ac = c.associated_card
+			if ac != null and ac.action == gs.Action.PLANT and String(ac.id) in available:
+				seed_ok = true
+		if not seed_ok:
+			failures.append("deal %d: lacks an unlocked seed" % r)
 	gs.card_draw_count = old_draws
-	print("deal contract: fixed 3 + water guarantee ok")
+	print("deal contract: fixed 3 + water + unlocked seed ok (20 rounds)")
 
 
 func _color_close(a, b, eps = 0.001):

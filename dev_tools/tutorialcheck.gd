@@ -148,6 +148,13 @@ func _idle(_delta):
 		_check(tut.stage == 3, "stage ORB, got %d" % tut.stage)
 		_check(gs.tutorial_allowed_action == "water", "orb stage keeps water lock")
 		_check(_hand_has(gs.Action.WATER), "orb lesson must provide a water card")
+		# 球必须真的出现在屏幕上，否则玩家没有可拖放的目标，只能卡在这。
+		_check(gs.hud != null and gs.hud.visible, "HUD shows orb during orb lesson")
+		if gs.hud != null:
+			_check(gs.hud._orb_holder.visible, "orb holder visible")
+			_check(gs.hud._orb_center().x > 0.0 and gs.hud._orb_center().y > 0.0,
+				"orb center on screen")
+			_check(gs.hud._orb_button.visible, "orb clickable during lesson")
 		# 模拟储水牌在事件后才离手：先加一张，存完立刻移走。
 		gs.add_card_to_hand(gs.card_buy_1x1_water)
 		var stored = gs.play_water_into_orb(gs.card_buy_1x1_water)

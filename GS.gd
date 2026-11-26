@@ -751,6 +751,32 @@ func make_water_card():
 	return card_by_id(String(entries[0]["id"]))
 
 
+# 每轮发牌的种子保证：从当前已解锁的种子池里按权重抽一张。
+# 只取赛季/年份已经放开的种子，不含终局那张"最后的种子"。
+func make_seed_card():
+	var ids = GameData.available_seed_card_ids()
+	if ids.empty():
+		return card_basic_plant
+
+	var entries = []
+	var total = 0
+	for id in ids:
+		var weight = 1
+		for e in GameData.BASIC_POOL:
+			if String(e["id"]) == String(id):
+				weight = int(e["weight"])
+				break
+		entries.append({"id": String(id), "weight": weight})
+		total += weight
+
+	var r = randi() % total
+	for e in entries:
+		r -= int(e["weight"])
+		if r < 0:
+			return card_by_id(String(e["id"]))
+	return card_by_id(String(entries[0]["id"]))
+
+
 var Game = preload("res://Game.tscn")
 var MainMenu = preload("res://MainMenu.tscn")
 var Intro = preload("res://Intro.tscn")
@@ -778,6 +804,8 @@ var guide = null
 var tutorial_allow_guide = false
 var tutorial_allow_end_turn = false
 var tutorial_allowed_action = ""
+# 储水课要给玩家露出左下角水晶球；其余教程阶段仍收起常驻 HUD。
+var tutorial_show_orb = false
 
 
 # 教程期间只放行当前阶段需要的卡牌，避免把关键牌浪费在空地上。
@@ -1398,17 +1426,23 @@ func deal_new_hand():
 func _deal_cards():
 	mature_rewards_this_round = 0
 
-	# 第四轮定稿：每轮固定抽 3 张，第 1 张必是水牌，其余两张纯看运气。
-	# （旧的"补满上限 + 种子保底 + 无水兜底"整套移除——水由规则保证，
-	# 种子和其余牌交给池子概率，回合结束的上限由选留面板把关。）
+	# 每轮固定抽 3 张：第 1 张必是水牌，最后 1 张必是已解锁种子，
+	# 中间那张照常随机（随机到种子就赚一张）。
+	# 种子是主循环资源，纯概率会出现连续几轮全是水和道具、田里空转的情况。
 	var w = make_water_card()
 	if w != null:
 		add_card_to_hand(w)
-	for i in range(1, max(1, card_draw_count)):
+
+	var random_draws = max(0, max(1, card_draw_count) - 2)
+	for i in range(random_draws):
 		var c = draw_card()
 		if c == null:
 			break
 		add_card_to_hand(c)
+
+	var s = make_seed_card()
+	if s != null:
+		add_card_to_hand(s)
 
 	# 敌方回合（反伤/护甲）杀掉的虫子，奖励顺延到这一轮。
 	var carried = pending_mature_rewards
@@ -1545,6 +1579,7 @@ func reset_all_state():
 	tutorial_allow_guide = false
 	tutorial_allow_end_turn = false
 	tutorial_allowed_action = ""
+	tutorial_show_orb = false
 	guide = null
 	if has_node("/root/TutorialSteps"):
 		TutorialSteps.tutorial = null
