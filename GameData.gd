@@ -370,11 +370,14 @@ const MUTATION_PITY_STEP = 0.15
 
 # 每回合基础抽卡池。带 min_year / min_season 的条目要到对应"绝对季门"后才出现。
 # 季门 = (年份-1)*4 + 季节序号(春夏秋冬=0..3)。
-# 种子阶梯（第三轮试玩后压缩到两年内全部见齐；进池后永久保留，瓶碎不收回）：
+# 种子阶梯（进池后永久保留，瓶碎不收回）：
 #   1年春 番茄 / 小麦 / 薄荷
-#   2年春 向日葵 / 棉花 / 亚麻 / 大豆
-#   2年秋 南瓜 / 水稻 / 玉米 / 马铃薯
-#   2年冬 腊梅 / 月见草 / 甘蔗 / 藏红花
+#   1年夏 向日葵 / 棉花
+#   1年秋 南瓜 / 水稻
+#   1年冬 腊梅 / 月见草 / 甘蔗 / 藏红花
+#   2年春 亚麻 / 大豆
+#   2年夏 玉米 / 马铃薯
+# 前 11 种在第一年就能见到，剩下 4 种分两季、每季 2 种，在第二年夏天前全部进池。
 const BASIC_POOL = [
 	{"id": "water_drop", "weight": 8},
 	{"id": "water_drip", "weight": 5},
@@ -391,19 +394,19 @@ const BASIC_POOL = [
 	{"id": "mint_seed", "weight": 3},
 	{"id": "swarm", "weight": 2, "min_year": 2},
 	{"id": "thorns_armor", "weight": 2, "min_year": 4},
-	{"id": "medium_plant", "weight": 2, "min_year": 2},
-	{"id": "cotton_seed", "weight": 2, "min_year": 2},
-	{"id": "flax_seed", "weight": 2, "min_year": 2},
-	{"id": "soybean_seed", "weight": 2, "min_year": 2},
+	{"id": "medium_plant", "weight": 2, "min_season": "summer"},
+	{"id": "cotton_seed", "weight": 2, "min_season": "summer"},
 	{"id": "energy_spring", "weight": 2, "min_year": 2},
-	{"id": "high_plant", "weight": 2, "min_year": 2, "min_season": "autumn"},
-	{"id": "rice_seed", "weight": 2, "min_year": 2, "min_season": "autumn"},
-	{"id": "maize_seed", "weight": 2, "min_year": 2, "min_season": "autumn"},
-	{"id": "potato_seed", "weight": 2, "min_year": 2, "min_season": "autumn"},
-	{"id": "wintersweet_seed", "weight": 2, "min_year": 2, "min_season": "winter"},
-	{"id": "win_plant", "weight": 1, "min_year": 2, "min_season": "winter"},
-	{"id": "sugarcane_seed", "weight": 1, "min_year": 2, "min_season": "winter"},
-	{"id": "saffron_seed", "weight": 1, "min_year": 2, "min_season": "winter"}
+	{"id": "high_plant", "weight": 2, "min_season": "autumn"},
+	{"id": "rice_seed", "weight": 2, "min_season": "autumn"},
+	{"id": "wintersweet_seed", "weight": 2, "min_season": "winter"},
+	{"id": "win_plant", "weight": 1, "min_season": "winter"},
+	{"id": "sugarcane_seed", "weight": 1, "min_season": "winter"},
+	{"id": "saffron_seed", "weight": 1, "min_season": "winter"},
+	{"id": "flax_seed", "weight": 2, "min_year": 2, "min_season": "spring"},
+	{"id": "soybean_seed", "weight": 2, "min_year": 2, "min_season": "spring"},
+	{"id": "maize_seed", "weight": 2, "min_year": 2, "min_season": "summer"},
+	{"id": "potato_seed", "weight": 2, "min_year": 2, "min_season": "summer"}
 ]
 
 # 种子卡全集。发牌保底（手里至少两张种子）从这个列表里补。
@@ -412,19 +415,51 @@ const SEED_CARDS = [
 	{"id": "basic_plant", "min_year": 1},
 	{"id": "wheat_seed", "min_year": 1},
 	{"id": "mint_seed", "min_year": 1},
-	{"id": "medium_plant", "min_year": 2},
-	{"id": "cotton_seed", "min_year": 2},
-	{"id": "flax_seed", "min_year": 2},
-	{"id": "soybean_seed", "min_year": 2},
-	{"id": "high_plant", "min_year": 2, "min_season": "autumn"},
-	{"id": "rice_seed", "min_year": 2, "min_season": "autumn"},
-	{"id": "maize_seed", "min_year": 2, "min_season": "autumn"},
-	{"id": "potato_seed", "min_year": 2, "min_season": "autumn"},
-	{"id": "wintersweet_seed", "min_year": 2, "min_season": "winter"},
-	{"id": "win_plant", "min_year": 2, "min_season": "winter"},
-	{"id": "sugarcane_seed", "min_year": 2, "min_season": "winter"},
-	{"id": "saffron_seed", "min_year": 2, "min_season": "winter"}
+	{"id": "medium_plant", "min_season": "summer"},
+	{"id": "cotton_seed", "min_season": "summer"},
+	{"id": "high_plant", "min_season": "autumn"},
+	{"id": "rice_seed", "min_season": "autumn"},
+	{"id": "wintersweet_seed", "min_season": "winter"},
+	{"id": "win_plant", "min_season": "winter"},
+	{"id": "sugarcane_seed", "min_season": "winter"},
+	{"id": "saffron_seed", "min_season": "winter"},
+	{"id": "flax_seed", "min_year": 2, "min_season": "spring"},
+	{"id": "soybean_seed", "min_year": 2, "min_season": "spring"},
+	{"id": "maize_seed", "min_year": 2, "min_season": "summer"},
+	{"id": "potato_seed", "min_year": 2, "min_season": "summer"}
 ]
+
+# 种子卡 id → 物种 id。抽卡时用它判断“这个物种玩家是否已经拥有”。
+const SEED_SPECIES = {
+	"basic_plant": "tomato",
+	"wheat_seed": "wheat",
+	"mint_seed": "mint",
+	"medium_plant": "sunflower",
+	"cotton_seed": "cotton",
+	"flax_seed": "flax",
+	"soybean_seed": "soybean",
+	"high_plant": "pumpkin",
+	"rice_seed": "rice",
+	"maize_seed": "maize",
+	"potato_seed": "potato",
+	"wintersweet_seed": "wintersweet",
+	"win_plant": "moonflower",
+	"sugarcane_seed": "sugarcane",
+	"saffron_seed": "saffron"
+}
+
+
+func species_of_seed_card(card_id):
+	return String(SEED_SPECIES.get(String(card_id), ""))
+
+
+# 图鉴里已经拥有该物种（基础条目或任一变种）就算拥有，抽卡时不再优先。
+func species_owned(sid):
+	if sid == "":
+		return true
+	var enc = get_node_or_null("/root/Encyclopedia")
+	return enc != null and enc.species_seen(sid)
+
 
 # 魔瓶卡池：收获某种植物后充能对应的池。
 # 规则：每个池只放本阶及更低阶的种子，再加各阶道具；
@@ -449,18 +484,18 @@ const BOTTLE_POOLS = {
 		{"id": "graft", "weight": 2},
 		{"id": "net", "weight": 2},
 		{"id": "energy_dew", "weight": 2},
-		{"id": "medium_plant", "weight": 2, "min_year": 2},
-		{"id": "cotton_seed", "weight": 2, "min_year": 2},
-		{"id": "flax_seed", "weight": 2, "min_year": 2},
+		{"id": "medium_plant", "weight": 2, "min_season": "summer"},
+		{"id": "cotton_seed", "weight": 2, "min_season": "summer"},
+		{"id": "flax_seed", "weight": 2, "min_year": 2, "min_season": "spring"},
 		{"id": "energy_spring", "weight": 1, "min_year": 2},
 		{"id": "swarm", "weight": 2, "min_year": 2},
-		{"id": "soybean_seed", "weight": 2, "min_year": 2}
+		{"id": "soybean_seed", "weight": 2, "min_year": 2, "min_season": "spring"}
 	],
 	"medium": [
 		{"id": "medium_plant", "weight": 4},
 		{"id": "cotton_seed", "weight": 3},
-		{"id": "flax_seed", "weight": 3},
-		{"id": "soybean_seed", "weight": 3},
+		{"id": "flax_seed", "weight": 3, "min_year": 2, "min_season": "spring"},
+		{"id": "soybean_seed", "weight": 3, "min_year": 2, "min_season": "spring"},
 		{"id": "basic_plant", "weight": 2},
 		{"id": "wheat_seed", "weight": 2},
 		{"id": "mint_seed", "weight": 2},
@@ -481,14 +516,14 @@ const BOTTLE_POOLS = {
 	],
 	"high": [
 		{"id": "high_plant", "weight": 4},
-		{"id": "rice_seed", "weight": 2, "min_year": 2, "min_season": "autumn"},
-		{"id": "maize_seed", "weight": 2, "min_year": 2, "min_season": "autumn"},
-		{"id": "potato_seed", "weight": 2, "min_year": 2, "min_season": "autumn"},
-		{"id": "wintersweet_seed", "weight": 2, "min_year": 2, "min_season": "winter"},
+		{"id": "rice_seed", "weight": 2, "min_season": "autumn"},
+		{"id": "maize_seed", "weight": 2, "min_year": 2, "min_season": "summer"},
+		{"id": "potato_seed", "weight": 2, "min_year": 2, "min_season": "summer"},
+		{"id": "wintersweet_seed", "weight": 2, "min_season": "winter"},
 		{"id": "medium_plant", "weight": 2},
-		{"id": "cotton_seed", "weight": 2, "min_year": 2},
-		{"id": "flax_seed", "weight": 2, "min_year": 2},
-		{"id": "soybean_seed", "weight": 2, "min_year": 2},
+		{"id": "cotton_seed", "weight": 2, "min_season": "summer"},
+		{"id": "flax_seed", "weight": 2, "min_year": 2, "min_season": "spring"},
+		{"id": "soybean_seed", "weight": 2, "min_year": 2, "min_season": "spring"},
 		{"id": "water_rain", "weight": 3},
 		{"id": "tsunami", "weight": 3},
 		{"id": "overflow", "weight": 3},
@@ -503,17 +538,17 @@ const BOTTLE_POOLS = {
 	],
 	"rare": [
 		{"id": "win_plant", "weight": 4},
-		{"id": "sugarcane_seed", "weight": 3, "min_year": 2, "min_season": "winter"},
-		{"id": "saffron_seed", "weight": 3, "min_year": 2, "min_season": "winter"},
+		{"id": "sugarcane_seed", "weight": 3, "min_season": "winter"},
+		{"id": "saffron_seed", "weight": 3, "min_season": "winter"},
 		{"id": "high_plant", "weight": 2},
-		{"id": "wintersweet_seed", "weight": 2, "min_year": 2, "min_season": "winter"},
-		{"id": "rice_seed", "weight": 2, "min_year": 2, "min_season": "autumn"},
-		{"id": "maize_seed", "weight": 2, "min_year": 2, "min_season": "autumn"},
-		{"id": "potato_seed", "weight": 2, "min_year": 2, "min_season": "autumn"},
+		{"id": "wintersweet_seed", "weight": 2, "min_season": "winter"},
+		{"id": "rice_seed", "weight": 2, "min_season": "autumn"},
+		{"id": "maize_seed", "weight": 2, "min_year": 2, "min_season": "summer"},
+		{"id": "potato_seed", "weight": 2, "min_year": 2, "min_season": "summer"},
 		{"id": "medium_plant", "weight": 2},
-		{"id": "cotton_seed", "weight": 2, "min_year": 2},
-		{"id": "flax_seed", "weight": 2, "min_year": 2},
-		{"id": "soybean_seed", "weight": 2, "min_year": 2},
+		{"id": "cotton_seed", "weight": 2, "min_season": "summer"},
+		{"id": "flax_seed", "weight": 2, "min_year": 2, "min_season": "spring"},
+		{"id": "soybean_seed", "weight": 2, "min_year": 2, "min_season": "spring"},
 		{"id": "tsunami", "weight": 3},
 		{"id": "sacrifice", "weight": 3},
 		{"id": "vampire_blast", "weight": 3},
@@ -686,15 +721,22 @@ func roll_basic_card_id():
 	if available.empty():
 		return BASIC_POOL[0]["id"]
 
+	# 还没拥有过的物种，种子权重放大 3 倍，避免整轮只反复抽到开局那几种。
+	var weights = []
 	var total = 0
 	for e in available:
-		total += e["weight"]
+		var w = int(e["weight"])
+		var sid = species_of_seed_card(e["id"])
+		if sid != "" and not species_owned(sid):
+			w *= 3
+		weights.append(w)
+		total += w
 
 	var r = randi() % total
-	for e in available:
-		r -= e["weight"]
+	for i in range(available.size()):
+		r -= weights[i]
 		if r < 0:
-			return e["id"]
+			return available[i]["id"]
 
 	return available[0]["id"]
 

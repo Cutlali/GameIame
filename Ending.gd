@@ -135,7 +135,7 @@ func _build_page():
 
 	# 最后一页压在画面上的收尾印章。
 	_finish_label = Label.new()
-	_finish_label.text = "四季魔瓶\n— 完 —"
+	_finish_label.text = "奇迹之种\n— 完 —"
 	_finish_label.align = Label.ALIGN_CENTER
 	_finish_label.valign = Label.VALIGN_CENTER
 	_finish_label.anchor_right = 1.0

@@ -8,9 +8,11 @@ extends SceneTree
 
 const ALL_SEED_IDS = [
 	"basic_plant", "wheat_seed", "mint_seed",
-	"medium_plant", "cotton_seed", "flax_seed", "soybean_seed",
-	"high_plant", "rice_seed", "maize_seed", "potato_seed", "wintersweet_seed",
-	"win_plant", "sugarcane_seed", "saffron_seed"
+	"medium_plant", "cotton_seed",
+	"high_plant", "rice_seed",
+	"wintersweet_seed", "win_plant", "sugarcane_seed", "saffron_seed",
+	"flax_seed", "soybean_seed",
+	"maize_seed", "potato_seed"
 ]
 
 # 物种 → 场景贴图数量（含 seed 帧）。
@@ -164,32 +166,64 @@ func _seed_card_id_for(sid):
 
 
 func _check_ladder():
-	# 绝对季门阶梯（v1.8 两年全开）：
-	# gate 0=1年春(3种) 4=2年春(7种) 6=2年秋(11种) 7=2年冬(15种)。
+	# 绝对季门阶梯（v1.9：前 11 种一年内见齐，剩余 4 种分到第二年春夏）：
+	# gate 0=1年春(3) 1=1年夏(5) 2=1年秋(7) 3=1年冬(11)
+	# 4=2年春(13) 5=2年夏(15)。
+	# 15 种在第二年夏天结束前一定全部进池。
 	# 注意：本引擎 Array.slice 的 end 参数不可信，取前缀一律走 _first。
 	season.year = 1; season.current_index = 0
 	_expect_ids(_first(3))
-	season.year = 2; season.current_index = 0
-	_expect_ids(_first(7))
+	season.current_index = 1
+	_expect_ids(_first(5))
 	season.current_index = 2
-	_expect_ids(_first(11))
+	_expect_ids(_first(7))
 	season.current_index = 3
+	_expect_ids(_first(11))
+	season.year = 2; season.current_index = 0
+	_expect_ids(_first(13))
+	season.current_index = 1
 	_expect_ids(ALL_SEED_IDS)
 	# 瓶碎回第一年春：按历史季门进池、不缩回，也不超发。
 	sv.enabled = true
-	sv.max_gate_reached = 5
+	sv.max_gate_reached = 1
 	season.year = 1; season.current_index = 0
 	var ids = gamedata.available_seed_card_ids()
-	for want in _first(7):
+	for want in _first(5):
 		if not (want in ids):
-			_fail("max_gate fallback lost y2 spring seed: " + want)
-	for absent in ["high_plant", "win_plant", "saffron_seed"]:
+			_fail("max_gate fallback lost 1y summer seed: " + want)
+	for absent in ["high_plant", "flax_seed", "win_plant", "saffron_seed"]:
 		if absent in ids:
-			_fail("max_gate fallback too loose: " + absent + " at max_gate=5")
-	sv.max_gate_reached = 7
+			_fail("max_gate fallback too loose: " + absent + " at max_gate=1")
+	sv.max_gate_reached = 3
+	_expect_ids(_first(11))
+	sv.max_gate_reached = 4
+	_expect_ids(_first(13))
+	sv.max_gate_reached = 5
 	_expect_ids(ALL_SEED_IDS)
 	sv.enabled = false
-	season.year = 2; season.current_index = 0
+	season.year = 1; season.current_index = 0
+
+	# 保底发牌优先没拥有过的物种：全解锁后连续抽 15 次应当拿到 15 个不同物种。
+	encyclopedia.reset_all()
+	season.year = 2; season.current_index = 1
+	var got = {}
+	for i in range(15):
+		var card = gs.make_seed_card()
+		if card == null:
+			_fail("make_seed_card returned null on draw %d" % i)
+			break
+		var sid = gamedata.species_of_seed_card(card.id)
+		if sid == "":
+			_fail("draw %d has no species: %s" % [i, card.id])
+			break
+		if got.has(sid):
+			_fail("draw %d repeated species before all were owned: %s" % [i, sid])
+		got[sid] = true
+		encyclopedia.discovered[sid] = true
+	if got.size() != 15:
+		_fail("fresh-species priority gave %d distinct species, want 15" % got.size())
+	encyclopedia.reset_all()
+	season.year = 2; season.current_index = 1
 
 
 func _first(n):

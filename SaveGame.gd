@@ -42,7 +42,7 @@ var guide_flags = {}
 var discovered_ids = []
 var milestone_index = 0
 var parcels = []   # 旧存档兼容：固定地块序号 0..3
-var plots = []     # v1.8：[[x, y], ...] 已开垦 2×2 的左上角格子
+var plots = []     # [[x, y, shape], ...] 已开垦 1×2 的左上角格子和方向（2=旧档 2×2）
 var meta = {"bonus_draws": 0, "permanent_energy_bonus": 0}
 var run = {}
 
@@ -122,8 +122,12 @@ func load_save():
 
 	plots = []
 	for po in run.get("plots", []):
-		if typeof(po) == TYPE_ARRAY and po.size() == 2:
-			plots.append([int(po[0]), int(po[1])])
+		if typeof(po) == TYPE_ARRAY and po.size() >= 2:
+			# 旧档只有 [x, y]，代表 v1.8 的 2×2 地块；新档第三位是 0/1 横竖。
+			var shape = 2
+			if po.size() >= 3:
+				shape = int(po[2])
+			plots.append([int(po[0]), int(po[1]), shape])
 
 	has_save = true
 
@@ -150,7 +154,7 @@ func save_now():
 	if in_game():
 		plots = []
 		for o in GS.tilemap.claimed_plots:
-			plots.append([int(o.x), int(o.y)])
+			plots.append([int(o.x), int(o.y), GS.tilemap.plot_shape_for(o)])
 		parcels = []
 		run = _capture_run()
 
@@ -336,22 +340,36 @@ func apply_run():
 	if t == null or not is_instance_valid(t):
 		return
 
-	# v1.8 自由开垦：新格式 run.plots；旧档 parcels 序号自动迁移成左上角。
+	# 自由开垦：新格式 run.plots；旧档 parcels 序号自动迁移成左上角。
+	# 两格宽的旧档地块（没有第三位）仍按 2×2 补回，避免读档后农田缩水。
 	t.claimed_plots = []
+	t.plot_horizontal = {}
+	t.legacy_2x2_plots = {}
 	for po in run.get("plots", []):
 		var origin = Vector2(int(po[0]), int(po[1]))
 		if origin in t.claimed_plots:
 			continue
-		for cell in t.plot_cells(origin):
+		var shape = 2
+		if po.size() >= 3:
+			shape = int(po[2])
+		var cells = t.legacy_plot_cells(origin)
+		if shape != 2:
+			cells = t.plot_cells(origin, shape == 1)
+		for cell in cells:
 			t.set_cellv(cell, t.farmland_variant(cell))
 		t.claimed_plots.append(origin)
+		if shape == 2:
+			t.legacy_2x2_plots[origin] = true
+		elif shape == 1:
+			t.plot_horizontal[origin] = true
 	for idx in parcels:
 		var legacy = t.legacy_parcel_origin(idx)
 		if legacy == null or legacy in t.claimed_plots:
 			continue
-		for cell in t.plot_cells(legacy):
+		for cell in t.legacy_plot_cells(legacy):
 			t.set_cellv(cell, t.farmland_variant(cell))
 		t.claimed_plots.append(legacy)
+		t.legacy_2x2_plots[legacy] = true
 	t.rebuild_farm_edges()
 	GS.farm_quota = int(run.get("farm_quota", 0))
 

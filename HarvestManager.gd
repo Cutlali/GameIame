@@ -232,6 +232,9 @@ func _apply_harvest_perks(plant, entry, pool):
 
 
 func handle_harvest(plant):
+	# 结局已经开始：同一轮里其它成熟植物不再弹收获/选牌，直接进剧情。
+	if GS.ending_started:
+		return
 	if plant == null or _root == null or _root.visible:
 		return
 

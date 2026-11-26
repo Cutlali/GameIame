@@ -231,6 +231,9 @@ func _make_flat_button(text, min_size):
 
 
 func _process(_delta):
+	# 进入结局后，残留的蓄能也不能再弹选牌盖在剧情上。
+	if GS.ending_started:
+		return
 	# 瓶碎结算优先于一切抽取；等这一轮植物/虫子结算完再弹。
 	if _shatter_open:
 		return
@@ -471,6 +474,8 @@ func reset_all():
 
 
 func open_bottle():
+	if GS.ending_started:
+		return
 	if _root == null or _root.visible:
 		return
 	if _shatter_pending or _shatter_open:

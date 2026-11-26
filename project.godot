@@ -26,7 +26,7 @@ _global_script_class_icons={
 
 [application]
 
-config/name="Cardwork Cycle"
+config/name="奇迹之种"
 run/main_scene="res://MainMenu.tscn"
 boot_splash/image="res://ui/menu/menu_bg.png"
 boot_splash/bg_color=Color( 0.054902, 0.0431373, 0.0372549, 1 )

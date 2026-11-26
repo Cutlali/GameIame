@@ -160,6 +160,10 @@ func _play_card_sfx():
 	if b == GS.card_dmg2:
 		SFX.attack_heavy.play_sfx()
 		return
+	if b.action == GS.Action.NET:
+		# 捕虫网也是一下敲在虫子身上，沿用「重击！」的命中声。
+		SFX.attack_single.play_sfx()
+		return
 	SFX.card_play.play_sfx()
 	
 func discard():

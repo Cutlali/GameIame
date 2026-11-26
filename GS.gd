@@ -96,7 +96,7 @@ var farm_choice_open = false
 var shatter_open = false
 var hand_keep_open = false
 
-# v1.8 开垦名额：图鉴里程碑发放，玩家在任意 2×2 空地自选位置使用。
+# 开垦名额：图鉴里程碑发放，玩家在任意空地自选 1×2 的位置使用。
 var farm_quota = 0
 
 # 一轮结算结束后先处理魔瓶抽取，全部收下后再发新手牌。
@@ -759,6 +759,14 @@ func make_seed_card():
 	if ids.empty():
 		return card_basic_plant
 
+	# 还没拥有过的物种优先：一年只有 24 轮，反复抽同几种会让田里没变化。
+	var fresh = []
+	for id in ids:
+		if not GameData.species_owned(GameData.species_of_seed_card(id)):
+			fresh.append(String(id))
+	if not fresh.empty():
+		ids = fresh
+
 	var entries = []
 	var total = 0
 	for id in ids:
@@ -1276,6 +1284,9 @@ func _finish_end_turn():
 # 植物和虫子结算完后，先把本轮积攒的魔瓶抽取处理掉，
 # 再发下一轮手牌，避免收获多次时连续弹窗打断节奏。
 func _finish_round_processing():
+	# 已经进入结局就不再推进回合与发牌。
+	if ending_started:
+		return
 	# 魔瓶抽取或瓶碎还没处理完时，先不派新手牌。
 	if has_node("/root/BottleManager") and BottleManager.is_busy():
 		pending_new_hand = true
@@ -1400,7 +1411,9 @@ func start_ending():
 		return
 	ending_started = true
 	if has_node("/root/BottleManager"):
+		# force_close 会把当前池退回蓄能，结局里不能再弹出选牌，直接清空。
 		BottleManager.force_close()
+		BottleManager.charges.clear()
 	if has_node("/root/HarvestManager"):
 		HarvestManager.force_close()
 	if has_node("/root/EncyclopediaUI"):
@@ -1430,6 +1443,8 @@ func start_ending():
 
 
 func deal_new_hand():
+	if ending_started:
+		return
 	Season.advance_round()
 	
 	if get_tree().get_nodes_in_group("Enemy").empty():
@@ -1447,6 +1462,8 @@ func deal_new_hand():
 
 # 只发这一轮的手牌，不推进季节。瓶碎重开时也走这里。
 func _deal_cards():
+	if ending_started:
+		return
 	mature_rewards_this_round = 0
 
 	# 每轮固定抽 3 张：第 1 张必是水牌，最后 1 张必是已解锁种子，

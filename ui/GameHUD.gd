@@ -34,8 +34,6 @@ var _orb_drag_hover = false
 var _title_font: DynamicFont
 var _small_font: DynamicFont
 var _orb_font: DynamicFont
-var _bottle_body_box: StyleBoxFlat
-var _bottle_outline_box: StyleBoxFlat
 
 
 func _ready():
@@ -117,14 +115,6 @@ func _ready():
 	_orb_font.size = 30
 	_orb_font.outline_size = 4
 	_orb_font.outline_color = Color(0.06, 0.10, 0.14, 0.9)
-
-	_bottle_body_box = _flat_box(Color(0.13, 0.17, 0.18, 0.96), Color(0, 0, 0, 0), 0, 10)
-	_bottle_body_box.corner_radius_top_left = 4
-	_bottle_body_box.corner_radius_top_right = 4
-	_bottle_outline_box = _flat_box(Color(0, 0, 0, 0), Color(0.60, 0.68, 0.62, 0.9), 2, 10)
-	_bottle_outline_box.draw_center = false
-	_bottle_outline_box.corner_radius_top_left = 4
-	_bottle_outline_box.corner_radius_top_right = 4
 
 	# 左下角：水晶球与魔力球并排，尺寸对齐。
 	_orb_holder = Control.new()
@@ -286,58 +276,79 @@ func _draw():
 	_draw_crystal_orb()
 
 
-# 魔瓶：瓶塞、瓶颈、肩部、玻璃瓶身、液体高度和血量。
+# 魔瓶：贴着开场动画的样子画——细长瓶颈、金色颈环、圆鼓的玻璃瓶身，
+# 瓶口塞一颗棱面水晶。液体高度就是剩余血量。
 func _draw_bottle(f):
 	var cx = f.x + 157.0
 	var y = f.y
+	var body_c = Vector2(cx, y + 104.0)
+	var body_r = 27.0
 
 	# 季节光晕与投影。
 	var pulse = 0.9 + 0.1 * sin(OS.get_ticks_msec() / 520.0)
-	draw_circle(Vector2(cx, y + 94), 36.0,
+	draw_circle(Vector2(body_c.x, body_c.y + 6.0), body_r + 14.0,
 		Color(_glow.r, _glow.g, _glow.b, 0.10 * pulse))
 	# 瓶能攒满时再套一圈紫光，配合下方提示告诉玩家可以点了。
 	if _power >= _power_max and _hp > 0:
 		var charge_pulse = 0.6 + 0.4 * sin(OS.get_ticks_msec() / 240.0)
-		draw_circle(Vector2(cx, y + 94), 46.0, Color(0.72, 0.52, 0.96, 0.20 * charge_pulse))
-	draw_circle(Vector2(cx, y + 134), 25.0, Color(0.0, 0.0, 0.0, 0.18))
+		draw_circle(body_c, body_r + 20.0,
+			Color(0.72, 0.52, 0.96, 0.20 * charge_pulse))
+	draw_circle(Vector2(body_c.x, y + 135.0), 22.0, Color(0.0, 0.0, 0.0, 0.18))
 
-	# 瓶塞与瓶颈。
-	draw_rect(Rect2(cx - 7, y + 26, 14, 8), Color(0.50, 0.34, 0.20))
-	draw_rect(Rect2(cx - 7, y + 26, 14, 2), Color(0.68, 0.50, 0.30))
-	draw_rect(Rect2(cx - 4, y + 34, 8, 12), Color(0.16, 0.19, 0.20))
-	draw_rect(Rect2(cx - 6, y + 42, 12, 3), Color(0.36, 0.40, 0.38))
-	draw_rect(Rect2(cx - 5, y + 34, 2, 9), Color(0.30, 0.34, 0.34))
+	var glass = Color(0.13, 0.18, 0.19, 0.97)
+	var edge = Color(0.62, 0.76, 0.68, 0.92)
+	var gold = Color(0.78, 0.62, 0.30)
+	var gold_hi = Color(0.95, 0.82, 0.48)
 
-	# 肩部与瓶身。
-	var shoulder = PoolVector2Array([
-		Vector2(cx - 4, y + 43), Vector2(cx - 27, y + 58),
-		Vector2(cx - 27, y + 67), Vector2(cx + 27, y + 67),
-		Vector2(cx + 27, y + 58), Vector2(cx + 4, y + 43)])
-	draw_colored_polygon(shoulder, Color(0.13, 0.17, 0.18, 0.96))
-	draw_style_box(_bottle_body_box, Rect2(cx - 27, y + 58, 54, 76))
+	# 细长瓶颈，往下展开成圆身。
+	draw_rect(Rect2(cx - 6, y + 60, 12, 26), glass)
+	draw_colored_polygon(PoolVector2Array([
+		Vector2(cx - 6, y + 80), Vector2(cx - 23, y + 92),
+		Vector2(cx + 23, y + 92), Vector2(cx + 6, y + 80)]), glass)
+	draw_circle(body_c, body_r, glass)
 
-	# 液体高度就是剩余血量。
-	var ratio = float(_hp) / float(max(1, _hp_max))
-	var liquid_h = 72.0 * ratio
-	if liquid_h > 0.0:
-		var liquid = Color(_glow.r, _glow.g, _glow.b, 0.88)
-		if _damage_flash > 0.0:
-			liquid = liquid.linear_interpolate(Color(1.0, 0.25, 0.25, 0.95), _damage_flash)
-		var ly = y + 130 - liquid_h
-		draw_rect(Rect2(cx - 23, ly, 46, liquid_h), liquid)
-		draw_line(Vector2(cx - 22, ly), Vector2(cx + 22, ly),
+	# 液体：按血量从瓶底往上灌，用圆缺多边形避免溢出瓶身。
+	var ratio = clamp(float(_hp) / float(max(1, _hp_max)), 0.0, 1.0)
+	var liquid = Color(_glow.r, _glow.g, _glow.b, 0.88)
+	if _damage_flash > 0.0:
+		liquid = liquid.linear_interpolate(Color(1.0, 0.25, 0.25, 0.95), _damage_flash)
+	var liquid_pts = _bottle_liquid_polygon(body_c, body_r - 2.0, ratio)
+	if liquid_pts.size() >= 3:
+		draw_colored_polygon(liquid_pts, liquid)
+		var liquid_r = body_r - 2.0
+		var surface_y = body_c.y + liquid_r - 2.0 * liquid_r * ratio
+		var sdy = clamp(surface_y - body_c.y, -liquid_r, liquid_r)
+		var half = sqrt(max(0.0, liquid_r * liquid_r - sdy * sdy))
+		draw_line(Vector2(cx - half, surface_y), Vector2(cx + half, surface_y),
 			Color(liquid.r, liquid.g, liquid.b, 0.95).lightened(0.25), 1.5)
-		if liquid_h > 14.0:
-			draw_circle(Vector2(cx - 8, ly + 9), 2.5,
-				Color(1.0, 1.0, 1.0, 0.20))
-			draw_circle(Vector2(cx + 6, ly + 18), 1.8,
-				Color(1.0, 1.0, 1.0, 0.16))
 
 	# 玻璃轮廓与反光。
-	draw_polyline(shoulder, Color(0.60, 0.68, 0.62, 0.9), 2.0)
-	draw_style_box(_bottle_outline_box, Rect2(cx - 27, y + 58, 54, 76))
-	draw_rect(Rect2(cx - 21, y + 66, 4, 54), Color(1.0, 1.0, 1.0, 0.14))
-	draw_circle(Vector2(cx - 14, y + 66), 3.5, Color(1.0, 1.0, 1.0, 0.22))
+	draw_arc(body_c, body_r, 0.0, PI * 2.0, 40, edge, 2.0)
+	draw_line(Vector2(cx - 6, y + 60), Vector2(cx - 6, y + 82), edge, 1.5)
+	draw_line(Vector2(cx + 6, y + 60), Vector2(cx + 6, y + 82), edge, 1.5)
+	draw_arc(body_c, body_r - 6.0, PI * 1.05, PI * 1.55, 12,
+		Color(1.0, 1.0, 1.0, 0.22), 3.0)
+	draw_circle(Vector2(cx - 13, y + 94), 3.0, Color(1.0, 1.0, 1.0, 0.28))
+
+	# 金色颈环与瓶口。
+	draw_rect(Rect2(cx - 9, y + 82, 18, 5), gold)
+	draw_rect(Rect2(cx - 9, y + 82, 18, 2), gold_hi)
+	draw_rect(Rect2(cx - 8, y + 55, 16, 5), gold)
+	draw_rect(Rect2(cx - 8, y + 55, 16, 2), gold_hi)
+
+	# 水晶瓶塞：一颗竖着的棱面宝石。
+	draw_colored_polygon(PoolVector2Array([
+		Vector2(cx, y + 33), Vector2(cx + 8, y + 45),
+		Vector2(cx, y + 57), Vector2(cx - 8, y + 45)]),
+		Color(0.62, 0.86, 0.92, 0.95))
+	draw_colored_polygon(PoolVector2Array([
+		Vector2(cx, y + 36), Vector2(cx + 4, y + 45),
+		Vector2(cx, y + 52), Vector2(cx - 4, y + 45)]),
+		Color(0.90, 0.99, 1.0, 0.85))
+	draw_polyline(PoolVector2Array([
+		Vector2(cx, y + 33), Vector2(cx + 8, y + 45),
+		Vector2(cx, y + 57), Vector2(cx - 8, y + 45),
+		Vector2(cx, y + 33)]), Color(0.84, 0.97, 1.0, 0.95), 1.5)
 
 	# 标题与血量。
 	draw_string(_title_font, Vector2(f.x + 84, y + 30), "魔瓶",
@@ -356,6 +367,27 @@ func _draw_bottle(f):
 		Color(0.78, 0.80, 0.76))
 
 	_draw_bottle_power(f)
+
+
+# 圆瓶身里的液体：截取圆的下半部分做一个“圆缺”多边形。
+func _bottle_liquid_polygon(center, radius, ratio):
+	var pts = PoolVector2Array()
+	ratio = clamp(ratio, 0.0, 1.0)
+	if ratio <= 0.001:
+		return pts
+	if ratio >= 0.999:
+		for i in range(24):
+			var a = 2.0 * PI * float(i) / 24.0
+			pts.append(center + Vector2(cos(a), sin(a)) * radius)
+		return pts
+	var level = center.y + radius - 2.0 * radius * ratio
+	var dy = clamp(level - center.y, -radius, radius)
+	var a1 = asin(dy / radius)
+	var steps = 18
+	for i in range(steps + 1):
+		var a = lerp(PI - a1, a1, float(i) / float(steps))
+		pts.append(center + Vector2(cos(a), sin(a)) * radius)
+	return pts
 
 
 # 瓶能槽：15 格小方块一行排开，左右读齐；满格时整条发亮，

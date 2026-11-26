@@ -77,7 +77,7 @@ margin_right = 334.0
 margin_bottom = 61.0
 custom_colors/font_color = Color( 0.95, 0.8, 0.5, 1 )
 custom_fonts/font = SubResource( 2 )
-text = "C A R D W O R K   C Y C L E"
+text = "M I R A C L E   S E E D"
 
 [node name="Title" type="Label" parent="Content"]
 margin_left = -143.0
@@ -89,7 +89,7 @@ custom_colors/font_color_shadow = Color( 0.1, 0.06, 0.04, 0.7 )
 custom_constants/shadow_offset_x = 2
 custom_constants/shadow_offset_y = 4
 custom_fonts/font = SubResource( 1 )
-text = "四季魔瓶"
+text = "奇迹之种"
 
 [node name="Ornament" type="HSeparator" parent="Content"]
 margin_left = -135.0

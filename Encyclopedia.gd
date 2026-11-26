@@ -11,7 +11,7 @@ const MILESTONES = [
 	# 手牌上限最多加 1 次（封顶 6，GS.HAND_CAP_MAX）；后续里程碑改发现实资源。
 	{"entries": 2, "type": "draw", "amount": 1, "text": "手牌上限 +1（回合结束最多留 6 张）"},
 	{"entries": 4, "type": "orb", "amount": 5, "text": "水晶球储水 +5"},
-	{"entries": 6, "type": "plots", "text": "获得 1 块开垦名额：可在任意空地自选 2×2 位置开垦（能量上限 +1）"},
+	{"entries": 6, "type": "plots", "text": "获得 1 块开垦名额：可在任意空地自选 1×2 位置开垦（能量上限 +1）"},
 	{"entries": 10, "type": "plots", "text": "又获得 1 块开垦名额（能量上限 +1）"},
 	# 物种扩到 15 个（45 条）之后，里程碑得排到后面还留有盼头，
 	# 但四块空地是上限，所以只再排两次开垦。

@@ -1,8 +1,9 @@
 extends TileMap
 
 # 初始农田只有中央 2x2 四格。图鉴里程碑发放"开垦名额"，
-# 玩家在任意一片泥地上自选 2×2 位置开垦（v1.8 改，旧的东南西北四块固定地仅作存档迁移用）。
-# 每开垦一块：农田 +2x2，同时手牌上限 +1、能量上限 +1，保证新田真的能种得过来。
+# 玩家在任意一片泥地上自选 1×2（两格）位置开垦；每次只扩两格，
+# 农田长得更细，不会一下子铺满半张地图（旧的东南西北四块固定地仅作存档迁移用）。
+# 每开垦一块：能量上限 +1，保证新田真的能种得过来。
 
 const GROUND_TILES = [1, 4, 5, 6]
 
@@ -38,8 +39,11 @@ const EDGE_DIRS = [
 
 var _edge_maps = []
 var claimed_plots = []
+# 左上角格子 → 这块 1×2 是竖着（默认）还是横着；旧档的 2×2 地块单列。
+var plot_horizontal = {}
+var legacy_2x2_plots = {}
 
-# 开垦模式的光标虚影：2×2 绿框可垦，红框不行。
+# 开垦模式的光标虚影：1×2 绿框可垦，红框不行。
 class PlotGhost extends Node2D:
 	var host
 
@@ -48,21 +52,26 @@ class PlotGhost extends Node2D:
 		update()
 
 	func _draw():
-		var ok = host.can_claim_plot(host._ghost_origin)
+		var ok = host.can_claim_plot(host._ghost_origin, host.plot_horizontal_pick)
 		var fill = Color(0.45, 0.85, 0.50, 0.32) if ok else Color(0.85, 0.35, 0.30, 0.26)
 		var edge = Color(0.60, 1.00, 0.65, 0.95) if ok else Color(1.00, 0.55, 0.50, 0.90)
-		var r = Rect2(host._ghost_origin * host.cell_size, host.cell_size * 2.0)
+		var size = host.plot_size(host.plot_horizontal_pick)
+		var r = Rect2(host._ghost_origin * host.cell_size, host.cell_size * size)
 		draw_rect(r, fill)
 		draw_rect(r, edge, false, 4.0)
 
 var plot_ghost = null
 var _ghost_origin = Vector2(-9999, -9999)
+# 当前放置方向：false = 竖 1×2，true = 横 2×1（滚轮切换）。
+var plot_horizontal_pick = false
 
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	GS.tilemap = self
 	claimed_plots = []
+	plot_horizontal = {}
+	legacy_2x2_plots = {}
 	# 防御：上一场可能带着未退出的开垦模式离场。
 	FarmChoiceUI.end_placement()
 	setup_farmland_tiles()
@@ -116,15 +125,26 @@ func count_plantable():
 
 # ---- v1.8 自由开垦 ----
 
-func plot_cells(origin):
+func plot_size(horizontal = false):
+	return Vector2(2, 1) if horizontal else Vector2(1, 2)
+
+
+func plot_cells(origin, horizontal = false):
+	if horizontal:
+		return [origin, origin + Vector2(1, 0)]
+	return [origin, origin + Vector2(0, 1)]
+
+
+# 旧存档（v1.8）里的地块是 2×2，迁移时仍按原样补回，不缩小玩家的田。
+func legacy_plot_cells(origin):
 	return [origin, origin + Vector2(1, 0), origin + Vector2(0, 1), origin + Vector2(1, 1)]
 
 
-# 2×2 全部是未开垦的泥地、且没有植物/虫子站上面，才算可选。
-func can_claim_plot(origin):
+# 1×2 全部是未开垦的泥地、且没有植物/虫子站上面，才算可选。
+func can_claim_plot(origin, horizontal = false):
 	if GS.farm_quota <= 0:
 		return false
-	for cell in plot_cells(origin):
+	for cell in plot_cells(origin, horizontal):
 		var id = get_cellv(cell)
 		if not (id in GROUND_TILES):
 			return false
@@ -135,21 +155,29 @@ func can_claim_plot(origin):
 	return true
 
 
-# 以 origin 为左上角开垦一块 2×2。返回 false 表示没有名额或位置不合法。
-func claim_plot(origin):
-	if not can_claim_plot(origin):
+# 以 origin 为左上角开垦一块 1×2。返回 false 表示没有名额或位置不合法。
+func claim_plot(origin, horizontal = false):
+	if not can_claim_plot(origin, horizontal):
 		return false
-	for cell in plot_cells(origin):
+	for cell in plot_cells(origin, horizontal):
 		set_cellv(cell, farmland_variant(cell))
 	claimed_plots.append(origin)
+	plot_horizontal[origin] = horizontal
 	GS.farm_quota -= 1
 	_apply_plot_bonuses()
 	rebuild_farm_edges()
 	SaveGame.save_now()
-	Toast.show_message("新垦一块 2×2 农田（剩余名额 %d）" % GS.farm_quota)
+	Toast.show_message("新垦一块 1×2 农田（剩余名额 %d）" % GS.farm_quota)
 	if GS.farm_quota <= 0:
 		FarmChoiceUI.end_placement()
 	return true
+
+
+# 存档用：0 = 竖 1×2，1 = 横 1×2，2 = v1.8 的旧 2×2。
+func plot_shape_for(origin):
+	if legacy_2x2_plots.has(origin):
+		return 2
+	return 1 if plot_horizontal.get(origin, false) else 0
 
 
 func _apply_plot_bonuses():
@@ -175,6 +203,7 @@ func claim_parcel(index):
 	for cell in PARCELS[index]["cells"]:
 		set_cellv(cell, farmland_variant(cell))
 	claimed_plots.append(origin)
+	legacy_2x2_plots[origin] = true
 	_apply_plot_bonuses()
 	rebuild_farm_edges()
 	SaveGame.save_now()
@@ -207,11 +236,14 @@ func _unhandled_input(event):
 	if not GS.farm_choice_open:
 		return
 	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == BUTTON_WHEEL_UP or event.button_index == BUTTON_WHEEL_DOWN:
+			plot_horizontal_pick = not plot_horizontal_pick
+			return
 		if event.button_index == BUTTON_LEFT:
 			var origin = world_to_map(get_global_mouse_position())
-			if not claim_plot(origin):
+			if not claim_plot(origin, plot_horizontal_pick):
 				if GS.farm_quota > 0:
-					Toast.show_message("这里不能开垦：需要四格连片的空地，且不能压住植物或虫子。")
+					Toast.show_message("这里不能开垦：需要两格连片的空地，且不能压住植物或虫子。")
 			elif GS.farm_quota <= 0:
 				FarmChoiceUI.end_placement()
 		elif event.button_index == BUTTON_RIGHT:

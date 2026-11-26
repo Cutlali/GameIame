@@ -63,6 +63,8 @@ func _idle(_delta):
 	_check(ending._photo.texture != null, "ending first photo loads")
 	_check(ending._caption_label.text.find("种子") >= 0, "ending first caption")
 	_check(ending._finish_label != null, "ending finish stamp")
+	_check(ending._finish_label.text.find("奇迹之种") >= 0, "ending stamp says miracle seed")
+	_check(ending._finish_label.text.find("四季魔瓶") < 0, "ending stamp drops four seasons bottle")
 	for i in range(ending.PANELS.size()):
 		_check(load(ending.PANELS[i]["path"]) != null, "ending panel %d loads" % i)
 	ending.queue_free()
@@ -108,11 +110,34 @@ func _idle(_delta):
 	_check(gs.has_final_seed_or_plant(), "plant alone blocks another seed")
 	_check(not gs.maybe_grant_final_seed(false), "no seed while final plant alive")
 
-	# 6. 成熟时进入结局而不是普通收获
+	# 6. 同一轮里先有一株普通植物成熟弹出收获窗，再让终局植物成熟：
+	# 结局开始时必须把收获/选牌窗收掉，直接进剧情。
+	var bottle = get_root().get_node("BottleManager")
+	var harvest = get_root().get_node("HarvestManager")
+	enc.reset_all()
+	var second = load("res://plants/winplant/WinPlant.tscn").instance()
+	second.species_id = "tomato"
+	get_root().add_child(second)
+	harvest.handle_harvest(second)
+	_check(gs.harvest_open, "control: normal harvest opens the popup")
+	_check(gs.waiting_for_card_selection, "control: normal harvest waits for a choice")
+	bottle.charges.clear()
+	bottle.charges.append("basic")
+	bottle.charges.append("high")
 	gs.ending_started = false
 	plant.popup_menu()
 	_check(gs.ending_started, "maturity starts ending")
 	_check(scene_trans.next == gs.Ending, "transition targets ending scene")
+
+	# 6b. 结局开始后：收获窗关闭、蓄能清空，后续成熟也不再弹选牌。
+	_check(not gs.harvest_open, "harvest UI closed on ending")
+	_check(not gs.waiting_for_card_selection, "card pick cancelled on ending")
+	_check(bottle.charges.empty(), "bottle charges cleared on ending")
+	harvest.handle_harvest(second)
+	_check(not gs.harvest_open, "no harvest UI during ending")
+	_check(not gs.waiting_for_card_selection, "no card pick during ending")
+	_check(not bottle.is_busy(), "bottle stays idle during ending")
+	second.queue_free()
 
 	# 收尾，避免测试场景真的切走
 	scene_trans.get_node("AnimationPlayer").stop(true)

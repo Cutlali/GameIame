@@ -1,9 +1,9 @@
 extends SceneTree
 
-# 开发工具：v1.8 名额制自由开垦流程测试。
-# 初始 4 格 -> 名额1 -> 放置模式自选北侧 2×2（8 格）
-#          -> 名额2 -> 自选东侧 2×2（12 格）-> 旧接口 claim_parcel 兼容（16 格）。
-# 每次开垦：手牌上限（bonus_draws）+1、能量上限 +1；名额耗尽自动退出放置模式。
+# 开发工具：名额制自由开垦流程测试。
+# 初始 4 格 -> 名额1 -> 放置模式自选北侧 1×2（6 格）
+#          -> 名额2 -> 自选东侧 1×2（8 格）-> 旧接口 claim_parcel 兼容（12 格）。
+# 每次开垦：能量上限 +1；名额耗尽自动退出放置模式。
 
 const OUT_DIR = "D:/Godot/"
 
@@ -68,7 +68,8 @@ func _idle(_delta):
 			# 位置校验：北侧草地可垦；中央已耕不可垦；压住初始田不可垦。
 			_check("north claimable", tilemap.can_claim_plot(Vector2(-2, -5)), true)
 			_check("center not claimable", tilemap.can_claim_plot(Vector2(-2, -3)), false)
-			_check("overlap not claimable", tilemap.can_claim_plot(Vector2(-3, -4)), false)
+			_check("overlap not claimable", tilemap.can_claim_plot(Vector2(-1, -3), true), false)
+			_check("horizontal claimable", tilemap.can_claim_plot(Vector2(-3, -5), true), true)
 			# 非法点击不动数据。
 			var before_draws = gs.bonus_draws
 			_check("bad claim rejected", tilemap.claim_plot(Vector2(-2, -3)), false)
@@ -76,7 +77,7 @@ func _idle(_delta):
 			_check("bad claim kept draws", gs.bonus_draws, before_draws)
 			# 合法：开垦北侧。
 			_check("north claim ok", tilemap.claim_plot(Vector2(-2, -5)), true)
-			_check("after north plantable", tilemap.count_plantable(), 8)
+			_check("after north plantable", tilemap.count_plantable(), 6)
 			_check("after north keeps draws", gs.bonus_draws, 0)
 			_check("after north energy max", gs.energy_max, 4)
 			_check("quota spent", gs.farm_quota, 0)
@@ -89,12 +90,12 @@ func _idle(_delta):
 			ui.start_placement()
 			_check("second placement on", gs.farm_choice_open, true)
 			_check("east claim ok", tilemap.claim_plot(Vector2(0, -3)), true)
-			_check("after east plantable", tilemap.count_plantable(), 12)
+			_check("after east plantable", tilemap.count_plantable(), 8)
 			_check("after east keeps draws", gs.bonus_draws, 0)
 			_check("after east energy max", gs.energy_max, 5)
 			# 旧接口（存档迁移/测试用）：不占名额，也能垦。
 			_check("legacy claim_parcel ok", tilemap.claim_parcel(3), true)
-			_check("after legacy plantable", tilemap.count_plantable(), 16)
+			_check("after legacy plantable", tilemap.count_plantable(), 12)
 			_check("after legacy keeps draws", gs.bonus_draws, 0)
 			_check("after legacy energy max", gs.energy_max, 6)
 			_check("legacy kept quota", gs.farm_quota, 0)

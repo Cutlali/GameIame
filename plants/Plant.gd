@@ -190,6 +190,8 @@ func _update_final_glow(delta):
 
 
 func take_turn():
+	if GS.ending_started:
+		return
 	var anim = $AnimationPlayer
 	
 	anim.queue("Delay")
@@ -291,6 +293,9 @@ func water_plant():
 	set_water(water - 1)
 	
 func popup_menu():
+	# 结局已开始：同一轮里晚成熟的植物不再弹出收获/选牌。
+	if GS.ending_started:
+		return
 	if is_final_plant:
 		GS.start_ending()
 		return

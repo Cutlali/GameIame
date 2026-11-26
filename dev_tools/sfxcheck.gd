@@ -87,6 +87,16 @@ func _init():
 			problems.append("release_power still borrowing mutation")
 		f.close()
 
+	# 捕虫网（敲晕虫子一回合）沿用「重击！」的命中声。
+	if f.open("res://cards/HandCard.gd", File.READ) == OK:
+		var hc = f.get_as_text()
+		var net_idx = hc.find("b.action == GS.Action.NET")
+		if net_idx < 0:
+			problems.append("HandCard has no NET sfx branch")
+		elif hc.substr(net_idx, 180).find("SFX.attack_single.play_sfx()") < 0:
+			problems.append("NET card should use attack_single sfx")
+		f.close()
+
 	if problems.empty():
 		print("SFX CHECK OK")
 	else:

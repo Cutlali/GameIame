@@ -2,7 +2,7 @@ extends CanvasLayer
 
 # v1.8 开垦名额制：图鉴里程碑只负责发名额，不再弹"选方位"窗口。
 # 有名额时右下角出现"开垦农田"按钮，点击进入放置模式：
-# 光标处有 2×2 虚影（绿=可垦，红=不行），左键落铲、右键或 Esc 退出。
+# 光标处有 1×2 虚影（绿=可垦，红=不行），滚轮切换横竖，左键落铲、右键或 Esc 退出。
 # 地块合法性与铺砖在 TheTileMap（claim_plot），这里只管按钮与提示。
 
 var _root: Control
@@ -77,7 +77,7 @@ func _process(_delta):
 
 	_hint.visible = GS.farm_choice_open
 	if GS.farm_choice_open:
-		_hint.text = "开垦模式：左键在光标处落 2×2（绿框可垦）· 右键 / Esc 退出 · 剩余名额 %d" \
+		_hint.text = "开垦模式：左键落 1×2（绿框可垦）· 滚轮切换横竖 · 右键 / Esc 退出 · 剩余名额 %d" \
 			% GS.farm_quota
 
 
