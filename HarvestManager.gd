@@ -173,9 +173,6 @@ func _show_photo(entry):
 	_photo.texture = GameData.photo_for(entry["species_id"])
 	_photo.modulate = Color.white
 
-	# v1.8：收获反馈音——普通作物随机四选一，变异作物专属一声。
-	SFX.rand_harvest(entry["is_variant"])
-
 	var gold = Color(0.72, 0.68, 0.46, 0.9)
 	var border = gold
 	if entry["is_variant"]:
@@ -242,6 +239,10 @@ func handle_harvest(plant):
 	var entry = GameData.entry(entry_id)
 
 	RunStats.harvests += 1
+
+	# 每次收获都要有声音：普通作物随机一声，变异作物固定用专属声。
+	# 之前只在首次收录弹窗里播放，重复收获就静音了。
+	SFX.rand_harvest(entry != null and entry["is_variant"])
 
 	# 瓶能：种活一株 +1，收下一株变异 +3。攒满 15 点后由玩家点击魔瓶释放：
 	# 固定给全场植物各浇 1 滴水，田里有虫时一并砸出伤害。

@@ -55,10 +55,10 @@ func _ready():
 		_bob_seed = rand_range(0.0, 64.0)
 	elif is_giant:
 		scale = Vector2(1.18, 1.18)
-		# 巨虫与普通虫共用 64x64 画布，靠画得更满（约 54x28）显出体型，
-		# 所以不用再缩放，只调颜色与属性。
-		bite_damage += 2
-		armor = 2 + int(year_bonus / 2)
+		# 大虫子：固定 10 点血，一口 2 点伤害；不带护甲，
+		# 血量就是实打实的 10 点。
+		bite_damage = 2
+		armor = 0
 		base_modulate = Color(0.72, 0.55, 0.86)
 		$Sprite.texture = load("res://bugs/bug_giant.png")
 	elif is_elite:
@@ -301,6 +301,7 @@ func _landing_cell(plant):
 	return plant.position + Vector2(128, 0)
 
 func bite_bottle():
+	SFX.rand_bug_bite()
 	$AnimationPlayer.play("Attack")
 	# 直接啃瓶的伤害增长得慢一些，避免高年份一轮碎瓶。
 	var year_bonus = 0
@@ -320,6 +321,7 @@ func attack(plant):
 	if not is_instance_valid(plant):
 		return
 	
+	SFX.rand_bug_bite()
 	$AnimationPlayer.play("Attack")
 	current_plant_target = plant
 	

@@ -148,7 +148,47 @@ func _process(delta):
 		spawn_sfx_timer -= delta
 		if spawn_sfx_timer <= 0:
 			SFX.rand_seeds()
-	
+
+	if is_final_plant:
+		_update_final_glow(delta)
+
+
+# 终局植物的呼吸式光晕：随生长阶段变大变亮，并轻微明暗起伏。
+var _glow_time = 0.0
+
+func _update_final_glow(delta):
+	_glow_time += delta
+	var aura = get_node_or_null("Aura")
+	if aura == null:
+		return
+	var spark = get_node_or_null("Sparkles")
+
+	# 枯死动画会把植株本体渐隐，光晕和星尘这时候也该一起收掉，
+	# 不然会出现“植物没了光还在”的怪画面。
+	if $Plant.modulate.a < 0.99 or not $Plant.visible:
+		aura.visible = false
+		if spark != null:
+			spark.emitting = false
+		return
+	aura.visible = true
+
+	var max_frame = float(max(1, max_growth_frame()))
+	var lvl = clamp(float($Plant.frame) / max_frame, 0.0, 1.0)
+	var pulse = 0.5 + 0.5 * sin(_glow_time * 1.7)
+
+	# 种子刚种下时光晕小而暗，成熟后铺开、变亮。
+	var w = lerp(0.55, 1.05, lvl) * (0.96 + 0.06 * pulse)
+	var h = lerp(0.75, 1.45, lvl) * (0.96 + 0.06 * pulse)
+	aura.scale = Vector2(w, h)
+	aura.modulate.a = lerp(0.32, 0.62, lvl) + 0.06 * pulse
+	aura.position.y = lerp(56.0, 50.0, lvl)
+
+	if spark != null:
+		spark.emitting = true
+		spark.emission_sphere_radius = lerp(16.0, 42.0, lvl)
+		spark.position.y = lerp(54.0, 50.0, lvl)
+
+
 func take_turn():
 	var anim = $AnimationPlayer
 	

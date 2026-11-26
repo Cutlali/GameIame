@@ -61,6 +61,8 @@ var _decor = []
 var _edge_maps = []
 var _cache = {}
 var _switching = false
+# 转场代次：结局强制掐断换季动画时 +1，让旧的协程在下一个 yield 后自行退出。
+var _transition_token = 0
 
 var _fade_layer: CanvasLayer
 var _fade_rect: ColorRect
@@ -193,11 +195,11 @@ func bottle_can_refresh():
 func threat_text_for_year(y):
 	match y:
 		2:
-			return "明年的新威胁：虫子开始结伴出现，还有飞虫隔着半块田扑向最渴的那株。蜂群可以一次清理一片。"
+			return "明年的新威胁：虫子开始结伴出现，每波至少两只，大虫子也会混进虫群。"
 		3:
-			return "明年的新威胁：瓶虱会直接啃咬魔瓶。瓶血不会恢复也修不回来——看住你的植物。"
+			return "明年的新威胁：每一轮都会有虫子爬出来，而且至少两只。"
 		4:
-			return "明年的新威胁：精英虫登场，外壳更硬、咬得更重。护盾与反伤能救场。"
+			return "明年的新威胁：虫群已经在瓶底扎根，每一轮都不会安静。"
 		_:
 			if y > 4:
 				return "明年的新威胁：四季的侵蚀仍在加深，虫群会越来越难缠。"
@@ -396,8 +398,11 @@ func change_season(index, animate = true, reset_rounds = true):
 
 	# 淡入黑场 -> 换纹理 -> 显示季节名 -> 淡出
 	# 转场音从黑幕开始响，切完季节名就截停（时长不重要）。
+	var token = _transition_token
 	SFX.play_season_transition(index)
 	yield(_fade_to(1.0, FADE_IN_TIME), "completed")
+	if token != _transition_token:
+		return
 
 	current_index = index
 	current_season = SEASONS[index]
@@ -408,13 +413,34 @@ func change_season(index, animate = true, reset_rounds = true):
 
 	_show_season_name()
 	yield(get_tree().create_timer(HOLD_ON_BLACK), "timeout")
+	if token != _transition_token:
+		return
 
 	yield(_fade_to(0.0, FADE_OUT_TIME), "completed")
+	if token != _transition_token:
+		return
 	yield(get_tree().create_timer(0.7), "timeout")
+	if token != _transition_token:
+		return
 	_hide_season_name()
 
 	SFX.stop_season_sfxs()
 	_switching = false
+
+
+# 结局等需要立刻接管画面的场合：清掉黑幕、季节名和未完成的换季协程。
+func abort_transition():
+	_transition_token += 1
+	_switching = false
+	if _label_tween != null and is_instance_valid(_label_tween):
+		_label_tween.stop_all()
+		_label_tween.queue_free()
+		_label_tween = null
+	if _fade_rect != null:
+		_fade_rect.color = Color(0, 0, 0, 0)
+	if _season_label != null:
+		_season_label.modulate.a = 0.0
+	SFX.stop_season_sfxs()
 
 
 # 每次发出一手新牌时调用一次（即进入新的一轮）。

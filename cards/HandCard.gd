@@ -123,6 +123,27 @@ func _play_card_sfx():
 	if b == GS.card_water2_2x2:
 		SFX.water_hose.play_sfx()
 		return
+	if b.action == GS.Action.WATER:
+		# 其余浇水牌按费用分档：0 费水滴、1 费浸润/倾注、2 费以上随机档。
+		SFX.play_water_card(b.cost)
+		return
+	if b.action == GS.Action.DRAIN_WATER_DMG_RNG or b.action == GS.Action.DRAIN_WATER_DMG_ALL:
+		# 以水为代价的攻击：0 费用轻档，1 费及以上用重档。
+		if b.cost <= 0:
+			SFX.attack_water_low.play_sfx()
+		else:
+			SFX.attack_water_high.play_sfx()
+		return
+	if b.action == GS.Action.SACRIF:
+		# 以植物生命为代价的攻击：低费与多费分开。
+		if b.cost <= 1:
+			SFX.attack_blood_low.play_sfx()
+		else:
+			SFX.attack_blood_high.play_sfx()
+		return
+	if b.action == GS.Action.ATTACK_ALL:
+		SFX.swarm_attack.play_sfx()
+		return
 	if b.action == GS.Action.HEAL_DMG_NEAR:
 		# 吸血獠牙（低费）与吸血斩（高费）分档。
 		if b.cost <= 1:

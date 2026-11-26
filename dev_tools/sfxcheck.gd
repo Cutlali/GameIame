@@ -21,15 +21,19 @@ func _init():
 		"BottleHurt": true, "BottlePower": true, "BottleShatter": true,
 		"SeasonSpring": true, "SeasonSummer": true,
 		"SeasonAutumn": true, "SeasonWinter": true,
+		"BugBite1": true, "BugBite2": true, "BugBite3": true, "BugBite4": true,
+		"AttackWaterLow": true, "AttackWaterHigh": true,
+		"AttackBloodLow": true, "AttackBloodHigh": true, "SwarmAttack": true,
+		"WaterFree": true, "WaterCost1": true, "WaterRandom": true,
 	}
 	for n in sfx.get_children():
 		if n is AudioStreamPlayer and n.stream == null:
 			problems.append("SFX node with null stream: " + n.name)
-		# Godot3 ogg 导入默认 loop=true，SFX._ready 必须把它们全关掉，
+		# Godot3 ogg/mp3 导入默认 loop=true，SFX._ready 必须把它们全关掉，
 		# 否则一次点击无限重播（2026-11-25 试玩的"反复播放"根因）。
-		elif n is AudioStreamPlayer and n.stream is AudioStreamOGGVorbis \
-				and n.stream.loop:
-			problems.append("ogg stream still looping: " + n.name)
+		elif n is AudioStreamPlayer and (n.stream is AudioStreamOGGVorbis
+				or n.stream is AudioStreamMP3) and n.stream.loop:
+			problems.append("stream still looping: " + n.name)
 	for name in expect_players.keys():
 		var p = sfx.get_node_or_null(name)
 		if p == null:
@@ -37,11 +41,17 @@ func _init():
 		elif p.stream == null:
 			problems.append("null stream: " + name)
 
-	if sfx.get_child_count() != 43:
-		problems.append("SFX children %d != 43" % sfx.get_child_count())
+	if sfx.get_child_count() != 55:
+		problems.append("SFX children %d != 55" % sfx.get_child_count())
 
 	if not sfx.has_method("rand_harvest"):
 		problems.append("SFX.rand_harvest missing")
+	if not sfx.has_method("rand_bug_bite"):
+		problems.append("SFX.rand_bug_bite missing")
+	if sfx.has_method("play_bug_spawn"):
+		problems.append("SFX.play_bug_spawn should be removed")
+	if not sfx.has_method("play_water_card"):
+		problems.append("SFX.play_water_card missing")
 	if not sfx.has_method("play_season_transition"):
 		problems.append("SFX.play_season_transition missing")
 	if not music.has_method("set_mode"):

@@ -318,7 +318,7 @@ var card_drain1_dmg3 : Card = Card.new(
 	"从一株植物吸取 1 点水分，并对随机敌人造成 $DQ 点伤害",
 	0,
 	Action.DRAIN_WATER_DMG_RNG
-).with_quantity(3).with_drain(1).with_cat(CAT_WATER).with_icon(preload("res://cards/icons/water_dagger.svg"))
+).with_quantity(4).with_drain(1).with_cat(CAT_WATER).with_icon(preload("res://cards/icons/water_dagger.svg"))
 
 var card_water2_1x1 : Card = Card.new(
 	"倾注",
@@ -355,7 +355,7 @@ var card_drain3_rng5 : Card = Card.new(
 	"从一株植物吸取 1 点水分，并对随机敌人造成 $DQ 点伤害",
 	1,
 	Action.DRAIN_WATER_DMG_RNG
-).with_drain(1).with_quantity(4).with_cat(CAT_WATER).with_icon(preload("res://cards/icons/water_blast.svg"))
+).with_drain(1).with_quantity(6).with_cat(CAT_WATER).with_icon(preload("res://cards/icons/water_blast.svg"))
 
 # High water cards
 
@@ -371,7 +371,7 @@ var card_drain7_dmgall5 : Card = Card.new(
 	"从一株植物吸取 4 点水分，并对所有敌人造成 $DQ 点伤害",
 	4,
 	Action.DRAIN_WATER_DMG_ALL
-).with_quantity(5).with_drain(4).with_cat(CAT_WATER).with_icon(preload("res://cards/icons/tsunami.svg"))
+).with_quantity(6).with_drain(4).with_cat(CAT_WATER).with_icon(preload("res://cards/icons/tsunami.svg"))
 
 var card_drain3_dmgall1 : Card = Card.new(
 	"溢流",
@@ -394,7 +394,7 @@ var card_heal1_dmg1 : Card = Card.new(
 	"为一株植物恢复 1 点生命，并对最近的敌人造成 $DQ 点伤害",
 	1,
 	Action.HEAL_DMG_NEAR
-).with_quantity(1).with_drain(1).with_cat(CAT_DEF).with_icon(preload("res://cards/icons/vampire_fang.svg")) # Drain is healing for this
+).with_quantity(2).with_drain(1).with_cat(CAT_DEF).with_icon(preload("res://cards/icons/vampire_fang.svg")) # Drain is healing for this
 
 var card_def2_dmg1 : Card = Card.new(
 	"尖刺盾",
@@ -456,7 +456,7 @@ var card_sacrif1_1enem : Card = Card.new(
 	"消耗 1 点植物生命，并对生命值最低的敌人造成 $DQ 点伤害",
 	1,
 	Action.SACRIF
-).with_quantity(5).with_drain(1).with_mult(1).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/blood_dagger.svg"))
+).with_quantity(6).with_drain(1).with_mult(1).with_cat(CAT_ATK).with_icon(preload("res://cards/icons/blood_dagger.svg"))
 
 # Medium attack cards
 
@@ -697,6 +697,7 @@ func build_card_registry():
 # 第二轮新卡的专属像素图标。素材由 .promo 脚本生成，
 # 文件还没到位时退回上面挂的通用图标，保证游戏不会因为缺图崩掉。
 const SPECIAL_ICONS = {
+	"final_seed": "res://cards/icons/final_seed.png",
 	"wheat_seed": "res://cards/icons/wheat_seeds.png",
 	"mint_seed": "res://cards/icons/mint_seeds.png",
 	"flax_seed": "res://cards/icons/flax_seeds.png",
@@ -1092,8 +1093,6 @@ var spawn_configs = [
 ]
 
 var next_spawn = 0
-# 第一次遇到巨虫时给一句解释，之后不再啰嗦。
-var giants_seen = false
 
 func _spawn_bug_at(pos, item):
 	if get_object_at_map_lcoord(pos) != null:
@@ -1105,9 +1104,11 @@ func _spawn_bug_at(pos, item):
 	if item == SpawnOpt.Bug2:
 		bug.health = 2
 	elif item == SpawnOpt.Bug3:
-		bug.health = 3
+		# 蚜虫：第 1 年 3 点，第 2 年起 4 点。
+		bug.health = 3 if year <= 1 else 4
 	elif item == SpawnOpt.Bug5:
-		bug.health = 5
+		# 瓢虫：第 1 年 5 点，第 2 年起 6 点。
+		bug.health = 5 if year <= 1 else 6
 	elif item == SpawnOpt.Bug9:
 		bug.health = 9
 	elif item == SpawnOpt.BottleBiter:
@@ -1126,77 +1127,58 @@ func _spawn_bug_at(pos, item):
 			flyers_seen = true
 			Toast.show_message("一只飞虫贴着瓶壁盘旋：它不守原地，哪株最渴扑向哪株。")
 	elif item == SpawnOpt.Giant:
-		# 巨虫：大波次的压场角色。自带年份成长，动作慢但咬得狠。
-		bug.health = 10 + 2 * max(0, year - 2)
+		# 大虫子：固定 10 点血，一口 2 点伤害；靠血厚和隔回合出手压场。
+		bug.health = 10
 		bug.is_giant = true
-		if not giants_seen:
-			giants_seen = true
-			Toast.show_message("一只巨虫挤进了瓶底：壳厚血多，得攒够单体伤害才打得动。")
-	if item != SpawnOpt.Giant and item != SpawnOpt.Fly:
-		# 年度成长：从第 2 年起把普通虫的最低血量抬到 3+年份
-		# （2 年 5 滴、3 年 6 滴、4 年 7 滴……），
-		# 一张砰！再也顺手带不掉一只虫，蜂群这类全场伤害也不再万能。
-		var hp_floor = 2 if year <= 1 else 3 + year
-		bug.health = max(bug.health + max(0, year - 1), hp_floor)
 	tilemap.add_child(bug)
 	return true
 
 func build_spawn_config():
-	# 年度压力：虫子数量逐年增加，第 3 年出现瓶虱、第 4 年出现精英虫。
+	# 2026-11 虫群曲线：
+	#   第 1 年：蚜虫(3) / 瓢虫(5)；春 1-2 只，夏 1-2 只，秋冬各 2 只。
+	#   第 2 年：蚜虫(4) / 瓢虫(6) / 大虫子(10, 一口 2)；每波至少 2 只。
+	#   第 3 年起：数值维持第 2 年，改为每轮都会刷，至少 2 只。
 	var year = Season.year
-	var cfg = spawn_configs[next_spawn].duplicate()
-	if Season.is_summer():
-		cfg.append(SpawnOpt.Bug3)
-	if year >= 2:
-		cfg.append(SpawnOpt.Bug2)
-		# 飞虫从第 2 年起登场，第 4 年起可能成双。
-		if randf() < 0.55:
-			cfg.append(SpawnOpt.Fly)
-		if year >= 4 and randf() < 0.35:
-			cfg.append(SpawnOpt.Fly)
-	if year >= 3:
-		cfg.append(SpawnOpt.Bug3)
-	if year >= 4:
-		cfg.append(SpawnOpt.Bug5)
-	if year >= 5:
-		cfg.append(SpawnOpt.Bug3)
-	if year >= 3 and randf() < 0.45:
-		cfg.append(SpawnOpt.BottleBiter)
-	if year >= 4 and randf() < 0.40:
-		cfg.append(SpawnOpt.Elite)
-	# 大波次必带一只巨虫：基础配置就有 3 只以上、且年份到第 2 年之后，
-	# 虫群里一定压着一只血厚壳硬的，单体攻击牌终于有值得打的靶子。
-	# 放在队首，避免被虫群上限挤掉。
-	if year >= 2 and spawn_configs[next_spawn].size() >= 3:
-		cfg.push_front(SpawnOpt.Giant)
+	var count = 1
+	if year <= 1:
+		if Season.is_autumn() or Season.is_winter():
+			count = 2
+		else:
+			count = 1 + (1 if randf() < 0.5 else 0)
+	else:
+		count = 2 + (1 if randf() < 0.30 else 0)
+
+	var cfg = []
+	for i in range(count):
+		cfg.append(SpawnOpt.Bug3 if randf() < 0.5 else SpawnOpt.Bug5)
+
+	# 大虫子混进虫群时替换一只普通虫，不额外膨胀波次。
+	if year >= 2 and randf() < 0.30:
+		cfg[0] = SpawnOpt.Giant
 	return cfg
 
 func spawn_enemies():
 	var year = Season.year
 	var cfg = build_spawn_config()
 
-	# TODO: Keep using "difficult" configs
 	next_spawn += 1
-	if next_spawn >= spawn_configs.size():
-		next_spawn = 11 - 2 # Allow some easy
 
 	# Enemies are spawned near plants
 	var plants = get_tree().get_nodes_in_group("Plant")
 
 	# Can't spawn if there are no plants, also wil cause div by zero
 	if plants.size() == 0:
-		return
+		return 0
 
 	var count_enemys = get_tree().get_nodes_in_group("Enemy").size()
 	var summer = Season.is_summer()
 	# 场上虫子越多，年份越往后，能容纳的虫群上限也越高。
 	var enemy_cap = (7 if summer else 6) + max(0, year - 1)
 
-	# Three times
+	var spawned = 0
 	for item in cfg:
-		# 夏季虫害更多：上限提高，且配置额外补一只
 		if count_enemys >= enemy_cap:
-			return
+			break
 
 		# Try 100 times to spawn an enemy
 		for attempt in range(0, 100):
@@ -1207,17 +1189,50 @@ func spawn_enemies():
 
 			if _spawn_bug_at(pos, item):
 				count_enemys += 1
-
-				# 第 2 年起，普通虫会叫来一只贴身的同伴。
-				if year >= 2 and item == SpawnOpt.Bug2 and count_enemys < enemy_cap and randf() < 0.45:
-					var dirs = [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1)]
-					dirs.shuffle()
-					for d in dirs:
-						if _spawn_bug_at(pos + d * 128, SpawnOpt.Bug2):
-							count_enemys += 1
-							break
+				spawned += 1
 				break
-	
+
+	return spawned
+
+
+# ---- 刷怪轮次表 ----
+# 第 1 年：春 2 轮、夏 4 轮、秋 1 轮、冬 1 轮（随机选轮）。
+# 第 2 年：秋冬各加 1 轮（春 2 / 夏 4 / 秋 2 / 冬 2）。
+# 第 3 年起：每轮都刷。
+var _spawn_plan = []
+var _spawn_plan_key = ""
+
+func _spawn_plan_for(year, season_index):
+	var key = "%d-%d" % [year, season_index]
+	if key == _spawn_plan_key:
+		return _spawn_plan
+
+	var rounds = []
+	if year >= 3:
+		for r in range(1, 7):
+			rounds.append(r)
+	else:
+		var n = 2
+		if season_index == 1:
+			n = 4
+		elif season_index >= 2:
+			n = 1
+		if year >= 2 and season_index >= 2:
+			n += 1
+		var pool = [1, 2, 3, 4, 5, 6]
+		pool.shuffle()
+		for i in range(n):
+			rounds.append(pool[i])
+		rounds.sort()
+
+	_spawn_plan = rounds
+	_spawn_plan_key = key
+	return rounds
+
+
+func should_spawn_this_round():
+	return Season.rounds_in_season in _spawn_plan_for(Season.year, Season.current_index)
+
 func end_turn():
 	# Must be in PLAYING_CARDS or WAITING_FOR_TUTORIAL state
 	if turn_state != TurnState.PLAYING_CARDS or shatter_open:
@@ -1246,11 +1261,8 @@ func _finish_end_turn():
 	# 手牌保留，不再整手清掉；留在手上的牌继续占手牌位。
 	current_picked_up_card = null
 	
-	# 空场时很快来虫；场上有虫时也会周期性增援，年份越高间隔越短。
-	var year = Season.year
-	var spawn_gap = 2 if Season.is_summer() else 3
-	var active_gap = max(3, 5 - int((year - 1) / 2))
-	if no_enemy_turns >= spawn_gap or some_enemy_turns >= active_gap:
+	# 按本季的刷怪轮次表出虫：第 1 年稀疏，第 3 年起每轮都有。
+	if should_spawn_this_round():
 		spawn_enemies()
 		no_enemy_turns = 0
 		some_enemy_turns = 0
@@ -1286,11 +1298,11 @@ var discard_pile = []
 
 var camera = null
 
-# 调试一键集齐（F9）：只在编辑器进程或带 --devmode 启动时生效，
+# 调试一键集齐（F9）：编辑器里直接运行，或带 --devmode 启动时生效；
 # 正式导出的网页版不响应。收满图鉴后，下一次发牌魔瓶照规则
 # 送出"最后的种子"，可以直接走到结局。
 func _unhandled_input(event):
-	if not (Engine.editor_hint or OS.get_cmdline_args().has("--devmode")):
+	if not (OS.has_feature("editor") or OS.get_cmdline_args().has("--devmode")):
 		return
 	if event is InputEventKey and event.pressed and not event.echo \
 			and event.scancode == KEY_F9:
@@ -1395,11 +1407,22 @@ func start_ending():
 		EncyclopediaUI.close()
 	if has_node("/root/YearSummary"):
 		YearSummary.reset_all()
+	# 如果这一轮正好撞上换季/年终的黑场动画，先把它掐断，
+	# 否则黑幕和季节名会盖在结局分镜上。
+	if has_node("/root/Season"):
+		Season.abort_transition()
 	waiting_for_card_selection = false
 	harvest_open = false
 	bottle_open = false
 	bestiary_open = false
 	year_summary_open = false
+	# 结局会卸载农场场景。回合协程和待发手牌都绑定在即将被释放的节点上，
+	# 必须先切断，否则 _physics_process 会在场景切换后继续 resume 它们，
+	# 触发 "Attempted method call on a deleted object"。
+	current_turns = null
+	current_obj = null
+	pending_new_hand = false
+	turn_state = TurnState.UNDEFINED
 	var sv = get_node_or_null("/root/SaveGame")
 	if sv != null:
 		sv.save_now()
@@ -1535,6 +1558,10 @@ func restart_after_shatter():
 
 		
 func _physics_process(delta):
+	# 进入结局后农场场景已卸载，任何回合/发牌流程都不应再推进。
+	if ending_started:
+		return
+
 	# 等魔瓶把本轮积攒的抽取全部结算完，再发下一轮手牌。
 	if pending_new_hand:
 		if has_node("/root/BottleManager") and BottleManager.is_busy():

@@ -115,105 +115,118 @@ func _check_year_gate():
 func _check_spawn_config():
 	var old_year = season.year
 	var old_season = season.current_season
-	var old_spawn = gs.next_spawn
 
-	# 春天、第 1 年：配置里只有基础虫子。
-	season.current_season = "spring"
+	# 第 1 年：春/夏 1-2 只，秋/冬 2 只；只有蚜虫(3)与瓢虫(5)。
 	season.year = 1
-	gs.next_spawn = 0
-	var base = gs.build_spawn_config()
-	if base.size() != 1:
-		failures.append("year 1 wave size should stay 1, got %d" % base.size())
+	for s in ["spring", "summer"]:
+		season.current_season = s
+		for i in range(20):
+			var cfg = gs.build_spawn_config()
+			if cfg.size() < 1 or cfg.size() > 2:
+				failures.append("year1 %s wave size %d not in 1..2" % [s, cfg.size()])
+				break
+			for item in cfg:
+				if item != gs.SpawnOpt.Bug3 and item != gs.SpawnOpt.Bug5:
+					failures.append("year1 %s leaked advanced bug" % s)
+	for s in ["autumn", "winter"]:
+		season.current_season = s
+		for i in range(10):
+			if gs.build_spawn_config().size() != 2:
+				failures.append("year1 %s wave should be exactly 2" % s)
+				break
 
-	# 第 2 年：每波额外多一只虫。
+	# 第 2 年：每波至少 2 只，大虫子会混进来。
 	season.year = 2
-	var y2 = gs.build_spawn_config()
-	if y2.size() != base.size() + 1:
-		failures.append("year 2 should add a partner bug")
+	var giants = 0
+	for s in ["spring", "summer", "autumn", "winter"]:
+		season.current_season = s
+		for i in range(40):
+			var cfg2 = gs.build_spawn_config()
+			if cfg2.size() < 2:
+				failures.append("year2 %s wave size %d < 2" % [s, cfg2.size()])
+				break
+			for item in cfg2:
+				if item == gs.SpawnOpt.Giant:
+					giants += 1
+	if giants == 0:
+		failures.append("year2 never offered a giant")
 
-	# 第 3 / 4 年：有概率混入瓶虱、精英虫。
-	season.year = 3
-	var biters = 0
-	for i in range(60):
-		if gs.build_spawn_config().find(gs.SpawnOpt.BottleBiter) >= 0:
-			biters += 1
-	if biters == 0:
-		failures.append("year 3 never offered a bottle biter")
+	# 刷怪轮次表：春 2 / 夏 4 / 秋 1 / 冬 1，第 2 年秋冬各 +1，第 3 年每轮。
+	var p1 = gs._spawn_plan_for(1, 0)
+	if p1.size() != 2:
+		failures.append("year1 spring plan %d != 2" % p1.size())
+	var p2 = gs._spawn_plan_for(1, 1)
+	if p2.size() != 4:
+		failures.append("year1 summer plan %d != 4" % p2.size())
+	if gs._spawn_plan_for(1, 2).size() != 1:
+		failures.append("year1 autumn plan should be 1")
+	if gs._spawn_plan_for(1, 3).size() != 1:
+		failures.append("year1 winter plan should be 1")
+	if gs._spawn_plan_for(2, 2).size() != 2:
+		failures.append("year2 autumn plan should be 2")
+	if gs._spawn_plan_for(2, 3).size() != 2:
+		failures.append("year2 winter plan should be 2")
+	if gs._spawn_plan_for(3, 0).size() != 6:
+		failures.append("year3 spring plan should be every round")
 
-	season.year = 4
-	var elites = 0
-	for i in range(60):
-		if gs.build_spawn_config().find(gs.SpawnOpt.Elite) >= 0:
-			elites += 1
-	if elites == 0:
-		failures.append("year 4 never offered an elite")
-
-	gs.next_spawn = old_spawn
 	season.year = old_year
 	season.current_season = old_season
-	print("spawn config: year pressure checked (biters=%d elites=%d)" % [biters, elites])
+	print("spawn config: year1/2/3 curve checked (giants seen=%d)" % giants)
 
 
 func _check_bug_kinds():
-	# 精英虫：6 血、1 点护甲、咬 2 点。
-	var elite = load("res://bugs/Bug.tscn").instance()
-	elite.is_elite = true
-	elite.health = 6
-	game.get_node("TileMap").add_child(elite)
-	elite.position = Vector2(0, 0)
-	if elite.armor != 1 or elite.bite_damage != 2:
-		failures.append("elite should have armor 1 and bite 2")
-	elite.take_damage(2)
-	elite.dec_health()
-	if elite.health != 5:
-		failures.append("elite armor should reduce 2 damage to 1, got hp %d" % elite.health)
-	elite.queue_free()
+	# 第 1 年：蚜虫 3 血、瓢虫 5 血。
+	season.year = 1
+	gs._spawn_bug_at(Vector2(-2, -1), gs.SpawnOpt.Bug3)
+	var aphid = get_nodes_in_group("Enemy")[0]
+	if aphid.health != 3:
+		failures.append("year1 aphid health %d != 3" % aphid.health)
+	_despawn(aphid)
+	gs._spawn_bug_at(Vector2(-2, -1), gs.SpawnOpt.Bug5)
+	var ladybug = get_nodes_in_group("Enemy")[0]
+	if ladybug.health != 5:
+		failures.append("year1 ladybug health %d != 5" % ladybug.health)
+	_despawn(ladybug)
 
-	# 瓶虱：第 3 回合直接啃掉 1 点瓶血。
-	var biter = load("res://bugs/Bug.tscn").instance()
-	biter.is_bottle_biter = true
-	biter.health = 3
-	biter.spawned = true
-	game.get_node("TileMap").add_child(biter)
-	biter.position = Vector2(256, 0)
+	# 第 2 年：蚜虫 4 / 瓢虫 6 / 大虫子 10（一口 2、无护甲）。
+	season.year = 2
+	gs._spawn_bug_at(Vector2(-2, -1), gs.SpawnOpt.Bug3)
+	aphid = get_nodes_in_group("Enemy")[0]
+	if aphid.health != 4:
+		failures.append("year2 aphid health %d != 4" % aphid.health)
+	_despawn(aphid)
+	gs._spawn_bug_at(Vector2(-2, -1), gs.SpawnOpt.Bug5)
+	ladybug = get_nodes_in_group("Enemy")[0]
+	if ladybug.health != 6:
+		failures.append("year2 ladybug health %d != 6" % ladybug.health)
+	_despawn(ladybug)
 
-	bottle.hp = 3
-	biter.take_turn()
-	biter.take_turn()
-	if bottle.hp != 3:
-		failures.append("bottle biter bit too early")
-	biter.take_turn()
-	if bottle.hp != 2:
-		failures.append("bottle biter should damage the bottle on turn 3, hp %d" % bottle.hp)
-	biter.queue_free()
-	bottle.hp = 3
+	gs._spawn_bug_at(Vector2(-2, -1), gs.SpawnOpt.Giant)
+	var giant = get_nodes_in_group("Enemy")[0]
+	if not giant.is_giant or giant.health != 10:
+		failures.append("year2 giant should be 10 hp")
+	if giant.armor != 0:
+		failures.append("giant should have no armor")
+	if giant.bite_damage != 2:
+		failures.append("year2 giant bite %d != 2" % giant.bite_damage)
+	_despawn(giant)
 
-	# 飞虫：锁定最渴的植物，落点必须紧贴它旁边一格。
-	# _make_plant() 已经把它挂到 TileMap 上了，这里只补位置和水分。
-	var p_wet = _make_plant()
-	p_wet.position = Vector2(-1024, 0)
-	p_wet.set_water(3)
-	var p_dry = _make_plant()
-	p_dry.position = Vector2(512, 512)
-	p_dry.set_water(0)
-	var fly = load("res://bugs/Bug.tscn").instance()
-	fly.is_flyer = true
-	fly.health = 2
-	fly.spawned = true
-	game.get_node("TileMap").add_child(fly)
-	fly.position = Vector2(-128, -128)
-	if fly.find_thirstiest() != p_dry:
-		failures.append("flyer should pick the driest plant")
-	var landing = fly._landing_cell(p_dry)
-	if abs(abs(landing.x - p_dry.position.x) + abs(landing.y - p_dry.position.y) - 128) > 1:
-		failures.append("flyer landing should hug the plant, got " + str(landing))
-	fly.take_turn()
-	if fly.current_plant_target != p_dry:
-		failures.append("flyer take_turn should commit to the driest plant")
-	fly.queue_free()
-	p_wet.queue_free()
-	p_dry.queue_free()
-	print("bug kinds: elite / bottle biter / flyer checked")
+	# 第 3 年数值维持第 2 年，只提高刷新频率。
+	season.year = 3
+	gs._spawn_bug_at(Vector2(-2, -1), gs.SpawnOpt.Giant)
+	giant = get_nodes_in_group("Enemy")[0]
+	if giant.health != 10:
+		failures.append("year3 giant health %d != 10" % giant.health)
+	if giant.bite_damage != 2:
+		failures.append("year3 giant bite %d != 2" % giant.bite_damage)
+	_despawn(giant)
+	season.year = 1
+	print("bug kinds: aphid / ladybug / giant checked")
+
+
+func _despawn(bug):
+	bug.get_parent().remove_child(bug)
+	bug.queue_free()
 
 
 func _make_plant(sid = "tomato"):
@@ -272,8 +285,8 @@ func _check_tools():
 func _check_threat_text():
 	if season.threat_text_for_year(2) == "":
 		failures.append("missing threat text for year 2")
-	if season.threat_text_for_year(3).find("瓶") < 0:
-		failures.append("year 3 threat should mention the bottle")
+	if season.threat_text_for_year(3).find("每一轮") < 0:
+		failures.append("year 3 threat should mention every round")
 	if season.threat_text_for_year(3).find("修补") >= 0:
 		failures.append("year 3 threat should no longer promise patching")
 	if season.threat_text_for_year(4) == "":

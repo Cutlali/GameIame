@@ -143,13 +143,13 @@ func _check_cards():
 	# 单体攻击第二轮整体加强，数值要钉住。
 	var atk = [
 		["card_free_atk", 2], ["card_small_attack", 3], ["card_dmg2", 4],
-		["card_net", 2], ["card_sacrif1_1enem", 5], ["card_sacrif2_2enem", 6],
+		["card_net", 2], ["card_sacrif1_1enem", 6], ["card_sacrif2_2enem", 6],
 		["card_trapper", 6], ["card_queen_sting", 14]
 	]
 	for a in atk:
 		if gs.get(a[0]).quantity != a[1]:
 			_fail("%s quantity %d != %d" % [a[0], gs.get(a[0]).quantity, a[1]])
-	# 蜂群仍然只是全场 2 点：巨虫外壳 2，不会再出现“无脑蜂群”的答案。
+	# 蜂群仍然只是全场 2 点：它负责清杂兵，单体硬伤害仍要留给大虫子。
 	if gs.card_swarm.quantity != 2:
 		_fail("swarm quantity %d != 2" % gs.card_swarm.quantity)
 
@@ -406,38 +406,64 @@ func _check_energy_cards():
 
 
 func _check_bug_tiers():
-	# 第 2 年起普通虫至少 5 滴血；大波次必带巨虫，巨虫血厚壳硬。
+	# 2026-11 曲线：第 1 年只有蚜虫(3)和瓢虫(5)；
+	# 第 2 年蚜虫 4 / 瓢虫 6 / 大虫子 10（一口 2）；
+	# 第 3 年起每轮刷怪，至少 2 只。
 	_clear_enemies()
+	season.year = 1
+	season.current_season = "spring"
+	for i in range(20):
+		var cfg = gs.build_spawn_config()
+		if cfg.size() < 1 or cfg.size() > 2:
+			_fail("year1 spring wave size %d not in 1..2" % cfg.size())
+			break
+		for item in cfg:
+			if item != gs.SpawnOpt.Bug3 and item != gs.SpawnOpt.Bug5:
+				_fail("year1 spring leaked non-basic bug")
+	season.current_season = "autumn"
+	for i in range(10):
+		if gs.build_spawn_config().size() != 2:
+			_fail("year1 autumn wave should be exactly 2")
+			break
+
 	season.year = 2
-	var ok = _spawn_at(Vector2(-2, -1), gs.SpawnOpt.Bug2)
-	if not ok:
-		_fail("cannot spawn test bug")
-		return
-	var bug = get_nodes_in_group("Enemy")[0]
-	if bug.health < 5:
-		_fail("year2 small bug health %d < 5" % bug.health)
+	season.current_season = "spring"
+	for i in range(30):
+		var cfg2 = gs.build_spawn_config()
+		if cfg2.size() < 2:
+			_fail("year2 wave size %d < 2" % cfg2.size())
+			break
+		for item in cfg2:
+			if item != gs.SpawnOpt.Bug3 and item != gs.SpawnOpt.Bug5 \
+					and item != gs.SpawnOpt.Giant:
+				_fail("year2 wave has unexpected bug type")
+
+	# 血量：第 1 年蚜虫 3 / 瓢虫 5，第 2 年起蚜虫 4 / 瓢虫 6；
+	# 大虫子固定 10 点、无护甲、一口 2 点。
+	season.year = 2
+	_spawn_at(Vector2(-2, -1), gs.SpawnOpt.Bug3)
+	var aphid = get_nodes_in_group("Enemy")[0]
+	if aphid.health != 4:
+		_fail("year2 aphid health %d != 4" % aphid.health)
 	_clear_enemies()
 
-	season.year = 4
-	_spawn_at(Vector2(-2, -1), gs.SpawnOpt.Bug2)
-	bug = get_nodes_in_group("Enemy")[0]
-	if bug.health < 7:
-		_fail("year4 small bug health %d < 7" % bug.health)
+	_spawn_at(Vector2(-2, -1), gs.SpawnOpt.Bug5)
+	var ladybug = get_nodes_in_group("Enemy")[0]
+	if ladybug.health != 6:
+		_fail("year2 ladybug health %d != 6" % ladybug.health)
 	_clear_enemies()
 
-	season.year = 2
 	_spawn_at(Vector2(-2, -1), gs.SpawnOpt.Giant)
 	var giant = get_nodes_in_group("Enemy")[0]
 	if not giant.is_giant:
 		_fail("giant flag missing")
-	if giant.health < 10:
-		_fail("giant health %d < 10" % giant.health)
-	if giant.armor < 2:
-		_fail("giant armor %d < 2" % giant.armor)
-	# 外壳让蜂群这类全场 2 点伤害几乎失效。
-	if max(1, 2 - giant.armor) > 1:
-		_fail("giant armor does not blunt swarm")
-	# 巨虫隔一回合才咬一次。
+	if giant.health != 10:
+		_fail("year2 giant health %d != 10" % giant.health)
+	if giant.armor != 0:
+		_fail("giant armor %d != 0" % giant.armor)
+	if giant.bite_damage != 2:
+		_fail("year2 giant bite %d != 2" % giant.bite_damage)
+	# 大虫子体型笨重，仍然隔一回合才咬一次。
 	var bites = 0
 	for i in range(4):
 		giant.take_turn()
@@ -447,33 +473,20 @@ func _check_bug_tiers():
 		_fail("giant attacks every turn (%d of 4)" % bites)
 	_clear_enemies()
 
-	# 大波次（基础配置 3 只以上）第 2 年起必须排到巨虫。
-	season.year = 2
-	var missed = 0
-	for i in range(gs.spawn_configs.size()):
-		gs.next_spawn = i
-		var cfg = gs.build_spawn_config()
-		if gs.spawn_configs[i].size() >= 3:
-			var has_giant = false
-			for item in cfg:
-				if item == gs.SpawnOpt.Giant:
-					has_giant = true
-			if not has_giant:
-				missed += 1
-	if missed > 0:
-		_fail("%d large waves without a giant" % missed)
-	gs.next_spawn = 0
+	season.year = 3
+	_spawn_at(Vector2(-2, -1), gs.SpawnOpt.Bug3)
+	if get_nodes_in_group("Enemy")[0].health != 4:
+		_fail("year3 aphid health should stay 4")
+	_clear_enemies()
+	_spawn_at(Vector2(-2, -1), gs.SpawnOpt.Bug5)
+	if get_nodes_in_group("Enemy")[0].health != 6:
+		_fail("year3 ladybug health should stay 6")
+	_clear_enemies()
 
-	# 小波次不该被巨虫塞满。
-	for i in range(gs.spawn_configs.size()):
-		if gs.spawn_configs[i].size() >= 3:
-			continue
-		gs.next_spawn = i
-		var cfg = gs.build_spawn_config()
-		for item in cfg:
-			if item == gs.SpawnOpt.Giant:
-				_fail("small wave %d carries a giant" % i)
-	gs.next_spawn = 0
+	# 第 3 年的刷怪轮次表必须是每一轮。
+	var plan = gs._spawn_plan_for(3, 2)
+	if plan.size() != 6:
+		_fail("year3 spawn plan rounds %d != 6" % plan.size())
 	season.year = 1
 
 
