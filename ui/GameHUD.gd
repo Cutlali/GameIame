@@ -508,3 +508,10 @@ func _on_guide_page_unlocked(index, title):
 	if _guide_badge != null:
 		_guide_badge.visible = true
 	Toast.show_message("手记更新：%s" % title)
+
+
+# 强制阅读过的页不再算“未读”，供瓶碎过场收掉角标。
+func mark_guide_read():
+	_new_guide_index = -1
+	if _guide_badge != null:
+		_guide_badge.visible = false

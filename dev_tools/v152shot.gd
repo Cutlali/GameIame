@@ -58,7 +58,7 @@ func _idle(_delta):
 		return
 	if stage == 4 and t >= 2100:
 		_save("game_guide_v152")
-		game.get_node("GuideBook").select_chapter(9)
+		game.get_node("GuideBook").select_chapter(10)
 		stage = 5
 		return
 	if stage == 5 and t >= 2400:

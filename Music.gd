@@ -19,7 +19,7 @@ func _ready():
 
 
 # v1.8 场景配乐模式："menu"=旧氛围底（drone+即兴），"game"=游戏循环，
-# "shatter"=瓶碎长曲（点重开按钮前一直放），"ending"=结局曲（单次）。
+# "shatter"=瓶碎过场/结算期间播放，重开后切回 game，"ending"=结局曲（单次）。
 var _bgm_mode = ""
 
 func set_mode(mode):

@@ -37,7 +37,7 @@ func _idle(_delta):
 		return
 	if stage == 1 and t >= 220:
 		guide.open()
-		guide.select_chapter(9)
+		guide.select_chapter(10)
 		stage = 2
 		stage_ms = t
 		return
@@ -46,7 +46,7 @@ func _idle(_delta):
 		var flags = get_root().get_node("Flags")
 		flags.guide_bottle_shattered = true
 		guide._refresh_toc()
-		guide.select_chapter(9)
+		guide.select_chapter(10)
 		stage = 3
 		stage_ms = t
 		return

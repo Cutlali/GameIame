@@ -259,7 +259,7 @@ func _restore_plant(t, pd):
 	var sid = String(pd.get("sid", ""))
 	var p = null
 	if is_final:
-		p = GS.PlantWin.instance()
+		p = GS.PlantFinal.instance()
 		p.card_level = 4
 		p.is_final_plant = true
 	else:

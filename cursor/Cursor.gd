@@ -35,8 +35,8 @@ func new_plant(associated_card):
 	var level = 1
 
 	if associated_card == GS.card_final_seed:
-		# 终局种子借用月见草的生长画面，但走的是独立结局流程。
-		scene = GS.PlantWin
+		# 终局种子有独立的美术，和月见草不再共用生长画面。
+		scene = GS.PlantFinal
 		level = 4
 	elif sid != "":
 		scene = GameData.scene_for(sid)

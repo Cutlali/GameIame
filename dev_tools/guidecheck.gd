@@ -59,13 +59,14 @@ func _idle(_delta):
 			if c is Button:
 				buttons += 1
 		_check(buttons == guide.CHAPTERS.size(), "chapter buttons %d" % buttons)
-		_check(guide.CHAPTERS.size() == 11, "notebook should have 11 pages")
+		_check(guide.CHAPTERS.size() == 12, "notebook should have 12 pages")
 		# 目录始终列全所有页，未解锁的章节只会被雾气盖住。
-		_check(_visible_buttons(toc) == 11, "all 11 pages listed, got %d"
+		_check(_visible_buttons(toc) == 12, "all 12 pages listed, got %d"
 			% _visible_buttons(toc))
 		_check(not guide._is_unlocked(4), "season locked at start")
-		_check(not guide._is_unlocked(9), "milestone page locked at start")
-		_check(not guide._is_unlocked(10), "final page locked at start")
+		_check(not guide._is_unlocked(9), "shatter page locked at start")
+		_check(not guide._is_unlocked(10), "milestone page locked at start")
+		_check(not guide._is_unlocked(11), "final page locked at start")
 		_check(guide._toc_buttons[4].hint_tooltip != "", "locked page gets fog tooltip")
 
 		var body = guide.get_node("Root/Book/Margin/VBox/Body/Scroll/Content/ChapterBody")
@@ -89,7 +90,7 @@ func _idle(_delta):
 		flags.guide_season_changed = true
 		guide._refresh_toc()
 		_check(guide._is_unlocked(4), "season page unlocked")
-		_check(_visible_buttons(toc) == 11, "toc keeps every page, got %d"
+		_check(_visible_buttons(toc) == 12, "toc keeps every page, got %d"
 			% _visible_buttons(toc))
 		guide.select_chapter(4)
 		_check(body.visible, "season body visible after unlock")
@@ -123,9 +124,9 @@ func _idle(_delta):
 		flags.guide_bottle_damaged = true
 		flags.guide_milestone_seen = true
 		guide._refresh_toc()
-		_check(not guide._is_unlocked(10), "final page still foged below seven species")
-		guide.select_chapter(10)
-		_check(title.text == "10  最后一页 · 瓶子里的世界", "final chapter title")
+		_check(not guide._is_unlocked(11), "final page still foged below seven species")
+		guide.select_chapter(11)
+		_check(title.text == "11  最后一页 · 瓶子里的世界", "final chapter title")
 		_check(not body.visible, "final body hidden before seven species")
 		_check(guide._fog.visible, "final page fog visible")
 		_check(guide._fog_hint.text.find("七种") >= 0, "fog hint mentions seven species")
@@ -146,8 +147,8 @@ func _idle(_delta):
 			seven[gd.SPECIES_ORDER[i]] = true
 		enc.discovered = seven
 		guide._refresh_toc()
-		_check(guide._is_unlocked(10), "final page opens at seven species")
-		guide.select_chapter(10)
+		_check(guide._is_unlocked(11), "final page opens at seven species")
+		guide.select_chapter(11)
 		_check(body.visible, "stage 2 body visible after seven species")
 		_check(body.text.find("下一个得到瓶子的人") >= 0, "stage 2 previous-owner text")
 		_check(body.text.find("看着魔瓶") >= 0, "stage 2 discovery paragraph")
@@ -162,12 +163,20 @@ func _idle(_delta):
 			full[sid] = true
 		enc.discovered = full
 		guide._refresh_toc()
-		guide.select_chapter(10)
+		guide.select_chapter(11)
 		_check(body.visible, "stage 3 visible at full species")
 		_check(body.text.find("我是魔瓶的创造者") >= 0, "creator text")
 		_check(body.text.find("奇迹的种子") >= 0, "creator seed hint")
 		_check(body.text.find("下一个得到瓶子的人") >= 0, "stage 2 kept below stage 3")
 		enc.discovered = old_entries
+
+		# 首次瓶碎：手记多出一页“碎裂之后”。
+		flags.guide_bottle_shattered = true
+		guide._refresh_toc()
+		_check(guide._is_unlocked(9), "shatter page unlocks after first break")
+		guide.select_chapter(9)
+		_check(title.text == "09  第八页 · 碎裂之后", "shatter chapter title")
+		_check(body.text.find("碎片") >= 0, "shatter page body")
 
 		guide.close()
 		_check(not guide.visible, "guide closes")

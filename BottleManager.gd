@@ -37,7 +37,8 @@ var _batch_done = 0
 var _batch_gained = 0
 
 # 魔瓶维持着这个世界的四季，最多 3 滴血。
-# 植物被虫害杀死时扣 1 滴，归零后进入瓶碎结算。
+# 植物被虫害杀死时扣 1 滴：首次归零播瓶碎过场并翻手记；
+# 之后再归零仍走原来的瓶碎结算面板。
 const MAX_HP = 3
 var hp = MAX_HP
 
@@ -49,12 +50,17 @@ const POWER_PER_HARVEST = 1
 const POWER_PER_VARIANT = 3
 var power = 0
 
+# 首次瓶碎解锁的手记页（碎裂之后）。
+const SHATTER_GUIDE_INDEX = 9
+
 signal power_changed(current, max_power)
 
 signal hp_changed(current, max_hp)
 
 var _shatter_pending = false
 var _shatter_open = false
+var _break_cutscene = null
+var _break_first_time = false
 var _damage_flash: ColorRect
 var _flash_tween: Tween
 var _shatter_root: Control
@@ -234,7 +240,7 @@ func _process(_delta):
 	# 进入结局后，残留的蓄能也不能再弹选牌盖在剧情上。
 	if GS.ending_started:
 		return
-	# 瓶碎结算优先于一切抽取；等这一轮植物/虫子结算完再弹。
+	# 瓶碎流程优先于一切抽取；等这一轮植物/虫子结算完再弹。
 	if _shatter_open:
 		return
 	if _shatter_pending:
@@ -277,8 +283,6 @@ func damage(amount = 1):
 		SFX.bottle_hurt.play_usual()
 	if hp <= 0:
 		_shatter_pending = true
-		# 亲眼见过一次瓶碎，才满足最后一页的前置条件。
-		Flags.guide_bottle_shattered = true
 		Toast.show_message("魔瓶碎裂了！四季开始停滞……")
 	else:
 		Toast.show_message("魔瓶受损！剩余 %d 滴血。" % hp)
@@ -398,6 +402,44 @@ func _show_shatter():
 	GS.bottle_open = false
 	GS.waiting_for_card_selection = false
 
+	# 碎裂一声脆响。
+	if has_node("/root/SFX"):
+		SFX.bottle_shatter.play_usual()
+	if has_node("/root/Music"):
+		Music.set_mode("shatter")
+
+	# 第一次瓶碎用动画和手记新页代替结算面板；之后仍走原来的结算面板。
+	_break_first_time = not Flags.guide_bottle_shattered
+	if _break_first_time:
+		Flags.unlock_guide("guide_bottle_shattered", SHATTER_GUIDE_INDEX, "碎裂之后")
+		_play_break_cinematic()
+	else:
+		_show_shatter_summary()
+
+
+func _play_break_cinematic():
+	var cut = load("res://BottleBreak.gd").new()
+	cut.on_finished = funcref(self, "_on_break_cinematic_finished")
+	_break_cutscene = cut
+	get_tree().get_root().add_child(cut)
+
+
+func _on_break_cinematic_finished():
+	_break_cutscene = null
+	var first = _break_first_time
+	_break_first_time = false
+	var guide = GS.guide
+	if first and guide != null and is_instance_valid(guide):
+		# 这一页是强制翻开读过的，顺手收掉手记角标。
+		var hud = GS.hud
+		if hud != null and is_instance_valid(hud) and hud.has_method("mark_guide_read"):
+			hud.mark_guide_read()
+		guide.open_required([SHATTER_GUIDE_INDEX], funcref(self, "_finish_break_restart"))
+	else:
+		_finish_break_restart()
+
+
+func _show_shatter_summary():
 	var year = Season.year
 	var entries = Encyclopedia.discovered_count()
 	var plots = 0
@@ -417,23 +459,25 @@ func _show_shatter():
 	lines.append("你带着图鉴和整片农田，从第一年的春天继续。")
 	_shatter_body.text = lines.join("\n")
 	_shatter_root.visible = true
-	# v1.8：碎裂一声脆响，随后长曲一直放到玩家按下重开（实测口径没问题，保持）。
-	if has_node("/root/SFX"):
-		SFX.bottle_shatter.play_usual()
-	if has_node("/root/Music"):
-		Music.set_mode("shatter")
 
 
 func _on_shatter_restart_pressed():
+	_finish_break_restart()
+
+
+func _finish_break_restart():
 	if not _shatter_open:
 		return
 	_shatter_open = false
-	_shatter_root.visible = false
 	GS.shatter_open = false
+	if _shatter_root != null:
+		_shatter_root.visible = false
 	refill()
-	# 碎裂长曲只放到按下这一刻，回到农场恢复常规 BGM。
+	# 瓶碎曲停在这里，回到农场后恢复常规 BGM。
 	if has_node("/root/Music"):
 		Music.set_mode("game")
+	if has_node("/root/Toast"):
+		Toast.clear()
 	GS.restart_after_shatter()
 
 
@@ -464,10 +508,14 @@ func reset_all():
 	power = 0
 	_shatter_pending = false
 	_shatter_open = false
+	_break_first_time = false
 	if _root != null:
 		_root.visible = false
 	if _shatter_root != null:
 		_shatter_root.visible = false
+	if _break_cutscene != null and is_instance_valid(_break_cutscene):
+		_break_cutscene.queue_free()
+	_break_cutscene = null
 	GS.waiting_for_card_selection = false
 	GS.bottle_open = false
 	GS.shatter_open = false

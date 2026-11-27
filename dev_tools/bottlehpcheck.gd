@@ -1,9 +1,9 @@
 extends SceneTree
 
-# 开发工具：魔瓶血量/瓶碎结算冒烟测试。
+# 开发工具：魔瓶血量/瓶碎重开冒烟测试。
 # 用法：
 #   Godot --path <project> --script res://dev_tools/bottlehpcheck.gd
-# 检查：HUD 血量、植物死亡扣血、瓶碎面板、重开后图鉴与农田保留。
+# 检查：HUD 血量、植物死亡扣血、瓶碎过场、重开后图鉴与农田保留。
 
 const OUT_DIR = "D:/Godot/"
 
@@ -86,9 +86,16 @@ func _idle(_delta):
 			wait_until = OS.get_ticks_msec() + 350
 		3:
 			if not bottle._shatter_open:
-				failures.append("shatter panel did not open at 0 hp")
+				failures.append("shatter flow did not open at 0 hp")
+			if bottle._break_cutscene == null:
+				failures.append("shatter cutscene did not play")
 			_shot("bottle_shatter")
-			bottle._on_shatter_restart_pressed()
+			# 跳过过场；首碎会强制翻到手记新页，合上后才重开。
+			if bottle._break_cutscene != null:
+				bottle._break_cutscene._skip()
+			var shatter_guide = game.get_node_or_null("GuideBook")
+			if shatter_guide != null and shatter_guide.visible:
+				shatter_guide.close()
 			stage = 4
 			wait_until = OS.get_ticks_msec() + 300
 		4:
@@ -114,6 +121,25 @@ func _idle(_delta):
 				failures.append("restart should clear plants")
 			if gs.shatter_open:
 				failures.append("shatter flag not cleared after restart")
+			# 第二次碎瓶：不再播过场，直接回到原来的结算面板。
+			bottle.damage(3)
+			stage = 6
+			wait_until = OS.get_ticks_msec() + 350
+		6:
+			if bottle._break_cutscene != null:
+				failures.append("later break should skip the cutscene")
+			if not bottle._shatter_root.visible:
+				failures.append("later break should show the summary panel")
+			_shot("bottle_shatter_summary")
+			bottle._on_shatter_restart_pressed()
+			stage = 7
+			wait_until = OS.get_ticks_msec() + 300
+		7:
+			_shot("bottle_hp_restart_again")
+			if bottle.hp != 3 or bottle._shatter_open:
+				failures.append("summary restart did not refill/close the flow")
+			if gs.shatter_open:
+				failures.append("summary restart left shatter flag set")
 			_report()
 			quit()
 

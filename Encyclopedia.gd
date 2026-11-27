@@ -121,7 +121,7 @@ func _check_milestones():
 
 
 func _apply_milestone(m):
-	Flags.unlock_guide("guide_milestone_seen", 9, "图鉴的分量")
+	Flags.unlock_guide("guide_milestone_seen", 10, "图鉴的分量")
 	match m["type"]:
 		"energy":
 			GS.add_permanent_energy(m["amount"])

@@ -95,7 +95,13 @@ func _idle(_delta):
 	_check(not gs.discard_pile.has(card), "discard pile no longer holds seed")
 
 	# 5. 终局植物：不参与变异、更结实、每次浇水 2 帧
-	var plant = load("res://plants/winplant/WinPlant.tscn").instance()
+	var final_scene = load("res://plants/finalseed/FinalSeed.tscn")
+	var moon_scene = load("res://plants/winplant/WinPlant.tscn")
+	_check(final_scene != moon_scene, "final seed and moonflower use different scenes")
+	var moon = moon_scene.instance()
+	_check(not moon.has_node("Aura"), "moonflower no longer borrows final seed art")
+	moon.free()
+	var plant = final_scene.instance()
 	plant.is_final_plant = true
 	plant.species_id = "final_seed"
 	get_root().add_child(plant)
